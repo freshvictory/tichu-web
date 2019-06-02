@@ -6,6 +6,9 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 
+import Team as Team exposing (Team, PlayerNumber)
+import Bet exposing (Bet)
+
 
 -- MAIN
 
@@ -29,60 +32,16 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-  ( { team1 =
-      { name = "Team 1"
-      , score = 0
-      , turnScore = 50
-      , consecutiveVictory = False
-      , player1 = { name = "Player 1", bet = None }
-      , player2 = { name = "Player 2", bet = None }
-      }
-    , team2 =
-      { name = "Team 2"
-      , score = 0
-      , turnScore = 50
-      , consecutiveVictory = False
-      , player1 = { name = "Player 1", bet = None }
-      , player2 = { name = "Player 2", bet = None }
-      }
+  ( { team1 = Team.default "Team 1"
+    , team2 = Team.default "Team 2"
     }
   , Cmd.none
   )
 
 
-type alias Team =
-  { name : String
-  , score : Int
-  , turnScore : Int
-  , consecutiveVictory : Bool
-  , player1 : Player
-  , player2 : Player
-  }
-
-
-type alias Player =
-  { name : String
-  , bet : Bet
-  }
-
-
-type Bet
-  = None
-  | Tichu Bool
-  | GrandTichu Bool
-
-
-type PlayerNumber
-  = Player1
-  | Player2
-
-
 type TeamNumber
   = Team1
   | Team2
-
-
-type alias PlayerUpdater a = (Player -> a -> Player)
 
 
 getTeam : Model -> TeamNumber -> Team
@@ -92,16 +51,6 @@ getTeam model teamNumber =
     Team2 -> model.team2
 
 
-getPlayer : Model -> TeamNumber -> PlayerNumber -> Player
-getPlayer model teamNumber playerNumber =
-  let
-    team = getTeam model teamNumber
-  in
-    case playerNumber of
-      Player1 -> team.player1
-      Player2 -> team.player2
-
-
 getPlayerId : TeamNumber -> PlayerNumber -> String
 getPlayerId teamNumber playerNumber =
   let
@@ -109,29 +58,10 @@ getPlayerId teamNumber playerNumber =
       Team1 -> "team1"  
       Team2 -> "team2"
     playerName = case playerNumber of
-      Player1 -> "player1"
-      Player2 -> "player2"
+      Team.Player1 -> "player1"
+      Team.Player2 -> "player2"
   in
     teamName ++ "-" ++ playerName
-
-
-getTeamScore : Team -> Int
-getTeamScore team =
-    team.turnScore
-  + getPlayerScore team.player1
-  + getPlayerScore team.player2
-  + if team.consecutiveVictory then 200 else 0
-
-
-getPlayerScore : Player -> Int
-getPlayerScore player =
-  case player.bet of
-      None ->
-        0
-      Tichu success ->
-        100 * (if success then 1 else -1)
-      GrandTichu success ->
-        200 * (if success then 1 else -1)
 
 
 
@@ -170,40 +100,35 @@ update msg model =
       ( consecutiveVictory model teamNumber, Cmd.none )
 
 
+updateTeam : Model -> TeamNumber -> (Team -> Team) -> Model
+updateTeam model teamNumber updater =
+  let
+    updated = updater (getTeam model teamNumber)
+  in
+    case teamNumber of
+      Team1 ->
+        { model | team1 = updated }
+      Team2 ->
+        { model | team2 = updated }  
+
+
 changeTeamName : Model -> TeamNumber -> String -> Model
 changeTeamName model teamNumber name =
-  case teamNumber of
-    Team1 ->
-      { model | team1 = updateName model.team1 name }
-    Team2 ->
-      { model | team2 = updateName model.team2 name }
-
+  updateTeam model teamNumber (Team.updateName name)
 
 changePlayerName : Model -> TeamNumber -> PlayerNumber -> String -> Model
 changePlayerName model teamNumber playerNumber name =
-  case teamNumber of
-    Team1 ->
-      { model | team1 = updatePlayer model.team1 playerNumber name updatePlayerName }
-    Team2 ->
-      { model | team1 = updatePlayer model.team2 playerNumber name updatePlayerName }
+  updateTeam model teamNumber (Team.updatePlayerName playerNumber name)
 
 
 changePlayerBet : Model -> TeamNumber -> PlayerNumber -> Bet -> Model
 changePlayerBet model teamNumber playerNumber bet =
-  case teamNumber of
-    Team1 ->
-      { model | team1 = updatePlayer model.team1 playerNumber bet updatePlayerBet }
-    Team2 ->
-      { model | team2 = updatePlayer model.team2 playerNumber bet updatePlayerBet }
+  updateTeam model teamNumber (Team.updatePlayerBet playerNumber bet)
 
 
 changePlayerBetResult : Model -> TeamNumber -> PlayerNumber -> (Bool -> Bet) -> Bool -> Model
 changePlayerBetResult model teamNumber playerNumber betType result =
-  case teamNumber of
-    Team1 ->
-      { model | team1 = updatePlayer model.team1 playerNumber (betType result) updatePlayerBet }
-    Team2 ->
-      { model | team2 = updatePlayer model.team2 playerNumber (betType result) updatePlayerBet }
+  updateTeam model teamNumber (Team.updatePlayerBet playerNumber (betType result))
 
 
 scoreAll : Model -> Model
@@ -213,8 +138,8 @@ scoreAll model = reset (updateScore model)
 changeTeamScore : Model -> Int -> Model
 changeTeamScore model team1Score =
   { model
-  | team1 = updateTeamTurnScore model.team1 team1Score
-  , team2 = updateTeamTurnScore model.team2 (100 - team1Score)
+  | team1 = Team.updateTurnScore model.team1 team1Score
+  , team2 = Team.updateTurnScore model.team2 (100 - team1Score)
   }
 
 
@@ -223,85 +148,31 @@ consecutiveVictory model teamNumber =
   case teamNumber of
     Team1 ->
       { model 
-      | team1 = updateTeamConsecutiveVictory model.team1 True
-      , team2 = updateTeamConsecutiveVictory model.team2 False
+      | team1 = Team.updateConsecutiveVictory model.team1 True
+      , team2 = Team.updateConsecutiveVictory model.team2 False
       }
     Team2 ->
       { model 
-      | team1 = updateTeamConsecutiveVictory model.team1 False
-      , team2 = updateTeamConsecutiveVictory model.team2 True
+      | team1 = Team.updateConsecutiveVictory model.team1 False
+      , team2 = Team.updateConsecutiveVictory model.team2 True
       }
 
 
 updateScore : Model -> Model
 updateScore model =
   let
-    team1Score = getTeamScore model.team1
-    team2Score = getTeamScore model.team2
+    team1Score = Team.calculateScore model.team1
+    team2Score = Team.calculateScore model.team2
   in
     { model
-    | team1 = updateTeamScore model.team1 team1Score
-    , team2 = updateTeamScore model.team2 team2Score
+    | team1 = Team.updateScore model.team1 team1Score
+    , team2 = Team.updateScore model.team2 team2Score
     }
-
-
-updateName : Team -> String -> Team
-updateName team name =
-  { team | name = name }
-
-
-updateTeamScore : Team -> Int -> Team
-updateTeamScore team score =
-  { team | score = team.score + score }
-
-
-updateTeamTurnScore : Team -> Int -> Team
-updateTeamTurnScore team score =
-  { team | turnScore = score }
-
-
-updateTeamConsecutiveVictory : Team -> Bool -> Team
-updateTeamConsecutiveVictory team isCV =
-  { team | consecutiveVictory = isCV }
-
-
-updatePlayer : Team -> PlayerNumber -> a -> PlayerUpdater a -> Team
-updatePlayer team playerNumber val updater =
-  case playerNumber of
-      Player1 ->
-          { team | player1 = updater team.player1 val }  
-      Player2 ->
-          { team | player2 = updater team.player2 val }
-
-
-updatePlayerName : PlayerUpdater String
-updatePlayerName player name =
-  { player | name = name }
-
-
-updatePlayerBet : PlayerUpdater Bet
-updatePlayerBet player bet =
-  { player | bet = bet }
 
 
 reset : Model -> Model
 reset model =
-  { model | team1 = resetTeam model.team1, team2 = resetTeam model.team2 }
-
-
-resetTeam : Team -> Team
-resetTeam team =
-  { team
-  | turnScore = 50
-  , player1 = resetPlayer team.player1
-  , player2 = resetPlayer team.player2
-  , consecutiveVictory = False
-  }
-
-
-resetPlayer : Player -> Player
-resetPlayer player =
-  { player | bet = None }
+  { model | team1 = Team.reset model.team1, team2 = Team.reset model.team2 }
 
 
 -- VIEW
@@ -329,8 +200,8 @@ viewTeam model teamNumber =
   div [ css [ displayFlex, flexDirection column ] ]
     [ viewTeamName model teamNumber
     , viewTeamScore model teamNumber
-    , viewPlayer model teamNumber Player1
-    , viewPlayer model teamNumber Player2
+    , viewPlayer model teamNumber Team.Player1
+    , viewPlayer model teamNumber Team.Player2
     ]
   
 
@@ -359,18 +230,25 @@ viewPlayer model teamNumber playerNumber =
 
 viewPlayerName : Model -> TeamNumber -> PlayerNumber -> Html Msg
 viewPlayerName model teamNumber playerNumber =
-  input
-    [ placeholder (getPlayer model teamNumber playerNumber).name
-    , value (getPlayer model teamNumber playerNumber).name
-    , onInput (ChangePlayerName teamNumber playerNumber)
-    ]
-    []
+  let
+    team = getTeam model teamNumber
+    name = (Team.getPlayer team playerNumber).name
+  in
+    input
+      [ placeholder name
+      , value name
+      , onInput (ChangePlayerName teamNumber playerNumber)
+      ]
+      []
 
 
 viewPlayerBet : Model -> TeamNumber -> PlayerNumber -> Html Msg
 viewPlayerBet model teamNumber playerNumber =
   let
+    team = getTeam model teamNumber
     playerId = getPlayerId teamNumber playerNumber
+    bet = (Team.getPlayer team playerNumber).bet
+    (betType, success) = Bet.destructure bet
   in  
     div [ css [ displayFlex, flexDirection column ] ]
       [ div [ css [ displayFlex, flexDirection row ] ]
@@ -378,48 +256,30 @@ viewPlayerBet model teamNumber playerNumber =
               ("none" ++ "-" ++ playerId)
               "None"
               ("bet" ++ "-" ++ playerId)
-              ((getPlayer model teamNumber playerNumber).bet == None)
-              (ChangePlayerBet teamNumber playerNumber None)          
+              (bet == Bet.None)
+              (ChangePlayerBet teamNumber playerNumber Bet.None)          
           , labeledRadio
               ("tichu" ++ "-" ++ playerId)
               "Tichu"
               ("bet" ++ "-" ++ playerId)
-              (case (getPlayer model teamNumber playerNumber).bet of
-                Tichu _ -> True
-                _ -> False 
-              )
-              (ChangePlayerBet teamNumber playerNumber (Tichu False))
+              (Bet.isBetType bet Bet.Tichu)
+              (ChangePlayerBet teamNumber playerNumber (Bet.Tichu False))
           , labeledRadio
               ("grand" ++ "-" ++ playerId)
               "Grand Tichu"
               ("bet"  ++ "-" ++ playerId)
-              (case (getPlayer model teamNumber playerNumber).bet of
-                GrandTichu _ -> True
-                _ -> False 
-              )
-              (ChangePlayerBet teamNumber playerNumber (GrandTichu False))
+              (Bet.isBetType bet Bet.GrandTichu)
+              (ChangePlayerBet teamNumber playerNumber (Bet.GrandTichu False))
           ]
-      , let
-          bet = (getPlayer model teamNumber playerNumber).bet
-        in
-          if bet /= None then
-          let
-            (betType, success) = case bet of
-                None ->
-                  (\s -> None, False)
-                Tichu s ->
-                    (Tichu, s)
-                GrandTichu s ->
-                  (GrandTichu, s)                    
-          in
-            div []
-              [ input
-                [ type_ "checkbox"
-                , id ("success" ++ "-" ++ playerId)
-                , Html.Styled.Attributes.checked success
-                , onCheck (ChangePlayerBetResult teamNumber playerNumber betType) ] []
-              , label [ for ("success" ++ "-" ++ playerId) ] [ text "Successful" ]
-              ]
+      , if bet /= Bet.None then
+          div []
+            [ input
+            [ type_ "checkbox"
+            , id ("success" ++ "-" ++ playerId)
+            , Html.Styled.Attributes.checked success
+            , onCheck (ChangePlayerBetResult teamNumber playerNumber betType) ] []
+            , label [ for ("success" ++ "-" ++ playerId) ] [ text "Successful" ]
+            ]
         else
           text ""
       ]
