@@ -237,7 +237,10 @@ view model =
     text "The app crashed :("
   else 
     div [ css [ displayFlex, flexDirection column ] ]
-      [ button [ onClick CrashApp ] [ text "Things are not looking good" ]
+      [ if (abs (model.vertScore - model.horzScore)) > 400 then
+          button [ onClick CrashApp ] [ text "Things are not looking good" ]
+        else
+          text ""
       , viewTeams model
       , viewTeamTurnScore model
       , viewConsecutiveVictory model
