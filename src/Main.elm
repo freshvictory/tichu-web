@@ -11,12 +11,12 @@ import Html.Styled.Events exposing (..)
 
 main : Program () Model Msg
 main =
-    Browser.document
-        { init = init
-        , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
-        , update = update
-        , subscriptions = \_ -> Sub.none
-        }
+  Browser.document
+    { init = init
+    , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
+    , update = update
+    , subscriptions = \_ -> Sub.none
+    }
 
 
 -- MODEL
@@ -174,9 +174,9 @@ changeTeamName : Model -> TeamNumber -> String -> Model
 changeTeamName model teamNumber name =
   case teamNumber of
     Team1 ->
-        { model | team1 = updateName model.team1 name }
+      { model | team1 = updateName model.team1 name }
     Team2 ->
-        { model | team2 = updateName model.team2 name }
+      { model | team2 = updateName model.team2 name }
 
 
 changePlayerName : Model -> TeamNumber -> PlayerNumber -> String -> Model
@@ -336,11 +336,12 @@ viewTeam model teamNumber =
 
 viewTeamName : Model -> TeamNumber -> Html Msg
 viewTeamName model teamNumber =
-  input [ placeholder (getTeam model teamNumber).name
-        , value (getTeam model teamNumber).name
-        , onInput (ChangeTeamName teamNumber)
-        ]
-        []
+  input
+    [ placeholder (getTeam model teamNumber).name
+    , value (getTeam model teamNumber).name
+    , onInput (ChangeTeamName teamNumber)
+    ]
+    []
   
 
 viewTeamScore : Model -> TeamNumber -> Html Msg
@@ -358,11 +359,12 @@ viewPlayer model teamNumber playerNumber =
 
 viewPlayerName : Model -> TeamNumber -> PlayerNumber -> Html Msg
 viewPlayerName model teamNumber playerNumber =
-  input [ placeholder (getPlayer model teamNumber playerNumber).name
-        , value (getPlayer model teamNumber playerNumber).name
-        , onInput (ChangePlayerName teamNumber playerNumber)
-        ]
-        []
+  input
+    [ placeholder (getPlayer model teamNumber playerNumber).name
+    , value (getPlayer model teamNumber playerNumber).name
+    , onInput (ChangePlayerName teamNumber playerNumber)
+    ]
+    []
 
 
 viewPlayerBet : Model -> TeamNumber -> PlayerNumber -> Html Msg
@@ -408,8 +410,7 @@ viewPlayerBet model teamNumber playerNumber =
                 Tichu s ->
                     (Tichu, s)
                 GrandTichu s ->
-                  (GrandTichu, s)
-                    
+                  (GrandTichu, s)                    
           in
             div []
               [ input
