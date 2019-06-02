@@ -6,9 +6,6 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 
-import Team as Team exposing (Team, PlayerNumber)
-import Bet exposing (Bet)
-
 
 -- MAIN
 
@@ -25,154 +22,201 @@ main =
 -- MODEL
 
 type alias Model =
-  { team1: Team
-  , team2: Team
+  { north: (Player, Bet)
+  , south: (Player, Bet)
+  , east: (Player, Bet)
+  , west: (Player, Bet)
+  , firstOut: FirstOut
+  , vertTurnScore: Int
+  , vertScore: Int
+  , horzScore: Int
   }
+
+
+type Bet
+  = Zero
+  | Tichu
+  | GrandTichu
+
+
+default : Bet
+default = Zero
+
+
+getScore : Bet -> Int
+getScore bet =
+  case bet of
+      Zero ->
+        0
+      Tichu ->
+        100
+      GrandTichu ->
+        200
+
+
+type Player
+  = North
+  | South
+  | East
+  | West
+
+
+type FirstOut
+  = None
+  | One Player
+  | Team (Team, (Maybe Player))
+
+
+type Team
+  = Vertical
+  | Horizontal
+
+
+inTeam : Player -> Team -> Bool
+inTeam player team =
+  case team of
+    Vertical -> player == North || player == South
+    Horizontal -> player == East || player == West
+
+
+getPlayerId : Player -> String
+getPlayerId player =
+  case player of
+    North -> "north"
+    South -> "south"
+    East -> "east"
+    West -> "west"
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-  ( { team1 = Team.default "Team 1"
-    , team2 = Team.default "Team 2"
+  ( { north = (North, Zero)
+    , south = (South, Zero)
+    , east = (East, Zero)
+    , west = (West, Zero)
+    , firstOut = None
+    , vertTurnScore = 50
+    , vertScore = 0
+    , horzScore = 0
     }
   , Cmd.none
   )
-
-
-type TeamNumber
-  = Team1
-  | Team2
-
-
-getTeam : Model -> TeamNumber -> Team
-getTeam model teamNumber =
-  case teamNumber of
-    Team1 -> model.team1
-    Team2 -> model.team2
-
-
-getPlayerId : TeamNumber -> PlayerNumber -> String
-getPlayerId teamNumber playerNumber =
-  let
-    teamName = case teamNumber of
-      Team1 -> "team1"  
-      Team2 -> "team2"
-    playerName = case playerNumber of
-      Team.Player1 -> "player1"
-      Team.Player2 -> "player2"
-  in
-    teamName ++ "-" ++ playerName
 
 
 
 -- UPDATE
 
 type Msg
-  = ChangeTeamName TeamNumber String
-  | ChangePlayerName TeamNumber PlayerNumber String
-  | ChangePlayerBet TeamNumber PlayerNumber Bet String
-  | ChangePlayerBetResult TeamNumber PlayerNumber (Bool -> Bet) Bool
-  | Score
+  = ChangePlayerBet Player Bet String
+  | ChangeFirstOut Player Bool
   | ChangeTeamScore String
-  | ConsecutiveVictory TeamNumber String
+  | ConsecutiveVictory Team Bool
+  | Score
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ChangeTeamName teamNumber name ->
-      ( changeTeamName model teamNumber name, Cmd.none )
-    ChangePlayerName teamNumber playerNumber name ->
-      ( changePlayerName model teamNumber playerNumber name, Cmd.none )
-    ChangePlayerBet teamNumber playerNumber bet _ ->
-      ( changePlayerBet model teamNumber playerNumber bet, Cmd.none )
-    ChangePlayerBetResult teamNumber playerNumber betType result ->
-      ( changePlayerBetResult model teamNumber playerNumber betType result, Cmd.none )
+    ChangePlayerBet playerType bet _ ->
+      ( changePlayerBet model playerType bet, Cmd.none )
+    ChangeFirstOut playerType result ->
+      ( changeFirstOut model playerType result, Cmd.none )
     Score ->
       ( scoreAll model, Cmd.none )
     ChangeTeamScore val ->
       ( case String.toInt val of
           Nothing -> model
-          Just s -> changeTeamScore model s            
+          Just s -> { model | vertTurnScore = s }
       , Cmd.none
       )
-    ConsecutiveVictory teamNumber _ ->
-      ( consecutiveVictory model teamNumber, Cmd.none )
+    ConsecutiveVictory team result ->
+      ( consecutiveVictory model team result, Cmd.none )
 
 
-updateTeam : Model -> TeamNumber -> (Team -> Team) -> Model
-updateTeam model teamNumber updater =
+changePlayerBet : Model -> Player -> Bet -> Model
+changePlayerBet model player bet =
+  case player of
+    North -> { model | north = (player, bet) }
+    South -> { model | south = (player, bet) }
+    East -> { model | east = (player, bet) }
+    West -> { model | west = (player, bet) }
+  
+
+
+changeFirstOut : Model -> Player -> Bool -> Model
+changeFirstOut model player result =
+  if result then
+    let        
+      firstOut =
+        case model.firstOut of
+          Team (team, _) -> if inTeam player team then Team (team, Just player) else One player
+          _ -> One player
+    in    
+      { model | firstOut = firstOut }
+  else
+    { model | firstOut = None }
+
+
+consecutiveVictory : Model -> Team -> Bool -> Model
+consecutiveVictory model team result =
   let
-    updated = updater (getTeam model teamNumber)
+    firstOut =
+      case model.firstOut of
+        None -> Team (team, Nothing)
+        One player -> if inTeam player team then Team (team, Just player) else Team (team, Nothing)
+        Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
   in
-    case teamNumber of
-      Team1 ->
-        { model | team1 = updated }
-      Team2 ->
-        { model | team2 = updated }  
-
-
-changeTeamName : Model -> TeamNumber -> String -> Model
-changeTeamName model teamNumber name =
-  updateTeam model teamNumber (Team.updateName name)
-
-changePlayerName : Model -> TeamNumber -> PlayerNumber -> String -> Model
-changePlayerName model teamNumber playerNumber name =
-  updateTeam model teamNumber (Team.updatePlayerName playerNumber name)
-
-
-changePlayerBet : Model -> TeamNumber -> PlayerNumber -> Bet -> Model
-changePlayerBet model teamNumber playerNumber bet =
-  updateTeam model teamNumber (Team.updatePlayerBet playerNumber bet)
-
-
-changePlayerBetResult : Model -> TeamNumber -> PlayerNumber -> (Bool -> Bet) -> Bool -> Model
-changePlayerBetResult model teamNumber playerNumber betType result =
-  updateTeam model teamNumber (Team.updatePlayerBet playerNumber (betType result))
+    { model | firstOut = firstOut }
+    
 
 
 scoreAll : Model -> Model
-scoreAll model = reset (updateScore model)
+scoreAll model =
+  reset (
+    let
+      vertScore
+        = model.vertScore
+        + model.vertTurnScore
+        + getPlayerBonus model model.north
+        + getPlayerBonus model model.south
+        + (case model.firstOut of
+            Team (Vertical, _) -> 200        
+            _ -> 0
+          )
+      horzScore
+        = model.horzScore
+        + (100 - model.vertTurnScore)
+        + getPlayerBonus model model.west
+        + getPlayerBonus model model.east
+        + (case model.firstOut of
+            Team (Horizontal, _) -> 200        
+            _ -> 0
+          )
+    in
+      { model | vertScore = vertScore, horzScore = horzScore }
+  )
 
 
-changeTeamScore : Model -> Int -> Model
-changeTeamScore model team1Score =
-  { model
-  | team1 = Team.updateTurnScore model.team1 team1Score
-  , team2 = Team.updateTurnScore model.team2 (100 - team1Score)
-  }
-
-
-consecutiveVictory : Model -> TeamNumber -> Model
-consecutiveVictory model teamNumber =
-  case teamNumber of
-    Team1 ->
-      { model 
-      | team1 = Team.updateConsecutiveVictory model.team1 True
-      , team2 = Team.updateConsecutiveVictory model.team2 False
-      }
-    Team2 ->
-      { model 
-      | team1 = Team.updateConsecutiveVictory model.team1 False
-      , team2 = Team.updateConsecutiveVictory model.team2 True
-      }
-
-
-updateScore : Model -> Model
-updateScore model =
-  let
-    team1Score = Team.calculateScore model.team1
-    team2Score = Team.calculateScore model.team2
-  in
-    { model
-    | team1 = Team.updateScore model.team1 team1Score
-    , team2 = Team.updateScore model.team2 team2Score
-    }
+getPlayerBonus : Model -> (Player, Bet) -> Int
+getPlayerBonus model (player, bet) =
+  (getScore bet) * (
+    case model.firstOut of
+      One p -> if p == player then 1 else -1
+      Team (_, Just p) -> if p == player then 1 else -1
+      _ -> -1
+  )
 
 
 reset : Model -> Model
 reset model =
-  { model | team1 = Team.reset model.team1, team2 = Team.reset model.team2 }
+  { model
+  | north = (North, Zero)
+  , south = (South, Zero)
+  , east = (East, Zero)
+  , west = (West, Zero)
+  , firstOut = None
+  , vertTurnScore = 50
+  }
 
 
 -- VIEW
@@ -190,65 +234,31 @@ view model =
 viewTeams : Model -> Html Msg
 viewTeams model =
   div [ css [ displayFlex, flexDirection row ] ]
-    [ viewTeam model Team1
-    , viewTeam model Team2
+    [ viewTeam model model.vertScore model.north model.south
+    , viewTeam model model.horzScore model.east model.west
     ]
 
 
-viewTeam : Model -> TeamNumber -> Html Msg
-viewTeam model teamNumber =
+viewTeam : Model -> Int -> (Player, Bet) -> (Player, Bet) -> Html Msg
+viewTeam model score player1 player2 =
   div [ css [ displayFlex, flexDirection column ] ]
-    [ viewTeamName model teamNumber
-    , viewTeamScore model teamNumber
-    , viewPlayer model teamNumber Team.Player1
-    , viewPlayer model teamNumber Team.Player2
+    [ text (String.fromInt score)
+    , viewPlayer model player1
+    , viewPlayer model player2
     ]
-  
-
-viewTeamName : Model -> TeamNumber -> Html Msg
-viewTeamName model teamNumber =
-  input
-    [ placeholder (getTeam model teamNumber).name
-    , value (getTeam model teamNumber).name
-    , onInput (ChangeTeamName teamNumber)
-    ]
-    []
-  
-
-viewTeamScore : Model -> TeamNumber -> Html Msg
-viewTeamScore model teamNumber =
-  text (String.fromInt (getTeam model teamNumber).score)
 
 
-viewPlayer : Model -> TeamNumber -> PlayerNumber -> Html Msg
-viewPlayer model teamNumber playerNumber =
+viewPlayer : Model -> (Player, Bet) -> Html Msg
+viewPlayer model playerBet =
   div [ css [ displayFlex, flexDirection column ] ]
-    [ viewPlayerName model teamNumber playerNumber
-    , viewPlayerBet model teamNumber playerNumber
+    [ viewPlayerBet model playerBet
     ]
-  
 
-viewPlayerName : Model -> TeamNumber -> PlayerNumber -> Html Msg
-viewPlayerName model teamNumber playerNumber =
+
+viewPlayerBet : Model -> (Player, Bet) -> Html Msg
+viewPlayerBet model (player, bet) =
   let
-    team = getTeam model teamNumber
-    name = (Team.getPlayer team playerNumber).name
-  in
-    input
-      [ placeholder name
-      , value name
-      , onInput (ChangePlayerName teamNumber playerNumber)
-      ]
-      []
-
-
-viewPlayerBet : Model -> TeamNumber -> PlayerNumber -> Html Msg
-viewPlayerBet model teamNumber playerNumber =
-  let
-    team = getTeam model teamNumber
-    playerId = getPlayerId teamNumber playerNumber
-    bet = (Team.getPlayer team playerNumber).bet
-    (betType, success) = Bet.destructure bet
+    playerId = getPlayerId player
   in  
     div [ css [ displayFlex, flexDirection column ] ]
       [ div [ css [ displayFlex, flexDirection row ] ]
@@ -256,28 +266,33 @@ viewPlayerBet model teamNumber playerNumber =
               ("none" ++ "-" ++ playerId)
               "None"
               ("bet" ++ "-" ++ playerId)
-              (bet == Bet.None)
-              (ChangePlayerBet teamNumber playerNumber Bet.None)          
+              (bet == Zero)
+              (ChangePlayerBet player Zero)          
           , labeledRadio
               ("tichu" ++ "-" ++ playerId)
               "Tichu"
               ("bet" ++ "-" ++ playerId)
-              (Bet.isBetType bet Bet.Tichu)
-              (ChangePlayerBet teamNumber playerNumber (Bet.Tichu False))
+              (bet == Tichu)
+              (ChangePlayerBet player Tichu)
           , labeledRadio
               ("grand" ++ "-" ++ playerId)
               "Grand Tichu"
               ("bet"  ++ "-" ++ playerId)
-              (Bet.isBetType bet Bet.GrandTichu)
-              (ChangePlayerBet teamNumber playerNumber (Bet.GrandTichu False))
+              (bet == GrandTichu)
+              (ChangePlayerBet player GrandTichu)
           ]
-      , if bet /= Bet.None then
+      , if bet /= Zero then
           div []
             [ input
             [ type_ "checkbox"
             , id ("success" ++ "-" ++ playerId)
-            , Html.Styled.Attributes.checked success
-            , onCheck (ChangePlayerBetResult teamNumber playerNumber betType) ] []
+            , Html.Styled.Attributes.checked (
+              case model.firstOut of
+                One p -> p == player
+                Team (_, Just p) -> p == player
+                _ -> False 
+            )
+            , onCheck (ChangeFirstOut player) ] []
             , label [ for ("success" ++ "-" ++ playerId) ] [ text "Successful" ]
             ]
         else
@@ -288,33 +303,43 @@ viewPlayerBet model teamNumber playerNumber =
 viewTeamTurnScore : Model -> Html Msg
 viewTeamTurnScore model =
   div [ css [ displayFlex, flexDirection row ] ]
-    [ text (String.fromInt model.team1.turnScore)
+    [ text (String.fromInt model.vertTurnScore)
     , input
       [ type_ "range"
-      , Html.Styled.Attributes.min "0"
-      , Html.Styled.Attributes.max "100"
-      , value (String.fromInt model.team1.turnScore)
+      , Html.Styled.Attributes.min "-25"
+      , Html.Styled.Attributes.max "125"
+      , value (String.fromInt model.vertTurnScore)
       , step "5"
       , onInput ChangeTeamScore ] []
-    , text (String.fromInt model.team2.turnScore)
+    , text (String.fromInt (100 - model.vertTurnScore))
     ]
 
 
 viewConsecutiveVictory : Model -> Html Msg
 viewConsecutiveVictory model =
   div [ css [ displayFlex, flexDirection row ] ]
-    [ labeledRadio
-        "cv-team1"
-        "Consecutive"
-        "cv"
-        model.team1.consecutiveVictory
-        (ConsecutiveVictory Team1)
-    , labeledRadio
-        "cv-team2"
-        "Consecutive"
-        "cv"
-        model.team2.consecutiveVictory
-        (ConsecutiveVictory Team2)
+    [ input
+      [ type_ "checkbox"
+      , id "vert-cv"
+      , Html.Styled.Attributes.checked
+        (case model.firstOut of
+          Team (Vertical, _) -> True      
+          _ -> False
+        )
+      , onCheck (ConsecutiveVictory Vertical)
+      ][]
+    , label [ for "vert-cv" ] [ text "Consecutive" ]
+    , input
+      [ type_ "checkbox"
+      , id "horz-cv"
+      , Html.Styled.Attributes.checked
+        (case model.firstOut of
+          Team (Horizontal, _) -> True      
+          _ -> False
+        )
+      , onCheck (ConsecutiveVictory Horizontal)
+      ][]
+    , label [ for "horz-cv" ] [ text "Consecutive" ]
     ]
 
 
