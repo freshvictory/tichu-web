@@ -161,10 +161,15 @@ consecutiveVictory : Model -> Team -> Bool -> Model
 consecutiveVictory model team result =
   let
     firstOut =
-      case model.firstOut of
-        None -> Team (team, Nothing)
-        One player -> if inTeam player team then Team (team, Just player) else Team (team, Nothing)
-        Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
+      if not result then
+        case model.firstOut of
+          Team (t, Just p) -> One p
+          _ -> None
+      else
+        case model.firstOut of
+          None -> Team (team, Nothing)
+          One player -> if inTeam player team then Team (team, Just player) else Team (team, Nothing)
+          Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
   in
     { model | firstOut = firstOut }
     
@@ -176,21 +181,21 @@ scoreAll model =
     let
       vertScore
         = model.vertScore
-        + model.vertTurnScore
         + getPlayerBonus model model.north
         + getPlayerBonus model model.south
         + (case model.firstOut of
-            Team (Vertical, _) -> 200        
-            _ -> 0
+            Team (Vertical, _) -> 200
+            Team (Horizontal, _) -> 0      
+            _ -> model.vertTurnScore
           )
       horzScore
         = model.horzScore
-        + (100 - model.vertTurnScore)
         + getPlayerBonus model model.west
         + getPlayerBonus model model.east
         + (case model.firstOut of
-            Team (Horizontal, _) -> 200        
-            _ -> 0
+            Team (Horizontal, _) -> 200
+            Team (Vertical, _) -> 0
+            _ -> (100 - model.vertTurnScore)
           )
     in
       { model | vertScore = vertScore, horzScore = horzScore }
