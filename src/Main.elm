@@ -30,6 +30,7 @@ type alias Model =
   , vertTurnScore: Int
   , vertScore: Int
   , horzScore: Int
+  , crashed: Bool
   }
 
 
@@ -98,6 +99,7 @@ init _ =
     , vertTurnScore = 50
     , vertScore = 0
     , horzScore = 0
+    , crashed = False
     }
   , Cmd.none
   )
@@ -111,6 +113,7 @@ type Msg
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
   | ConsecutiveVictory Team Bool
+  | CrashApp
   | Score
 
 
@@ -131,6 +134,8 @@ update msg model =
       )
     ConsecutiveVictory team result ->
       ( consecutiveVictory model team result, Cmd.none )
+    CrashApp ->
+      ( { model | crashed = True }, Cmd.none )
 
 
 changePlayerBet : Model -> Player -> Bet -> Model
@@ -228,12 +233,16 @@ reset model =
 
 view : Model -> Html Msg
 view model =
-  div [ css [ displayFlex, flexDirection column ] ]
-    [ viewTeams model
-    , viewTeamTurnScore model
-    , viewConsecutiveVictory model
-    , button [ onClick Score ] [ text "score" ]
-    ]
+  if model.crashed then
+    text "The app crashed :("
+  else 
+    div [ css [ displayFlex, flexDirection column ] ]
+      [ button [ onClick CrashApp ] [ text "Things are not looking good" ]
+      , viewTeams model
+      , viewTeamTurnScore model
+      , viewConsecutiveVictory model
+      , button [ onClick Score ] [ text "score" ]
+      ]
 
 
 viewTeams : Model -> Html Msg
