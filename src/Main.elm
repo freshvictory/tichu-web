@@ -404,7 +404,7 @@ viewPlayerBet model teamNumber playerNumber =
           let
             (betType, success) = case bet of
                 None ->
-                  Debug.todo "This won't happen"
+                  (\s -> None, False)
                 Tichu s ->
                     (Tichu, s)
                 GrandTichu s ->
