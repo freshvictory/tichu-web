@@ -1,0 +1,1 @@
+A Tichu score calculator.
