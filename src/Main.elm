@@ -109,7 +109,7 @@ init _ =
 -- UPDATE
 
 type Msg
-  = ChangePlayerBet Player Bet String
+  = ChangePlayerBet Player Bet Bool
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
   | ConsecutiveVictory Team Bool
@@ -120,8 +120,8 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ChangePlayerBet playerType bet _ ->
-      ( changePlayerBet model playerType bet, Cmd.none )
+    ChangePlayerBet playerType bet checked ->
+      ( changePlayerBet model playerType (if checked then bet else Zero), Cmd.none )
     ChangeFirstOut playerType result ->
       ( changeFirstOut model playerType result, Cmd.none )
     Score ->
@@ -237,14 +237,14 @@ view model =
     text "The app crashed :("
   else 
     div [ class "app" ]
-      [ if (abs (model.vertScore - model.horzScore)) > 400 then
-          button [ onClick CrashApp ] [ text "Things are not looking good" ]
-        else
-          text ""
-      , viewTeams model
+      [ viewTeams model
       , viewTeamTurnScore model
       , viewConsecutiveVictory model
       , button [ class "score", onClick Score ] [ text "Score" ]
+      , if (abs (model.vertScore - model.horzScore)) > 400 then
+          button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
+        else
+          text ""
       ]
 
 
@@ -277,48 +277,38 @@ viewPlayerBet model (player, bet) =
   in  
     div [ class "bets" ]
       [ div [ class "bet" ]
-          [ labeledRadio
-              ("none" ++ "-" ++ playerId)
-              "None"
-              ("bet" ++ "-" ++ playerId)
-              "bet-radio"
-              "bet-label"
-              (bet == Zero)
-              (ChangePlayerBet player Zero)          
-          , labeledRadio
+          [ labeledCheckbox
               ("tichu" ++ "-" ++ playerId)
               "Tichu"
-              ("bet" ++ "-" ++ playerId)
               "bet-radio"
               "bet-label"
               (bet == Tichu)
               (ChangePlayerBet player Tichu)
-          , labeledRadio
+          , labeledCheckbox
               ("grand" ++ "-" ++ playerId)
               "Grand"
-              ("bet"  ++ "-" ++ playerId)
               "bet-radio"
               "bet-label"
               (bet == GrandTichu)
               (ChangePlayerBet player GrandTichu)
+          , if bet /= Zero then
+              div [ class "success"]
+                [ input
+                [ type_ "checkbox"
+                , class "bet-success"
+                , id ("success" ++ "-" ++ playerId)
+                , Html.Styled.Attributes.checked (
+                  case model.firstOut of
+                    One p -> p == player
+                    Team (_, Just p) -> p == player
+                    _ -> False 
+                )
+                , onCheck (ChangeFirstOut player) ] []
+                , label [ class "bet-success-label", for ("success" ++ "-" ++ playerId) ] [ text "✓" ]
+                ]
+            else
+              text ""
           ]
-      , if bet /= Zero then
-          div [ class "success"]
-            [ input
-            [ type_ "checkbox"
-            , class "bet-success"
-            , id ("success" ++ "-" ++ playerId)
-            , Html.Styled.Attributes.checked (
-              case model.firstOut of
-                One p -> p == player
-                Team (_, Just p) -> p == player
-                _ -> False 
-            )
-            , onCheck (ChangeFirstOut player) ] []
-            , label [ class "bet-success-label", for ("success" ++ "-" ++ playerId) ] [ text "Successful" ]
-            ]
-        else
-          text ""
       ]
 
 
@@ -382,6 +372,19 @@ labeledRadio elemid elemlabel rgroup elemclass labelclass isChecked msg =
       , name rgroup
       , Html.Styled.Attributes.checked isChecked
       , onInput msg
+      ] []
+    , label [ class labelclass, for elemid ] [ text elemlabel ]
+    ]
+
+labeledCheckbox : String -> String -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
+labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
+  div [] 
+    [ input
+      [ type_ "checkbox"
+      , id elemid
+      , class elemclass
+      , Html.Styled.Attributes.checked isChecked
+      , onCheck msg
       ] []
     , label [ class labelclass, for elemid ] [ text elemlabel ]
     ]

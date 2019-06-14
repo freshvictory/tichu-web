@@ -28,22 +28,20 @@
   text-align: center;
   font-size: 30px;
   padding: 5px;
+  margin-top: 20px;
 }
 
 .bets {
-  display: grid;
-  grid-row-gap: 20px;
   text-align: center;
   margin-top: 40px;
 }
 
 .bet {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.success {
-  margin-top: 10px;
+  grid-auto-flow: column;
+  grid-auto-columns: min-content;
+  justify-content: center;
+  grid-column-gap: 15px;
 }
 
 .turn-scores {
@@ -81,35 +79,57 @@
   display: none;
 }
 
-.bet-success:checked + label,
-.bet-radio:checked + label,
-.cv-check:checked + label {
-  background: #DBB004;
-  border-color: #DBB004;
+
+.bet-success:checked + label {
+  color: rgb(113, 190, 68);
+  border: 1px solid rgb(113, 190, 68);
 }
 
-.bet-label,
-.bet-success-label,
-.cv-label {
-  padding: 10px 20px;
-  margin: 0 5px;
-  border-radius: 4px;
-  border: 1px solid #DDD;
+.cv-check:checked + label,
+.bet-radio:checked + label {
+  font-weight: 600;
+  border-bottom: 2px solid #DBB004;
+}
+
+.bet-success-label {
+  padding: 0 2px;
   box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid white;
 }
 
 .score {
   width: 150px;
   padding: 10px 0;
   margin: auto;
-  cursor: pointer;
-  font-size: inherit;
 
   background-color: #DBB004;
-  border: none;
-  border-radius: 4px;
+}
+
+.uh-oh {
+  color: red;
+  font-weight: 500;
+  background: repeating-linear-gradient(
+    45deg,
+    yellow,
+    yellow 10px,
+    black 10px,
+    black 20px
+  );
+  text-shadow:
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+     -1px 1px 0 #000,
+      1px 1px 0 #000;
+}
+
+button {
+  cursor: pointer;
+  font-size: inherit;
   -webkit-appearance: none;
   -moz-appearance: none;
+  border: none;
+  border-radius: 4px;
 }
 
 /* Range element */
