@@ -9,6 +9,11 @@
   height: inherit;
 }
 
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 .app {
   width: 100%;
   display: grid;
@@ -92,7 +97,7 @@
 }
 
 .bet-success-label {
-  padding: 0 2px;
+  padding: 0 3px;
   box-sizing: border-box;
   border-radius: 4px;
   border: 1px solid white;
