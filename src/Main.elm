@@ -211,31 +211,35 @@ scoreAll : Model -> Model
 scoreAll model =
   reset (
     let
-      vertDiff
-        = getPlayerBonus model model.north
-        + getPlayerBonus model model.south
-        + (case model.firstOut of
-            Team (Vertical, _) -> 200
-            Team (Horizontal, _) -> 0      
-            _ -> model.vertTurnScore
-          )
-      vertScore = model.vertScore + vertDiff
-      horzDiff
-        = getPlayerBonus model model.west
-        + getPlayerBonus model model.east
-        + (case model.firstOut of
-            Team (Horizontal, _) -> 200
-            Team (Vertical, _) -> 0
-            _ -> (100 - model.vertTurnScore)
-          )
-      horzScore = model.horzScore + horzDiff
+      vertDiff = getTeamScore
+        model
+        model.north
+        model.south
+        Vertical
+        model.vertTurnScore
+      horzDiff = getTeamScore
+        model
+        model.west
+        model.east
+        Horizontal
+        (100 - model.vertTurnScore)
     in
       { model
-      | vertScore = vertScore
-      , horzScore = horzScore
+      | vertScore = model.vertScore + vertDiff
+      , horzScore = model.horzScore + horzDiff
       , history = (vertDiff, horzDiff) :: model.history
       }
   )
+
+
+getTeamScore : Model -> (Player, Bet) -> (Player, Bet) -> Team -> Int -> Int
+getTeamScore model player1 player2 team score =
+  getPlayerBonus model player1
+  + getPlayerBonus model player2
+  + (case model.firstOut of
+      Team (t, _) -> if t == team then 200 else 0
+      _ -> score
+    )
 
 
 getPlayerBonus : Model -> (Player, Bet) -> Int
