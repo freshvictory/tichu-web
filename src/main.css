@@ -29,6 +29,11 @@ body {
   color: #CCC;
 }
 
+.app.light {
+  background-color: #fff;
+  color: #000;
+}
+
 .safe-area {
   width: 100%;
   height: 100%;
