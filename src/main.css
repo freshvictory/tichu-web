@@ -11,6 +11,9 @@
 
 body {
   margin: 0;
+  width: 100%;
+  height: 100%;
+  position: fixed;
   overflow: hidden;
 }
 
@@ -143,6 +146,7 @@ body {
   width: 150px;
   padding: 10px 0;
   background-color: #DBB004;
+  color: #000;
 }
 
 .undo,
@@ -215,6 +219,7 @@ hr {
 
 .dark button {
   background: #444;
+  color: #CCC;
 }
 
 button {
@@ -225,6 +230,7 @@ button {
   border: none;
   border-radius: 4px;
   background: #CCC;
+  padding: 6px 20px;
 }
 
 /* Range element */
