@@ -1,4 +1,5 @@
 import Browser
+import Browser.Navigation
 import Css exposing (..)
 import Dict exposing (Dict)
 import Html
@@ -31,12 +32,14 @@ type alias Model =
   , vertScore: Int
   , horzScore: Int
   , history: List (Int, Int)
+  , lighting: Lighting
+  , showSettings: Bool
   , crashed: Bool
   }
 
 
-defaultModel : Model
-defaultModel =
+defaultModel : Lighting -> Model
+defaultModel lighting =
   { north = (North, Zero)
   , south = (South, Zero)
   , east = (East, Zero)
@@ -46,6 +49,8 @@ defaultModel =
   , vertScore = 0
   , horzScore = 0
   , history = [(0, 0)]
+  , lighting = lighting
+  , showSettings = False
   , crashed = False
   }
 
@@ -85,6 +90,11 @@ type Team
   | Horizontal
 
 
+type Lighting
+  = Light
+  | Dark
+
+
 inTeam : Player -> Team -> Bool
 inTeam player team =
   case team of
@@ -103,7 +113,7 @@ getPlayerId player =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-  ( defaultModel
+  ( defaultModel Light
   , Cmd.none
   )
 
@@ -120,6 +130,9 @@ type Msg
   | Score
   | Clear
   | Undo
+  | ToggleSettings Bool
+  | Update
+  | ChangeLighting Bool
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -142,9 +155,15 @@ update msg model =
     CrashApp ->
       ( { model | crashed = True }, Cmd.none )
     Clear ->
-      ( defaultModel, Cmd.none )
+      ( defaultModel model.lighting, Cmd.none )
     Undo ->
       ( undo model, Cmd.none )
+    Update ->
+      ( model, Browser.Navigation.reloadAndSkipCache )
+    ChangeLighting checked ->
+      ( { model | lighting = if checked then Light else Dark }, Cmd.none )
+    ToggleSettings checked ->
+      ( { model | showSettings = checked }, Cmd.none )
 
 
 
@@ -271,16 +290,42 @@ view model =
   if model.crashed then
     text "The app crashed :("
   else 
-    div [ class "app" ]
-      [ viewTeams model
-      , viewTeamTurnScore model
-      , viewConsecutiveVictory model
-      , viewActions model
-      , if (abs (model.vertScore - model.horzScore)) > 400 then
-          button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
-        else
-          text ""
+    div [ class ("app " ++ if model.lighting == Light then "light" else "dark" ) ]
+      [ div [ class "safe-area" ]
+        [ viewScorer model
+        , if model.showSettings then
+            shield (ToggleSettings False)
+          else
+            text ""
+        , div [ class "settings-container" ]
+          [ if model.showSettings then
+              viewSettings model
+            else
+              text ""
+          , labeledCheckbox
+              "settings-toggle"
+              "Settings"
+              "settings-toggle"
+              "settings-label"
+              model.showSettings
+              ToggleSettings
+          ]
+        ]
       ]
+
+
+viewScorer : Model -> Html Msg
+viewScorer model =
+  div [ class "scorer" ] 
+    [ viewTeams model
+    , viewTeamTurnScore model
+    , viewConsecutiveVictory model
+    , viewActions model
+    , if (abs (model.vertScore - model.horzScore)) > 400 then
+        button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
+      else
+        text ""
+    ]
 
 
 viewTeams : Model -> Html Msg
@@ -309,6 +354,12 @@ viewPlayerBet : Model -> (Player, Bet) -> Html Msg
 viewPlayerBet model (player, bet) =
   let
     playerId = getPlayerId player
+    successful = bet /= Zero
+      && (case model.firstOut of
+            One p -> p == player
+            Team (_, Just p) -> p == player
+            _ -> False 
+          )
   in  
     div [ class "bets" ]
       [ div [ class "bet" ]
@@ -332,14 +383,13 @@ viewPlayerBet model (player, bet) =
                 [ type_ "checkbox"
                 , class "bet-success"
                 , id ("success" ++ "-" ++ playerId)
-                , Html.Styled.Attributes.checked (
-                  case model.firstOut of
-                    One p -> p == player
-                    Team (_, Just p) -> p == player
-                    _ -> False 
-                )
+                , Html.Styled.Attributes.checked successful
                 , onCheck (ChangeFirstOut player) ] []
-                , label [ class "bet-success-label", for ("success" ++ "-" ++ playerId) ] [ text "✓" ]
+                , label
+                  [ class ("bet-success-label" ++ if successful then " successful" else "" )
+                  , for ("success" ++ "-" ++ playerId)
+                  ]
+                  [ text (if successful then "✓" else "✗") ]
                 ]
             else
               text ""
@@ -406,6 +456,21 @@ viewActions model =
     ]
 
 
+viewSettings : Model -> Html Msg
+viewSettings model =
+  div [ class "settings" ]
+    [ labeledCheckbox
+        "lighting"
+        (if model.lighting == Light then "Dark mode" else "Light mode")
+        "lighting"
+        "lighting-label"
+        (model.lighting == Light)
+        ChangeLighting
+    , hr [] []
+    , button [ class "update", onClick Update ] [ text "Reload" ] 
+    ]
+
+
 labeledRadio : String -> String -> String -> String -> String -> Bool -> (String -> Msg) -> Html Msg
 labeledRadio elemid elemlabel rgroup elemclass labelclass isChecked msg =
   div []
@@ -432,3 +497,18 @@ labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
       ] []
     , label [ class labelclass, for elemid ] [ text elemlabel ]
     ]
+
+
+shield : Msg -> Html Msg
+shield msg =
+  div 
+    [ css
+      [ position absolute
+      , left (px 0)
+      , top (px 0)
+      , right (px 0)
+      , bottom (px 0)
+      ]
+    , onClick msg
+    ]
+    []
