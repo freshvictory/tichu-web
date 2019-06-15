@@ -103,12 +103,20 @@ body {
   border: 1px solid white;
 }
 
+.view-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
 .score {
   width: 150px;
   padding: 10px 0;
-  margin: auto;
-
   background-color: #DBB004;
+}
+
+.undo,
+.clear {
+  padding: 10px 20px;
 }
 
 .uh-oh {

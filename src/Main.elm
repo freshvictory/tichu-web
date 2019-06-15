@@ -30,7 +30,23 @@ type alias Model =
   , vertTurnScore: Int
   , vertScore: Int
   , horzScore: Int
+  , history: List (Int, Int)
   , crashed: Bool
+  }
+
+
+defaultModel : Model
+defaultModel =
+  { north = (North, Zero)
+  , south = (South, Zero)
+  , east = (East, Zero)
+  , west = (West, Zero)
+  , firstOut = None
+  , vertTurnScore = 50
+  , vertScore = 0
+  , horzScore = 0
+  , history = [(0, 0)]
+  , crashed = False
   }
 
 
@@ -38,10 +54,6 @@ type Bet
   = Zero
   | Tichu
   | GrandTichu
-
-
-default : Bet
-default = Zero
 
 
 getScore : Bet -> Int
@@ -91,16 +103,7 @@ getPlayerId player =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-  ( { north = (North, Zero)
-    , south = (South, Zero)
-    , east = (East, Zero)
-    , west = (West, Zero)
-    , firstOut = None
-    , vertTurnScore = 50
-    , vertScore = 0
-    , horzScore = 0
-    , crashed = False
-    }
+  ( defaultModel
   , Cmd.none
   )
 
@@ -115,6 +118,8 @@ type Msg
   | ConsecutiveVictory Team Bool
   | CrashApp
   | Score
+  | Clear
+  | Undo
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -136,6 +141,11 @@ update msg model =
       ( consecutiveVictory model team result, Cmd.none )
     CrashApp ->
       ( { model | crashed = True }, Cmd.none )
+    Clear ->
+      ( defaultModel, Cmd.none )
+    Undo ->
+      ( undo model, Cmd.none )
+
 
 
 changePlayerBet : Model -> Player -> Bet -> Model
@@ -177,33 +187,54 @@ consecutiveVictory model team result =
           Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
   in
     { model | firstOut = firstOut }
-    
+
+
+undo : Model -> Model
+undo model =
+  let
+    ((vS, hS), history) = case model.history of
+      [] ->
+        ((0, 0), [(0, 0)])
+      [x] ->
+        (x, [(0, 0)])
+      (x :: xs) ->
+        (x, xs)
+  in
+    { model
+    | vertScore = model.vertScore - vS
+    , horzScore = model.horzScore - hS
+    , history = history
+    }  
 
 
 scoreAll : Model -> Model
 scoreAll model =
   reset (
     let
-      vertScore
-        = model.vertScore
-        + getPlayerBonus model model.north
+      vertDiff
+        = getPlayerBonus model model.north
         + getPlayerBonus model model.south
         + (case model.firstOut of
             Team (Vertical, _) -> 200
             Team (Horizontal, _) -> 0      
             _ -> model.vertTurnScore
           )
-      horzScore
-        = model.horzScore
-        + getPlayerBonus model model.west
+      vertScore = model.vertScore + vertDiff
+      horzDiff
+        = getPlayerBonus model model.west
         + getPlayerBonus model model.east
         + (case model.firstOut of
             Team (Horizontal, _) -> 200
             Team (Vertical, _) -> 0
             _ -> (100 - model.vertTurnScore)
           )
+      horzScore = model.horzScore + horzDiff
     in
-      { model | vertScore = vertScore, horzScore = horzScore }
+      { model
+      | vertScore = vertScore
+      , horzScore = horzScore
+      , history = (vertDiff, horzDiff) :: model.history
+      }
   )
 
 
@@ -240,7 +271,7 @@ view model =
       [ viewTeams model
       , viewTeamTurnScore model
       , viewConsecutiveVictory model
-      , button [ class "score", onClick Score ] [ text "Score" ]
+      , viewActions model
       , if (abs (model.vertScore - model.horzScore)) > 400 then
           button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
         else
@@ -359,6 +390,15 @@ viewConsecutiveVictory model =
         ][]
       , label [ class "cv-label", for "horz-cv" ] [ text "Consecutive" ]
       ]
+    ]
+
+
+viewActions : Model -> Html Msg
+viewActions model =
+  div [ class "view-actions" ]
+    [ button [ class "undo", onClick Undo ] [ text "Undo" ]
+    , button [ class "score", onClick Score ] [ text "Score" ]
+    , button [ class "clear", onClick Clear ] [ text "Reset" ]
     ]
 
 
