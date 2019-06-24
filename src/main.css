@@ -159,9 +159,11 @@ body {
   padding: 10px 20px;
 }
 
-.uh-oh {
+.dark .uh-oh,
+.light .uh-oh {
   color: red;
   font-weight: 500;
+  border: 1px red solid;
   background: repeating-linear-gradient(
     45deg,
     yellow,
