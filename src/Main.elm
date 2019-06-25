@@ -442,9 +442,11 @@ viewTeam model team name score player1 player2 =
           , border zero
           , fontSize (px 20)
           , marginTop (px 20)
-          , display block
+          , marginLeft auto
+          , marginRight auto
+          , displayFlex
           , paddingBottom (px 10)
-          , Css.width (pct 100)
+          , Css.width (pct 90)
           , focus [ outline none ]
           , backgroundColor transparent
           , color colors.text
@@ -644,7 +646,7 @@ confirm model =
           [
             div 
             [ css
-              [ backgroundColor colors.menuBackground
+              [ backgroundColor colors.background
               , borderRadius (px 30)
               , border3 (px 1) solid colors.border
               , padding (px 20)
