@@ -1,3 +1,5 @@
+port module Main exposing (..)
+
 import Browser
 import Browser.Navigation
 import Css exposing (..)
@@ -6,18 +8,36 @@ import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Json.Decode exposing (..)
 
 
 -- MAIN
 
-main : Program () Model Msg
+main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
     , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
-    , update = update
+    , update = updateWithStorage
     , subscriptions = \_ -> Sub.none
     }
+
+
+port setStorage : State -> Cmd msg
+
+
+{-| We want to `setStorage` on every update. This function adds the setStorage
+command for every step of the update function.
+-}
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, cmds ) =
+            update msg model
+    in
+        ( newModel
+        , Cmd.batch [ setStorage (getState newModel), cmds ]
+        )
 
 
 -- MODEL
@@ -41,8 +61,8 @@ type alias Model =
   }
 
 
-defaultModel : Lighting -> Model
-defaultModel lighting =
+defaultModel : Lighting -> String -> Model
+defaultModel lighting vertName =
   { north = (North, Zero)
   , south = (South, Zero)
   , east = (East, Zero)
@@ -52,12 +72,50 @@ defaultModel lighting =
   , vertScore = 0
   , horzScore = 0
   , history = [(0, 0)]
-  , vertName = "Team 1"
+  , vertName = vertName
   , horzName = "Team 2"
   , lighting = lighting
   , showSettings = False
   , crashed = False
   , confirm = Hidden
+  }
+
+
+modelFromState : State -> Model
+modelFromState state =
+  { north = (North, Zero)
+  , south = (South, Zero)
+  , east = (East, Zero)
+  , west = (West, Zero)
+  , firstOut = None
+  , vertTurnScore = 50
+  , vertScore = 0
+  , horzScore = 0
+  , history = [(0, 0)]
+  , vertName = state.vertName
+  , horzName = "Team 2"
+  , lighting = if state.lighting == "dark" then Dark else Light
+  , showSettings = False
+  , crashed = False
+  , confirm = Hidden
+  }
+
+
+type alias State =
+  { lighting: String
+  , vertName: String
+  }
+
+
+decodeState : Decoder State
+decodeState =
+  Json.Decode.map2 State (field "lighting" string) (field "vertName" string)
+
+
+getState : Model -> State
+getState model =
+  { lighting = if model.lighting == Light then "light" else "dark"
+  , vertName = model.vertName
   }
 
 
@@ -122,9 +180,15 @@ getPlayerId player =
     West -> "west"
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-  ( defaultModel Light
+init : Json.Decode.Value -> ( Model, Cmd Msg )
+init state =
+  let
+    decodedState = Json.Decode.decodeValue decodeState state
+    finalState = case decodedState of
+      Ok s -> s
+      Err _ -> { lighting = "light", vertName = "Team 1" }
+  in
+  ( modelFromState finalState
   , Cmd.none
   )
 
@@ -171,7 +235,7 @@ update msg model =
     CrashApp ->
       ( { model | crashed = True }, Cmd.none )
     Clear ->
-      ( defaultModel model.lighting, Cmd.none )
+      ( defaultModel model.lighting model.vertName, Cmd.none )
     Undo ->
       ( undo model, Cmd.none )
     Update ->
@@ -371,7 +435,7 @@ viewTeam model team name score player1 player2 =
   div [ class "team" ]
     [ input
       [ type_ "text"
-      , value name
+      , Html.Styled.Attributes.value name
       , onInput (ChangeTeamName team)
       , css
           [ textAlign center
@@ -382,6 +446,8 @@ viewTeam model team name score player1 player2 =
           , paddingBottom (px 10)
           , Css.width (pct 100)
           , focus [ outline none ]
+          , backgroundColor transparent
+          , color colors.text
           ]
       ]
       []
@@ -452,7 +518,7 @@ viewTeamTurnScore model =
       , class "range"
       , Html.Styled.Attributes.min "-25"
       , Html.Styled.Attributes.max "125"
-      , value (String.fromInt model.vertTurnScore)
+      , Html.Styled.Attributes.value (String.fromInt model.vertTurnScore)
       , step "5"
       , onInput ChangeTeamScore ] []
     , div [ class "turn-score horz" ] [ text (String.fromInt (100 - model.vertTurnScore)) ]
