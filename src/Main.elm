@@ -32,6 +32,8 @@ type alias Model =
   , vertScore: Int
   , horzScore: Int
   , history: List (Int, Int)
+  , vertName: String
+  , horzName: String
   , lighting: Lighting
   , showSettings: Bool
   , crashed: Bool
@@ -50,6 +52,8 @@ defaultModel lighting =
   , vertScore = 0
   , horzScore = 0
   , history = [(0, 0)]
+  , vertName = "Team 1"
+  , horzName = "Team 2"
   , lighting = lighting
   , showSettings = False
   , crashed = False
@@ -132,6 +136,7 @@ type Msg
   = ChangePlayerBet Player Bet Bool
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
+  | ChangeTeamName Team String
   | ConsecutiveVictory Team Bool
   | CrashApp
   | Score
@@ -159,6 +164,8 @@ update msg model =
           Just s -> { model | vertTurnScore = s }
       , Cmd.none
       )
+    ChangeTeamName team name ->
+      ( changeTeamName model team name, Cmd.none )
     ConsecutiveVictory team result ->
       ( consecutiveVictory model team result, Cmd.none )
     CrashApp ->
@@ -187,7 +194,13 @@ changePlayerBet model player bet =
     South -> { model | south = (player, bet) }
     East -> { model | east = (player, bet) }
     West -> { model | west = (player, bet) }
-  
+
+
+changeTeamName : Model -> Team -> String -> Model
+changeTeamName model team name =
+  case team of
+    Vertical -> { model | vertName = name }
+    Horizontal -> { model | horzName = name }  
 
 
 changeFirstOut : Model -> Player -> Bool -> Model
@@ -345,15 +358,34 @@ viewScorer model =
 viewTeams : Model -> Html Msg
 viewTeams model =
   div [ class "teams" ]
-    [ viewTeam model model.vertScore model.north model.south
-    , viewTeam model model.horzScore model.east model.west
+    [ viewTeam model Vertical model.vertName model.vertScore model.north model.south
+    , viewTeam model Horizontal model.horzName model.horzScore model.east model.west
     ]
 
 
-viewTeam : Model -> Int -> (Player, Bet) -> (Player, Bet) -> Html Msg
-viewTeam model score player1 player2 =
+viewTeam : Model -> Team -> String -> Int -> (Player, Bet) -> (Player, Bet) -> Html Msg
+viewTeam model team name score player1 player2 =
+  let
+    colors = colorValues model.lighting
+  in
   div [ class "team" ]
-    [ div [ class "team-score"] [ text (String.fromInt score) ]
+    [ input
+      [ type_ "text"
+      , value name
+      , onInput (ChangeTeamName team)
+      , css
+          [ textAlign center
+          , border zero
+          , fontSize (px 20)
+          , marginTop (px 20)
+          , display block
+          , paddingBottom (px 10)
+          , Css.width (pct 100)
+          , focus [ outline none ]
+          ]
+      ]
+      []
+    , div [ class "team-score"] [ text (String.fromInt score) ]
     , viewPlayer model player1
     , viewPlayer model player2
     ]
