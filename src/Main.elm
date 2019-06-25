@@ -225,7 +225,7 @@ update msg model =
     ChangeTeamScore val ->
       ( case String.toInt val of
           Nothing -> model
-          Just s -> { model | vertTurnScore = s }
+          Just s -> if s >= -25 && s <= 125 then { model | vertTurnScore = s } else model
       , Cmd.none
       )
     ChangeTeamName team name ->
@@ -512,7 +512,12 @@ viewPlayerBet model (player, bet) =
 viewTeamTurnScore : Model -> Html Msg
 viewTeamTurnScore model =
   div [ class "turn-scores", css [ displayFlex, flexDirection row ] ]
-    [ div [ class "turn-score vert" ] [ text (String.fromInt model.vertTurnScore) ]
+    [ button
+        [ class "score-step"
+        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore - 5)))
+        ]
+        [ text "<" ]
+    , div [ class "turn-score vert" ] [ text (String.fromInt model.vertTurnScore) ]
     , input
       [ type_ "range"
       , class "range"
@@ -522,6 +527,11 @@ viewTeamTurnScore model =
       , step "5"
       , onInput ChangeTeamScore ] []
     , div [ class "turn-score horz" ] [ text (String.fromInt (100 - model.vertTurnScore)) ]
+    , button
+        [ class "score-step"
+        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore + 5)))
+        ]
+        [ text ">" ]
     ]
 
 
