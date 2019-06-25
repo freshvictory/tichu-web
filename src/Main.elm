@@ -35,6 +35,7 @@ type alias Model =
   , lighting: Lighting
   , showSettings: Bool
   , crashed: Bool
+  , confirm: Confirm
   }
 
 
@@ -52,6 +53,7 @@ defaultModel lighting =
   , lighting = lighting
   , showSettings = False
   , crashed = False
+  , confirm = Hidden
   }
 
 
@@ -95,6 +97,11 @@ type Lighting
   | Dark
 
 
+type Confirm
+  = Hidden
+  | Active String Msg
+
+
 inTeam : Player -> Team -> Bool
 inTeam player team =
   case team of
@@ -133,6 +140,8 @@ type Msg
   | ToggleSettings Bool
   | Update
   | ChangeLighting Bool
+  | ShowConfirmation String Msg
+  | CloseConfirmation
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -164,6 +173,10 @@ update msg model =
       ( { model | lighting = if checked then Light else Dark }, Cmd.none )
     ToggleSettings checked ->
       ( { model | showSettings = checked }, Cmd.none )
+    ShowConfirmation query confirmMsg ->
+      ( { model | confirm = Active query confirmMsg }, Cmd.none )
+    CloseConfirmation ->
+      ( { model | confirm = Hidden }, Cmd.none )
 
 
 
@@ -294,9 +307,10 @@ view model =
       [ div [ class "safe-area" ]
         [ viewScorer model
         , if model.showSettings then
-            shield (ToggleSettings False)
+            shield (ToggleSettings False) False
           else
             text ""
+        , confirm model 
         , div [ class "settings-container" ]
           [ if model.showSettings then
               viewSettings model
@@ -452,7 +466,7 @@ viewActions model =
   div [ class "view-actions" ]
     [ button [ class "undo", onClick Undo ] [ text "Undo" ]
     , button [ class "score", onClick Score ] [ text "Score" ]
-    , button [ class "clear", onClick Clear ] [ text "Reset" ]
+    , button [ class "clear", onClick (ShowConfirmation "Are you sure you want to reset?" Clear) ] [ text "Reset" ]
     ]
 
 
@@ -499,8 +513,70 @@ labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
     ]
 
 
-shield : Msg -> Html Msg
-shield msg =
+confirm : Model -> Html Msg
+confirm model =
+  let
+    colors = colorValues model.lighting
+  in
+  case model.confirm of
+    Hidden -> text ""
+    Active query msg ->
+      div
+        []
+        [ shield CloseConfirmation True
+        , div
+          [ css
+            [ position absolute
+            , left (pct 50)
+            , top (pct 50)
+            , transform (translate2 (pct -50) (pct -66))
+            , minWidth maxContent
+            ]
+          ]
+          [
+            div 
+            [ css
+              [ backgroundColor colors.menuBackground
+              , borderRadius (px 30)
+              , border3 (px 1) solid colors.border
+              , padding (px 20)
+              ]
+            ]
+            [ div
+              [ css
+                [ textAlign center
+                , marginTop (px 25)
+                , marginBottom (px 45)
+                ]
+              ]
+              [ text query ]
+            , div
+              [ css
+                [ displayFlex
+                ]
+              ]
+              [ button
+                [ onClick CloseConfirmation
+                , css [ confirmButtonStyle ]
+                ]
+                [ text "No" ]
+              , button
+                [ onClick msg
+                , css
+                  [ confirmButtonStyle
+                  , ctaStyle
+                  , marginLeft auto
+                  ]
+                ]
+                [ text "Yes" ]
+              ]
+            ]
+          ]
+        ]
+
+
+shield : Msg -> Bool -> Html Msg
+shield msg dim =
   div 
     [ css
       [ position absolute
@@ -508,7 +584,61 @@ shield msg =
       , top (px 0)
       , right (px 0)
       , bottom (px 0)
+      , if dim then
+          batch
+          [ backgroundColor (hex "#111")
+          , opacity (num 0.2)
+          ]
+        else
+          batch []
       ]
     , onClick msg
     ]
     []
+
+
+type alias Colors =
+  { border: Color
+  , background: Color
+  , menuBackground: Color
+  , cta: Color
+  , ctaText: Color
+  , text: Color
+  }
+
+
+colorValues : Lighting -> Colors
+colorValues lighting =
+  if lighting == Dark then
+    { border = (hex "333")
+    , background = (hex "000")
+    , menuBackground = (hex "111")
+    , text = (hex "CCC")
+    , cta = (hex "DBB004")
+    , ctaText = (hex "000")
+    }
+  else
+    { border = (hex "CCC")
+    , background = (hex "FFF")
+    , menuBackground = (hex "EEE")
+    , cta = (hex "DBB004")
+    , ctaText = (hex "000")
+    , text = (hex "000")
+    }
+
+
+confirmButtonStyle : Style
+confirmButtonStyle =
+  batch
+    [ borderRadius (px 10)
+    , Css.width (pct 45)
+    , Css.height (px 40)
+    ]
+
+
+ctaStyle : Style
+ctaStyle = 
+ batch
+  [ important (color (hex "000"))
+  , important (backgroundColor (hex "DBB004"))
+  ]
