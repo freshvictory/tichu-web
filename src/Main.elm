@@ -255,7 +255,10 @@ update msg model =
     ConsecutiveVictory team result ->
       ( consecutiveVictory model team result, Cmd.none )
     CrashApp ->
-      ( { model | crashed = True }, Cmd.none )
+      let
+        resetModel = defaultModel model.lighting model.vertName model.horzName
+      in
+        ( { resetModel | crashed = True }, Cmd.none )
     Clear ->
       ( defaultModel model.lighting model.vertName model.horzName, Cmd.none )
     Undo ->
