@@ -9,6 +9,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Decode exposing (..)
+import Json.Decode.Extra exposing (..)
 
 
 -- MAIN
@@ -61,8 +62,8 @@ type alias Model =
   }
 
 
-defaultModel : Lighting -> String -> Model
-defaultModel lighting vertName =
+defaultModel : Lighting -> String -> String -> Model
+defaultModel lighting vertName horzName =
   { north = (North, Zero)
   , south = (South, Zero)
   , east = (East, Zero)
@@ -71,9 +72,9 @@ defaultModel lighting vertName =
   , vertTurnScore = 50
   , vertScore = 0
   , horzScore = 0
-  , history = [(0, 0)]
+  , history = [(0,0)]
   , vertName = vertName
-  , horzName = "Team 2"
+  , horzName = horzName
   , lighting = lighting
   , showSettings = False
   , crashed = False
@@ -89,11 +90,11 @@ modelFromState state =
   , west = (West, Zero)
   , firstOut = None
   , vertTurnScore = 50
-  , vertScore = 0
-  , horzScore = 0
-  , history = [(0, 0)]
+  , vertScore = state.vertScore
+  , horzScore = state.horzScore
+  , history = state.history
   , vertName = state.vertName
-  , horzName = "Team 2"
+  , horzName = state.horzName
   , lighting = if state.lighting == "dark" then Dark else Light
   , showSettings = False
   , crashed = False
@@ -104,18 +105,32 @@ modelFromState state =
 type alias State =
   { lighting: String
   , vertName: String
+  , horzName: String
+  , vertScore: Int
+  , horzScore: Int
+  , history: List (Int, Int)
   }
 
 
 decodeState : Decoder State
 decodeState =
-  Json.Decode.map2 State (field "lighting" string) (field "vertName" string)
+  Json.Decode.map6 State
+    (field "lighting" string)
+    (field "vertName" string)
+    (field "horzName" string)
+    (field "vertScore" Json.Decode.int)
+    (field "horzScore" Json.Decode.int)
+    (field "history" (Json.Decode.list (decodeAsTuple2 "0" Json.Decode.int "1" Json.Decode.int)))
 
 
 getState : Model -> State
 getState model =
   { lighting = if model.lighting == Light then "light" else "dark"
   , vertName = model.vertName
+  , horzName = model.horzName
+  , vertScore = model.vertScore
+  , horzScore = model.horzScore
+  , history = model.history
   }
 
 
@@ -186,7 +201,14 @@ init state =
     decodedState = Json.Decode.decodeValue decodeState state
     finalState = case decodedState of
       Ok s -> s
-      Err _ -> { lighting = "light", vertName = "Team 1" }
+      Err _ ->
+        { lighting = "light"
+        , vertName = "Us"
+        , horzName = "Them"
+        , vertScore = 0
+        , horzScore = 0
+        , history = [(0,0)]
+        }
   in
   ( modelFromState finalState
   , Cmd.none
@@ -235,7 +257,7 @@ update msg model =
     CrashApp ->
       ( { model | crashed = True }, Cmd.none )
     Clear ->
-      ( defaultModel model.lighting model.vertName, Cmd.none )
+      ( defaultModel model.lighting model.vertName model.horzName, Cmd.none )
     Undo ->
       ( undo model, Cmd.none )
     Update ->
@@ -752,3 +774,18 @@ ctaStyle =
   [ important (color (hex "000"))
   , important (backgroundColor (hex "DBB004"))
   ]
+
+
+{-| Decodes two fields into a tuple.
+- https://stackoverflow.com/a/53017452
+-}
+decodeAsTuple2 : String -> Json.Decode.Decoder a -> String -> Json.Decode.Decoder b -> Json.Decode.Decoder (a, b)
+decodeAsTuple2 fieldA decoderA fieldB decoderB =
+    let
+        result : a -> b -> (a, b)
+        result valueA valueB =
+            (valueA, valueB)
+    in
+        Json.Decode.succeed result
+            |> Json.Decode.Extra.andMap (Json.Decode.field fieldA decoderA)
+            |> Json.Decode.Extra.andMap (Json.Decode.field fieldB decoderB)
