@@ -11,4 +11,4 @@ app.ports.setStorage.subscribe(function(state) {
     localStorage.setItem('elm:state', JSON.stringify(state));
 });
 
-registerServiceWorker();
+registerServiceWorker(app);

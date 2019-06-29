@@ -20,11 +20,18 @@ main =
     { init = init
     , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
-    , subscriptions = \_ -> Sub.none
+    , subscriptions = subscriptions
     }
 
 
 port setStorage : State -> Cmd msg
+
+port updateAvailable : (() -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    updateAvailable (\_ -> UpdateAvailable)
 
 
 {-| We want to `setStorage` on every update. This function adds the setStorage
@@ -57,6 +64,7 @@ type alias Model =
   , horzName: String
   , lighting: Lighting
   , showSettings: Bool
+  , updateAvailable: Bool
   , crashed: Bool
   , confirm: Confirm
   }
@@ -77,6 +85,7 @@ defaultModel lighting vertName horzName =
   , horzName = horzName
   , lighting = lighting
   , showSettings = False
+  , updateAvailable = False
   , crashed = False
   , confirm = Hidden
   }
@@ -97,6 +106,7 @@ modelFromState state =
   , horzName = state.horzName
   , lighting = if state.lighting == "dark" then Dark else Light
   , showSettings = False
+  , updateAvailable = False
   , crashed = False
   , confirm = Hidden
   }
@@ -233,6 +243,7 @@ type Msg
   | ChangeLighting Bool
   | ShowConfirmation String Msg
   | CloseConfirmation
+  | UpdateAvailable
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -273,6 +284,8 @@ update msg model =
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
       ( { model | confirm = Hidden }, Cmd.none )
+    UpdateAvailable ->
+      ( { model | updateAvailable = True }, Cmd.none )
 
 
 
@@ -413,7 +426,7 @@ view model =
           else
             text ""
         , confirm model 
-        , div [ class "settings-container" ]
+        , div [ class ("settings-container" ++ (if model.updateAvailable then " avail" else "")) ]
           [ if model.showSettings then
               viewSettings model
             else
@@ -616,7 +629,7 @@ viewSettings model =
         (model.lighting == Light)
         ChangeLighting
     , hr [] []
-    , button [ class "update", onClick Update ] [ text "Reload" ] 
+    , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
     ]
 
 

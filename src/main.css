@@ -197,8 +197,21 @@ body {
   text-align: left;
 }
 
+.settings-container.avail .settings-label:after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 8px;
+  background: red;
+  position: absolute;
+}
+
 .update {
   width: 100%;
+}
+
+.settings-container.avail .update {
+  background: red;
 }
 
 .dark .settings {
