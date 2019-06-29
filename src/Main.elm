@@ -93,23 +93,17 @@ defaultModel lighting vertName horzName =
 
 modelFromState : State -> Model
 modelFromState state =
-  { north = (North, Zero)
-  , south = (South, Zero)
-  , east = (East, Zero)
-  , west = (West, Zero)
-  , firstOut = None
-  , vertTurnScore = 50
-  , vertScore = state.vertScore
-  , horzScore = state.horzScore
-  , history = state.history
-  , vertName = state.vertName
-  , horzName = state.horzName
-  , lighting = if state.lighting == "dark" then Dark else Light
-  , showSettings = False
-  , updateAvailable = False
-  , crashed = False
-  , confirm = Hidden
-  }
+  let
+    model = defaultModel
+      (if state.lighting == "dark" then Dark else Light)
+      state.vertName
+      state.horzName
+  in
+    { model
+    | vertScore = state.vertScore
+    , horzScore = state.horzScore
+    , history = state.history
+    }
 
 
 type alias State =
