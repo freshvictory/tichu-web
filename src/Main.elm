@@ -10,6 +10,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Decode exposing (..)
 import Json.Decode.Extra exposing (..)
+import Scorer exposing (..)
 
 
 -- MAIN
@@ -51,15 +52,7 @@ updateWithStorage msg model =
 -- MODEL
 
 type alias Model =
-  { north: (Player, Bet)
-  , south: (Player, Bet)
-  , east: (Player, Bet)
-  , west: (Player, Bet)
-  , firstOut: FirstOut
-  , vertTurnScore: Int
-  , vertScore: Int
-  , horzScore: Int
-  , history: List (Int, Int)
+  { scorer: Scorer
   , vertName: String
   , horzName: String
   , lighting: Lighting
@@ -72,15 +65,7 @@ type alias Model =
 
 defaultModel : Lighting -> String -> String -> Model
 defaultModel lighting vertName horzName =
-  { north = (North, Zero)
-  , south = (South, Zero)
-  , east = (East, Zero)
-  , west = (West, Zero)
-  , firstOut = None
-  , vertTurnScore = 50
-  , vertScore = 0
-  , horzScore = 0
-  , history = [(0,0)]
+  { scorer = defaultScorer
   , vertName = vertName
   , horzName = horzName
   , lighting = lighting
@@ -98,12 +83,15 @@ modelFromState state =
       (if state.lighting == "dark" then Dark else Light)
       state.vertName
       state.horzName
+    scorer = model.scorer
+    newScorer = 
+      { scorer
+      | vertScore = state.vertScore
+      , horzScore = state.horzScore
+      , history = state.history
+      }
   in
-    { model
-    | vertScore = state.vertScore
-    , horzScore = state.horzScore
-    , history = state.history
-    }
+    { model | scorer = newScorer }
 
 
 type alias State =
@@ -132,45 +120,10 @@ getState model =
   { lighting = if model.lighting == Light then "light" else "dark"
   , vertName = model.vertName
   , horzName = model.horzName
-  , vertScore = model.vertScore
-  , horzScore = model.horzScore
-  , history = model.history
+  , vertScore = model.scorer.vertScore
+  , horzScore = model.scorer.horzScore
+  , history = model.scorer.history
   }
-
-
-type Bet
-  = Zero
-  | Tichu
-  | GrandTichu
-
-
-getScore : Bet -> Int
-getScore bet =
-  case bet of
-      Zero ->
-        0
-      Tichu ->
-        100
-      GrandTichu ->
-        200
-
-
-type Player
-  = North
-  | South
-  | East
-  | West
-
-
-type FirstOut
-  = None
-  | One Player
-  | Team (Team, (Maybe Player))
-
-
-type Team
-  = Vertical
-  | Horizontal
 
 
 type Lighting
@@ -181,22 +134,6 @@ type Lighting
 type Confirm
   = Hidden
   | Active String Msg
-
-
-inTeam : Player -> Team -> Bool
-inTeam player team =
-  case team of
-    Vertical -> player == North || player == South
-    Horizontal -> player == East || player == West
-
-
-getPlayerId : Player -> String
-getPlayerId player =
-  case player of
-    North -> "north"
-    South -> "south"
-    East -> "east"
-    West -> "west"
 
 
 init : Json.Decode.Value -> ( Model, Cmd Msg )
@@ -244,21 +181,21 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ChangePlayerBet playerType bet checked ->
-      ( changePlayerBet model playerType (if checked then bet else Zero), Cmd.none )
+      ( { model | scorer = changePlayerBet model.scorer playerType (if checked then bet else Zero) }, Cmd.none )
     ChangeFirstOut playerType result ->
-      ( changeFirstOut model playerType result, Cmd.none )
+      ( { model | scorer = changeFirstOut model.scorer playerType result }, Cmd.none )
     Score ->
-      ( scoreAll model, Cmd.none )
+      ( { model | scorer = scoreAll model.scorer }, Cmd.none )
     ChangeTeamScore val ->
       ( case String.toInt val of
           Nothing -> model
-          Just s -> if s >= -25 && s <= 125 then { model | vertTurnScore = s } else model
+          Just s -> { model | scorer = (changeTurnScore model.scorer s) }
       , Cmd.none
       )
     ChangeTeamName team name ->
       ( changeTeamName model team name, Cmd.none )
     ConsecutiveVictory team result ->
-      ( consecutiveVictory model team result, Cmd.none )
+      ( { model | scorer = consecutiveVictory model.scorer team result }, Cmd.none )
     CrashApp ->
       let
         resetModel = defaultModel model.lighting model.vertName model.horzName
@@ -267,7 +204,7 @@ update msg model =
     Clear ->
       ( defaultModel model.lighting model.vertName model.horzName, Cmd.none )
     Undo ->
-      ( undo model, Cmd.none )
+      ( { model | scorer = undo model.scorer }, Cmd.none )
     Update ->
       ( model, Browser.Navigation.reloadAndSkipCache )
     ChangeLighting checked ->
@@ -282,127 +219,12 @@ update msg model =
       ( { model | updateAvailable = True }, Cmd.none )
 
 
-
-changePlayerBet : Model -> Player -> Bet -> Model
-changePlayerBet model player bet =
-  case player of
-    North -> { model | north = (player, bet) }
-    South -> { model | south = (player, bet) }
-    East -> { model | east = (player, bet) }
-    West -> { model | west = (player, bet) }
-
-
 changeTeamName : Model -> Team -> String -> Model
 changeTeamName model team name =
   case team of
     Vertical -> { model | vertName = name }
     Horizontal -> { model | horzName = name }  
 
-
-changeFirstOut : Model -> Player -> Bool -> Model
-changeFirstOut model player result =
-  if result then
-    let        
-      firstOut =
-        case model.firstOut of
-          Team (team, _) -> if inTeam player team then Team (team, Just player) else One player
-          _ -> One player
-    in    
-      { model | firstOut = firstOut }
-  else
-    { model | firstOut = None }
-
-
-consecutiveVictory : Model -> Team -> Bool -> Model
-consecutiveVictory model team result =
-  let
-    firstOut =
-      if not result then
-        case model.firstOut of
-          Team (t, Just p) -> One p
-          _ -> None
-      else
-        case model.firstOut of
-          None -> Team (team, Nothing)
-          One player -> if inTeam player team then Team (team, Just player) else Team (team, Nothing)
-          Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
-  in
-    { model | firstOut = firstOut }
-
-
-undo : Model -> Model
-undo model =
-  let
-    ((vS, hS), history) = case model.history of
-      [] ->
-        ((0, 0), [(0, 0)])
-      [x] ->
-        (x, [(0, 0)])
-      (x :: xs) ->
-        (x, xs)
-  in
-    { model
-    | vertScore = model.vertScore - vS
-    , horzScore = model.horzScore - hS
-    , history = history
-    }  
-
-
-scoreAll : Model -> Model
-scoreAll model =
-  reset (
-    let
-      vertDiff = getTeamScore
-        model
-        model.north
-        model.south
-        Vertical
-        model.vertTurnScore
-      horzDiff = getTeamScore
-        model
-        model.west
-        model.east
-        Horizontal
-        (100 - model.vertTurnScore)
-    in
-      { model
-      | vertScore = model.vertScore + vertDiff
-      , horzScore = model.horzScore + horzDiff
-      , history = (vertDiff, horzDiff) :: model.history
-      }
-  )
-
-
-getTeamScore : Model -> (Player, Bet) -> (Player, Bet) -> Team -> Int -> Int
-getTeamScore model player1 player2 team score =
-  getPlayerBonus model player1
-  + getPlayerBonus model player2
-  + (case model.firstOut of
-      Team (t, _) -> if t == team then 200 else 0
-      _ -> score
-    )
-
-
-getPlayerBonus : Model -> (Player, Bet) -> Int
-getPlayerBonus model (player, bet) =
-  (getScore bet) * (
-    case model.firstOut of
-      One p -> if p == player then 1 else -1
-      Team (_, Just p) -> if p == player then 1 else -1
-      _ -> -1
-  )
-
-
-reset : Model -> Model
-reset model =
-  { model
-  | north = (North, Zero)
-  , south = (South, Zero)
-  , east = (East, Zero)
-  , west = (West, Zero)
-  , firstOut = None
-  , vertTurnScore = 50
-  }
 
 
 -- VIEW
@@ -441,10 +263,10 @@ viewScorer : Model -> Html Msg
 viewScorer model =
   div [ class "scorer" ] 
     [ viewTeams model
-    , viewTeamTurnScore model
-    , viewConsecutiveVictory model
+    , viewTeamTurnScore model.scorer
+    , viewConsecutiveVictory model.scorer
     , viewActions model
-    , if (abs (model.vertScore - model.horzScore)) > 400 then
+    , if (abs (model.scorer.vertScore - model.scorer.horzScore)) > 400 then
         button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
       else
         text ""
@@ -454,8 +276,8 @@ viewScorer model =
 viewTeams : Model -> Html Msg
 viewTeams model =
   div [ class "teams" ]
-    [ viewTeam model Vertical model.vertName model.vertScore model.north model.south
-    , viewTeam model Horizontal model.horzName model.horzScore model.east model.west
+    [ viewTeam model Vertical model.vertName model.scorer.vertScore model.scorer.north model.scorer.south
+    , viewTeam model Horizontal model.horzName model.scorer.horzScore model.scorer.east model.scorer.west
     ]
 
 
@@ -486,17 +308,17 @@ viewTeam model team name score player1 player2 =
       ]
       []
     , div [ class "team-score"] [ text (String.fromInt score) ]
-    , viewPlayer model player1
-    , viewPlayer model player2
+    , viewPlayer model.scorer player1
+    , viewPlayer model.scorer player2
     ]
 
 
-viewPlayer : Model -> (Player, Bet) -> Html Msg
+viewPlayer : Scorer -> (Player, Bet) -> Html Msg
 viewPlayer model playerBet =
   viewPlayerBet model playerBet
 
 
-viewPlayerBet : Model -> (Player, Bet) -> Html Msg
+viewPlayerBet : Scorer -> (Player, Bet) -> Html Msg
 viewPlayerBet model (player, bet) =
   let
     playerId = getPlayerId player
@@ -543,7 +365,7 @@ viewPlayerBet model (player, bet) =
       ]
 
 
-viewTeamTurnScore : Model -> Html Msg
+viewTeamTurnScore : Scorer -> Html Msg
 viewTeamTurnScore model =
   div [ class "turn-scores", css [ displayFlex, flexDirection row ] ]
     [ button
@@ -569,7 +391,7 @@ viewTeamTurnScore model =
     ]
 
 
-viewConsecutiveVictory : Model -> Html Msg
+viewConsecutiveVictory : Scorer -> Html Msg
 viewConsecutiveVictory model =
   div [ class "consecutives", css [ displayFlex, flexDirection row ] ]
     [ div [ class "consecutive"] 
