@@ -276,7 +276,12 @@ viewScorer model =
 
 viewTeams : Model -> Html Msg
 viewTeams model =
-  div [ class "teams" ]
+  div
+    [ css
+      [ displayFlex
+      , property "justify-content" "space-evenly"
+      ]
+    ]
     [ viewTeam model Vertical model.vertName model.scorer.vertScore
     , viewTeam model Horizontal model.horzName model.scorer.horzScore
     ]
@@ -287,7 +292,15 @@ viewTeam model team name score =
   let
     colors = colorValues model.lighting
   in
-  div [ class "team" ]
+  div
+    [ css
+      [ border3 (px 3) solid colors.border
+      , borderRadius (px 10)
+      , padding (px 10)
+      , marginTop (px 20)
+      , width (px 100)
+      ]
+    ]
     [ input
       [ type_ "text"
       , value name
@@ -295,12 +308,10 @@ viewTeam model team name score =
       , css
           [ textAlign center
           , border zero
-          , fontSize (px 20)
-          , marginTop (px 20)
+          , fontSize (px 15)
           , marginLeft auto
           , marginRight auto
           , displayFlex
-          , paddingBottom (px 10)
           , width (pct 90)
           , focus [ outline none ]
           , backgroundColor transparent
@@ -308,7 +319,14 @@ viewTeam model team name score =
           ]
       ]
       []
-    , div [ class "team-score"] [ text (String.fromInt score) ]
+    , hr [] []
+    , div
+      [ css
+        [ textAlign center
+        , fontSize (px 35)
+        ]
+      ]
+      [ text (String.fromInt score) ]
     ]
 
 
