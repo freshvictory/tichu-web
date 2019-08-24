@@ -4,7 +4,6 @@ import Browser
 import Browser.Navigation
 import Css exposing (..)
 import Dict exposing (Dict)
-import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing
   ( id, type_, class, css, for, min, max, step, name, value, checked)
@@ -13,6 +12,7 @@ import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
+import Svgs exposing (..)
 
 
 -- MAIN
@@ -408,28 +408,23 @@ viewTeamTurnScore model teamScore team =
       , marginBottom (px 10)
       ]
     ]
-    [ button
-        [ onClick (ChangeTeamScore (String.fromInt
-            (model.scorer.vertTurnScore -
-              case team of
-                Vertical -> 5
-                Horizontal -> -5)
-            ))
-        , css
-          [ height (px 25)
+    [ div
+        [ css
+          [ height (px 30)
           , width (px 50)
-          , padding2 zero (px 10)
+          , padding2 zero (px 7)
           , backgroundColor colors.background
-          , border3 (px 2) solid colors.border
+          , border3 (px 3) solid colors.border
           , boxSizing borderBox
           , borderRadius zero
-          , margin zero
           , case team of
               -- Left
               Vertical ->
                 batch
                   [ borderTopLeftRadius (px 40)
                   , borderBottomLeftRadius (px 40)
+                  , borderRight zero
+                  , width (px 49)
                   , textAlign right
                   ]
               -- Right
@@ -441,7 +436,14 @@ viewTeamTurnScore model teamScore team =
                   ]
           ]
         ]
-        [ text (String.fromInt teamScore)
+        [ div
+            [ css
+              [ top (pct 50)
+              , transform (translateY (pct -50))
+              , position relative
+              ]
+            ]
+            [ text (String.fromInt teamScore) ]
         ]
     ]
 
@@ -465,17 +467,19 @@ viewConsecutiveVictoryButton model elemid team ischecked =
         [ for elemid
         , css
           [ border3 (px 3) solid colors.border
-          , width (px 40)
+          , width (px 50)
           , height (px 50)
           , display inlineBlock
           , boxSizing borderBox
-          , padding2 zero (px 5)
+          , padding2 zero (px 7)
+          , backgroundColor colors.border
           , case team of
               -- Left
               Vertical ->
                 batch
                   [ borderTopLeftRadius (px 25)
                   , borderBottomLeftRadius (px 25)
+                  , paddingLeft (px 16)
                   , textAlign right
                   ]
               -- Right
@@ -486,7 +490,8 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                   , textAlign left
                   ]
           , if ischecked then batch
-              [ backgroundColor colors.border
+              [ backgroundColor colors.cta
+              , borderColor colors.cta
               ]
             else
               batch []
@@ -497,9 +502,11 @@ viewConsecutiveVictoryButton model elemid team ischecked =
             [ top (pct 50)
             , transform (translateY (pct -50))
             , position relative
+            , width (px 22)
+            , height (px 22)
             ]
           ]
-          [ text "CV" ]
+          [ consecutiveVictorySvg ]
         ]
     ]
 
@@ -529,7 +536,7 @@ viewTeamTurnScoreSlider model =
               [ width (px 230)
               , height (px 50)
               , lineHeight (px 50)
-              , backgroundColor colors.border
+              , backgroundColor colors.cta
               , batch (case t of
                 (Horizontal, _) ->
                   [ textAlign right
@@ -564,12 +571,12 @@ viewSlider model =
     , onInput ChangeTeamScore
     , css (inputStyling model
       { width = 250
-      , background = colors.cta
+      , background = colors.background
       , trackBorderRadius = 0
       , thumbHeight = 30
-      , thumbWidth = 30
+      , thumbWidth = 40
       , thumbColor = colors.red
-      , thumbBorderRadius = 30
+      , thumbBorderRadius = 20
       })
     ]
     []
@@ -580,7 +587,6 @@ viewActions model =
   div [ class "view-actions" ]
     [ button [ class "undo", onClick Undo ] [ text "Undo" ]
     , button [ class "score", onClick Score ] [ text "Score" ]
-    , button [ class "clear", onClick (ShowConfirmation "Are you sure you want to reset?" Clear) ] [ text "Reset" ]
     ]
 
 
@@ -594,6 +600,14 @@ viewSettings model =
         "lighting-label"
         (model.lighting == Light)
         ChangeLighting
+    , button
+      [ css
+        [ width (pct 100)
+        , marginTop (px 10)
+        ]
+      , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
+      ]
+      [ text "Reset" ]
     , hr [] []
     , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
     ]
@@ -793,8 +807,8 @@ inputStyling model styles =
   [ width (px (styles.width - 20))
   , backgroundColor styles.background
   , borderRadius (px styles.trackBorderRadius)
-  , padding (px 10)
-  , height (px (20 + styles.thumbHeight))
+  , padding (px 5)
+  , height (px 50)
   , boxSizing borderBox
   , borderTop3 (px 3) solid colors.border
   , borderBottom3 (px 3) solid colors.border
