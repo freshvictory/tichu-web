@@ -46,7 +46,7 @@ body {
 
 .scorer {
   display: grid;
-  grid-row-gap: 40px;
+  grid-row-gap: 20px;
 }
 
 .teams {
@@ -83,7 +83,7 @@ body {
 
 .range {
   height: 30px;
-  max-width: calc(50% - 10px);
+  /* max-width: calc(50% - 10px); */
 }
 
 .turn-score {
@@ -242,6 +242,21 @@ hr {
   color: #CCC;
 }
 
+/* .button-chunked-right {
+	background-image:
+		radial-gradient(100% 100% at 102% 102%, #FFF 50px, #CCC 50px);
+}
+
+.button-chunked-left {
+	background-image:
+    radial-gradient(100% 100% at -2% 102%, #FFF 50px, #CCC 50px);
+}
+
+.vert-cv {
+	background-image:
+		radial-gradient(100% 91% at 101% 101%, #FFF 12px, #CCC 12px);
+} */
+
 button {
   cursor: pointer;
   font-size: inherit;
@@ -256,7 +271,7 @@ button {
 
 /* Range element */
 
-input[type=range] {
+/* input[type=range] {
   height: 31px;
   -webkit-appearance: none;
   width: 100%;
@@ -268,7 +283,7 @@ input[type=range]:focus {
 }
 input[type=range]::-webkit-slider-runnable-track {
   width: 100%;
-  height: 10px;
+  height: 50px;
   cursor: pointer;
   animate: 0.2s;
   box-shadow: 0px 0px 0px #000000;
@@ -292,7 +307,7 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 }
 input[type=range]::-moz-range-track {
   width: 100%;
-  height: 10px;
+  height: 50px;
   cursor: pointer;
   animate: 0.2s;
   box-shadow: 0px 0px 0px #000000;
@@ -311,7 +326,7 @@ input[type=range]::-moz-range-thumb {
 }
 input[type=range]::-ms-track {
   width: 100%;
-  height: 10px;
+  height: 50px;
   cursor: pointer;
   animate: 0.2s;
   background: transparent;
@@ -345,7 +360,7 @@ input[type=range]:focus::-ms-fill-lower {
 }
 input[type=range]:focus::-ms-fill-upper {
   background: #DBB004;
-}
+} */
 
 
 

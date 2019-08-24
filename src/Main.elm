@@ -6,10 +6,12 @@ import Css exposing (..)
 import Dict exposing (Dict)
 import Html
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
-import Json.Decode exposing (..)
-import Json.Decode.Extra exposing (..)
+import Html.Styled.Attributes exposing
+  ( id, type_, class, css, for, min, max, step, name, value, checked)
+import Html.Styled.Events exposing (onInput, onClick, onCheck)
+import Json.Decode exposing
+  (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
+import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 
 
@@ -110,9 +112,9 @@ decodeState =
     (field "lighting" string)
     (field "vertName" string)
     (field "horzName" string)
-    (field "vertScore" Json.Decode.int)
-    (field "horzScore" Json.Decode.int)
-    (field "history" (Json.Decode.list (decodeAsTuple2 "0" Json.Decode.int "1" Json.Decode.int)))
+    (field "vertScore" int)
+    (field "horzScore" int)
+    (field "history" (list (decodeAsTuple2 "0" int "1" int)))
 
 
 getState : Model -> State
@@ -136,10 +138,10 @@ type Confirm
   | Active String Msg
 
 
-init : Json.Decode.Value -> ( Model, Cmd Msg )
+init : Value -> ( Model, Cmd Msg )
 init state =
   let
-    decodedState = Json.Decode.decodeValue decodeState state
+    decodedState = decodeValue decodeState state
     finalState = case decodedState of
       Ok s -> s
       Err _ ->
@@ -263,8 +265,7 @@ viewScorer : Model -> Html Msg
 viewScorer model =
   div [ class "scorer" ] 
     [ viewTeams model
-    , viewTeamTurnScore model.scorer
-    , viewConsecutiveVictory model.scorer
+    , viewCircle model
     , viewActions model
     , if (abs (model.scorer.vertScore - model.scorer.horzScore)) > 400 then
         button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
@@ -276,20 +277,20 @@ viewScorer model =
 viewTeams : Model -> Html Msg
 viewTeams model =
   div [ class "teams" ]
-    [ viewTeam model Vertical model.vertName model.scorer.vertScore model.scorer.north model.scorer.south
-    , viewTeam model Horizontal model.horzName model.scorer.horzScore model.scorer.east model.scorer.west
+    [ viewTeam model Vertical model.vertName model.scorer.vertScore
+    , viewTeam model Horizontal model.horzName model.scorer.horzScore
     ]
 
 
-viewTeam : Model -> Team -> String -> Int -> (Player, Bet) -> (Player, Bet) -> Html Msg
-viewTeam model team name score player1 player2 =
+viewTeam : Model -> Team -> String -> Int -> Html Msg
+viewTeam model team name score =
   let
     colors = colorValues model.lighting
   in
   div [ class "team" ]
     [ input
       [ type_ "text"
-      , Html.Styled.Attributes.value name
+      , value name
       , onInput (ChangeTeamName team)
       , css
           [ textAlign center
@@ -300,7 +301,7 @@ viewTeam model team name score player1 player2 =
           , marginRight auto
           , displayFlex
           , paddingBottom (px 10)
-          , Css.width (pct 90)
+          , width (pct 90)
           , focus [ outline none ]
           , backgroundColor transparent
           , color colors.text
@@ -308,7 +309,13 @@ viewTeam model team name score player1 player2 =
       ]
       []
     , div [ class "team-score"] [ text (String.fromInt score) ]
-    , viewPlayer model.scorer player1
+    ]
+
+
+viewBets : Model -> (Player, Bet) -> (Player, Bet) -> Html Msg
+viewBets model player1 player2 =
+  div []
+    [ viewPlayer model.scorer player1
     , viewPlayer model.scorer player2
     ]
 
@@ -351,7 +358,7 @@ viewPlayerBet model (player, bet) =
                 [ type_ "checkbox"
                 , class "bet-success"
                 , id ("success" ++ "-" ++ playerId)
-                , Html.Styled.Attributes.checked successful
+                , checked successful
                 , onCheck (ChangeFirstOut player) ] []
                 , label
                   [ class ("bet-success-label" ++ if successful then " successful" else "" )
@@ -365,64 +372,207 @@ viewPlayerBet model (player, bet) =
       ]
 
 
-viewTeamTurnScore : Scorer -> Html Msg
-viewTeamTurnScore model =
-  div [ class "turn-scores", css [ displayFlex, flexDirection row ] ]
+viewCircle : Model -> Html Msg
+viewCircle model =
+  div
+    [ css
+      [ displayFlex
+      , flexDirection column
+      ]
+    ]
+    [ viewTopCircle model
+    , viewTeamTurnScoreSlider model
+    ]
+
+
+viewTopCircle : Model -> Html Msg
+viewTopCircle model =
+  let colors = colorValues model.lighting in
+  div
+    [ css
+      [ margin auto
+      , position relative
+      ]
+    ]
+    [ viewTeamTurnScore model model.scorer.vertTurnScore Vertical
+    , viewTeamTurnScore model (100 - model.scorer.vertTurnScore) Horizontal
+    ]
+
+
+viewTeamTurnScore : Model -> Int -> Team -> Html Msg
+viewTeamTurnScore model teamScore team =
+  let colors = colorValues model.lighting in
+  div
+    [ css
+      [ display inlineBlock
+      , marginBottom (px 10)
+      ]
+    ]
     [ button
-        [ class "score-step"
-        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore - 5)))
+        [ onClick (ChangeTeamScore (String.fromInt
+            (model.scorer.vertTurnScore -
+              case team of
+                Vertical -> 5
+                Horizontal -> -5)
+            ))
+        , css
+          [ height (px 25)
+          , width (px 50)
+          , padding2 zero (px 10)
+          , backgroundColor colors.background
+          , border3 (px 2) solid colors.border
+          , boxSizing borderBox
+          , borderRadius zero
+          , margin zero
+          , case team of
+              -- Left
+              Vertical ->
+                batch
+                  [ borderTopLeftRadius (px 40)
+                  , borderBottomLeftRadius (px 40)
+                  , textAlign right
+                  ]
+              -- Right
+              Horizontal ->
+                batch
+                  [ borderTopRightRadius (px 40)
+                  , borderBottomRightRadius (px 40)
+                  , textAlign left
+                  ]
+          ]
         ]
-        [ text "<" ]
-    , div [ class "turn-score vert" ] [ text (String.fromInt model.vertTurnScore) ]
-    , input
-      [ type_ "range"
-      , class "range"
-      , Html.Styled.Attributes.min "-25"
-      , Html.Styled.Attributes.max "125"
-      , Html.Styled.Attributes.value (String.fromInt model.vertTurnScore)
-      , step "5"
-      , onInput ChangeTeamScore ] []
-    , div [ class "turn-score horz" ] [ text (String.fromInt (100 - model.vertTurnScore)) ]
-    , button
-        [ class "score-step"
-        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore + 5)))
+        [ text (String.fromInt teamScore)
         ]
-        [ text ">" ]
     ]
 
 
-viewConsecutiveVictory : Scorer -> Html Msg
-viewConsecutiveVictory model =
-  div [ class "consecutives", css [ displayFlex, flexDirection row ] ]
-    [ div [ class "consecutive"] 
-      [ input
-        [ type_ "checkbox"
-        , class "cv-check"
-        , id "vert-cv"
-        , Html.Styled.Attributes.checked
-          (case model.firstOut of
-            Team (Vertical, _) -> True      
-            _ -> False
-          )
-        , onCheck (ConsecutiveVictory Vertical)
-        ][]
-      , label [ class "cv-label", for "vert-cv" ] [ text "Consecutive" ]
-      ]
-    , div [ class "consecutive" ] 
-      [ input
-        [ type_ "checkbox"
-        , class "cv-check"
-        , id "horz-cv"
-        , Html.Styled.Attributes.checked
-          (case model.firstOut of
-            Team (Horizontal, _) -> True      
-            _ -> False
-          )
-        , onCheck (ConsecutiveVictory Horizontal)
-        ][]
-      , label [ class "cv-label", for "horz-cv" ] [ text "Consecutive" ]
+viewConsecutiveVictoryButton : Model -> String -> Team -> Bool -> Html Msg
+viewConsecutiveVictoryButton model elemid team ischecked =
+  let colors = colorValues model.lighting in
+  div
+    [ css []
+    ] 
+    [ input
+      [ type_ "checkbox"
+      , id elemid
+      , checked ischecked
+      , onCheck (ConsecutiveVictory team)
+      , css
+        [ display none
+        ]
+      ][]
+    , label
+        [ for elemid
+        , css
+          [ border3 (px 3) solid colors.border
+          , width (px 40)
+          , height (px 50)
+          , display inlineBlock
+          , boxSizing borderBox
+          , padding2 zero (px 5)
+          , case team of
+              -- Left
+              Vertical ->
+                batch
+                  [ borderTopLeftRadius (px 25)
+                  , borderBottomLeftRadius (px 25)
+                  , textAlign right
+                  ]
+              -- Right
+              Horizontal ->
+                batch
+                  [ borderTopRightRadius (px 25)
+                  , borderBottomRightRadius (px 25)
+                  , textAlign left
+                  ]
+          , if ischecked then batch
+              [ backgroundColor colors.border
+              ]
+            else
+              batch []
+          ]
+        ]
+        [ div
+          [ css
+            [ top (pct 50)
+            , transform (translateY (pct -50))
+            , position relative
+            ]
+          ]
+          [ text "CV" ]
+        ]
+    ]
+
+
+viewTeamTurnScoreSlider : Model -> Html Msg
+viewTeamTurnScoreSlider model =
+  let colors = colorValues model.lighting in
+  div
+    [ css
+      [ displayFlex
+      , flexDirection row
+      , justifyContent center
       ]
     ]
+    [ viewConsecutiveVictoryButton
+      model
+      "vert-cv"
+      Vertical        
+      (case model.scorer.firstOut of
+        Team (Vertical, _) -> True      
+        _ -> False
+      )
+    , case model.scorer.firstOut of 
+        Team t -> 
+          div
+            [ css
+              [ width (px 230)
+              , height (px 50)
+              , lineHeight (px 50)
+              , backgroundColor colors.border
+              , batch (case t of
+                (Horizontal, _) ->
+                  [ textAlign right
+                  ]
+                _ -> []
+              )
+              ]
+            ]
+            [ text "Consecutive victory" ]
+        _ -> viewSlider model
+    , viewConsecutiveVictoryButton
+      model
+      "horz-cv"
+      Horizontal
+      (case model.scorer.firstOut of
+        Team (Horizontal, _) -> True      
+        _ -> False
+      )
+    ]
+
+
+viewSlider : Model -> Html Msg
+viewSlider model =
+  let colors = colorValues model.lighting in
+  input
+    [ type_ "range"
+    , class "range"
+    , min "-25"
+    , max "125"
+    , value (String.fromInt model.scorer.vertTurnScore)
+    , step "5"
+    , onInput ChangeTeamScore
+    , css (inputStyling model
+      { width = 250
+      , background = colors.cta
+      , trackBorderRadius = 0
+      , thumbHeight = 30
+      , thumbWidth = 30
+      , thumbColor = colors.red
+      , thumbBorderRadius = 30
+      })
+    ]
+    []
 
 
 viewActions : Model -> Html Msg
@@ -457,7 +607,7 @@ labeledRadio elemid elemlabel rgroup elemclass labelclass isChecked msg =
       , class elemclass
       , id elemid
       , name rgroup
-      , Html.Styled.Attributes.checked isChecked
+      , checked isChecked
       , onInput msg
       ] []
     , label [ class labelclass, for elemid ] [ text elemlabel ]
@@ -470,7 +620,7 @@ labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
       [ type_ "checkbox"
       , id elemid
       , class elemclass
-      , Html.Styled.Attributes.checked isChecked
+      , checked isChecked
       , onCheck msg
       ] []
     , label [ class labelclass, for elemid ] [ text elemlabel ]
@@ -568,6 +718,7 @@ type alias Colors =
   , cta: Color
   , ctaText: Color
   , text: Color
+  , red: Color
   }
 
 
@@ -580,6 +731,7 @@ colorValues lighting =
     , text = (hex "CCC")
     , cta = (hex "DBB004")
     , ctaText = (hex "000")
+    , red = (hex "B84444")
     }
   else
     { border = (hex "CCC")
@@ -588,6 +740,7 @@ colorValues lighting =
     , cta = (hex "DBB004")
     , ctaText = (hex "000")
     , text = (hex "000")
+    , red = (hex "B84444")
     }
 
 
@@ -595,8 +748,8 @@ confirmButtonStyle : Style
 confirmButtonStyle =
   batch
     [ borderRadius (px 10)
-    , Css.width (pct 45)
-    , Css.height (px 40)
+    , width (pct 45)
+    , height (px 40)
     ]
 
 
@@ -611,13 +764,77 @@ ctaStyle =
 {-| Decodes two fields into a tuple.
 - https://stackoverflow.com/a/53017452
 -}
-decodeAsTuple2 : String -> Json.Decode.Decoder a -> String -> Json.Decode.Decoder b -> Json.Decode.Decoder (a, b)
+decodeAsTuple2 : String -> Decoder a -> String -> Decoder b -> Decoder (a, b)
 decodeAsTuple2 fieldA decoderA fieldB decoderB =
     let
         result : a -> b -> (a, b)
         result valueA valueB =
             (valueA, valueB)
     in
-        Json.Decode.succeed result
-            |> Json.Decode.Extra.andMap (Json.Decode.field fieldA decoderA)
-            |> Json.Decode.Extra.andMap (Json.Decode.field fieldB decoderB)
+        succeed result
+            |> andMap (field fieldA decoderA)
+            |> andMap (field fieldB decoderB)
+
+
+type alias InputStyles =
+  { width: Float
+  , background: Color
+  , trackBorderRadius: Float
+  , thumbHeight: Float
+  , thumbWidth: Float
+  , thumbColor: Color
+  , thumbBorderRadius: Float
+  }
+
+
+inputStyling : Model -> InputStyles -> List Style
+inputStyling model styles =
+  let colors = colorValues model.lighting in
+  [ width (px (styles.width - 20))
+  , backgroundColor styles.background
+  , borderRadius (px styles.trackBorderRadius)
+  , padding (px 10)
+  , height (px (20 + styles.thumbHeight))
+  , boxSizing borderBox
+  , borderTop3 (px 3) solid colors.border
+  , borderBottom3 (px 3) solid colors.border
+
+  , property "-webkit-appearance" "none"
+  , property "-webkit-tap-highlight-color" "transparent"
+  , focus [ outline none ]
+  , margin zero
+  
+  , pseudoElement "-webkit-slider-runnable-track" (inputTrackStyling styles)
+  , pseudoElement "-moz-range-track" (inputTrackStyling styles)
+  , pseudoElement "-ms-track" (inputTrackStyling styles)
+
+  , pseudoElement "-webkit-slider-thumb" [ batch (inputThumbStyling styles) ]
+  , pseudoElement "-moz-range-thumb" (inputThumbStyling styles)
+  , pseudoElement "-ms-thumb" [ batch (inputThumbStyling styles), marginTop (px 1) ]
+  ]
+
+
+inputTrackStyling : InputStyles -> List Style
+inputTrackStyling styles =
+  [ borderRadius (px styles.trackBorderRadius)
+  , backgroundColor transparent
+
+  , cursor pointer
+  , boxShadow none
+  , border zero
+  ]
+
+
+inputThumbStyling : InputStyles -> List Style
+inputThumbStyling styles =
+  [ height (px styles.thumbHeight)
+  , width (px styles.thumbWidth)
+  , borderRadius (px styles.thumbBorderRadius)
+  , backgroundColor styles.thumbColor
+
+  , property "-webkit-appearance" "none"
+  , cursor pointer
+  , boxShadow none
+  , border zero
+  ]
+
