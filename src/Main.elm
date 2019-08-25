@@ -3,8 +3,9 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
+import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
-import Html.Styled exposing (Html, div, text, button, input, label, toUnstyled)
+import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyled)
 import Html.Styled.Attributes exposing
   ( id, type_, class, css, for, min, max, step, name, value, checked)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
@@ -59,7 +60,9 @@ type alias Model =
   , vertName: String
   , horzName: String
   , theme: ThemeSettings
+  , themes: Dict String ThemeSettings
   , showSettings: Bool
+  , changingTheme: Bool
   , updateAvailable: Bool
   , crashed: Bool
   , confirm: Confirm
@@ -72,7 +75,9 @@ defaultModel theme vertName horzName =
   , vertName = vertName
   , horzName = horzName
   , theme = theme
+  , themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, light ])
   , showSettings = False
+  , changingTheme = False
   , updateAvailable = False
   , crashed = False
   , confirm = Hidden
@@ -169,8 +174,9 @@ type Msg
   | Undo
   | ToggleSettings Bool
   | Update
-  | ChangeLighting Bool
+  | ChangeLighting String
   | ShowConfirmation String Msg
+  | ChangingTheme Bool
   | CloseConfirmation
   | UpdateAvailable
 
@@ -205,10 +211,12 @@ update msg model =
       ( { model | scorer = undo model.scorer }, Cmd.none )
     Update ->
       ( model, Browser.Navigation.reloadAndSkipCache )
-    ChangeLighting checked ->
-      ( { model | theme = if checked then light else dark }, Cmd.none )
+    ChangeLighting id ->
+      ( changeTheme model id, Cmd.none )
     ToggleSettings checked ->
       ( { model | showSettings = checked }, Cmd.none )
+    ChangingTheme checked ->
+      ( { model | changingTheme = checked }, Cmd.none )
     ShowConfirmation query confirmMsg ->
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
@@ -221,8 +229,17 @@ changeTeamName : Model -> Team -> String -> Model
 changeTeamName model team name =
   case team of
     Vertical -> { model | vertName = name }
-    Horizontal -> { model | horzName = name }  
+    Horizontal -> { model | horzName = name }
 
+
+changeTheme : Model -> String -> Model
+changeTheme model id =
+  let
+    maybeTheme = Dict.get id model.themes
+  in
+    case maybeTheme of
+      Just theme -> { model | theme = theme }
+      Nothing -> model
 
 
 -- VIEW
@@ -614,25 +631,78 @@ viewActions model =
 
 viewSettings : Model -> Html Msg
 viewSettings model =
-  div [ class "settings" ]
-    [ labeledCheckbox
-        "lighting"
-        (if model.theme.id == "light" then "Dark mode" else "Light mode")
-        "lighting"
-        "lighting-label"
-        (model.theme.id == "light")
-        ChangeLighting
-    , button
-      [ css
-        [ width (pct 100)
-        , marginTop (px 10)
-        ]
-      , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
+  div
+    [ css
+      [ border3 (px 3) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , backgroundColor model.theme.colors.menuBackground
+      , width (px 150)
+      , textAlign left
+      , marginBottom (px 10)
       ]
-      [ text "Reset" ]
-    , hr 1 model.theme.colors.border [ margin2 (px 10) zero ]
-    , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
     ]
+    (if model.changingTheme then themeSettings model else defaultSettings model)
+
+
+defaultSettings : Model -> List (Html Msg)
+defaultSettings model =
+  [ button
+    [ onClick (ChangingTheme True)
+    , css
+      [ cursor pointer
+      , width (pct 100)
+      , paddingRight zero
+      , paddingLeft zero
+      ]
+    ]
+    [ text "Change theme..."]
+  , button
+    [ css
+      [ width (pct 100)
+      , marginTop (px 10)
+      ]
+    , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
+    ]
+    [ text "Reset" ]
+  , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
+  , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
+  ]
+
+
+themeSettings : Model -> List (Html Msg)
+themeSettings model =
+  [ div
+    [ css
+      [ paddingBottom (px 10)
+      , marginBottom (px 10)
+      , fontWeight bold
+      , cursor pointer
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      ]
+    , onClick (ChangingTheme False)
+    ]
+    [ text "< Theme" ]
+  , div
+    [
+    ]
+    (List.map
+      (\theme ->
+        li
+          [ onClick (ChangeLighting theme.id)
+          , css
+            [ batch (if model.theme.id == theme.id then [ fontWeight bold ] else [])
+            , marginBottom (px 10)
+            , cursor pointer
+            , lastChild [ marginBottom zero ]
+            ]
+          ]
+          [ text theme.name
+          ]
+      )
+      (Dict.values model.themes))
+  ]
+  
 
 
 labeledRadio : String -> String -> String -> String -> String -> Bool -> (String -> Msg) -> Html Msg

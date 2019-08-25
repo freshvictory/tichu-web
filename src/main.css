@@ -158,16 +158,6 @@ body {
   text-align: right;
 }
 
-.settings {
-  margin-bottom: 10px;
-  border: 1px solid #CCC;
-  border-radius: 20px;
-  padding: 10px;
-  background: #EEE;
-  width: 150px;
-  text-align: left;
-}
-
 .settings-container.avail .settings-label:after {
   content: '';
   width: 8px;
