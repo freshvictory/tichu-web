@@ -194,20 +194,6 @@ body {
   padding: 3px 6px;
 }
 
-hr {
-    display: block;
-    height: 1px;
-    border: 0;
-    border-top: 1px solid #CCC;
-    margin: 1em 0;
-    padding: 0;
-    margin: 10px 0;
-}
-
-.dark hr {
-  border-color: #333;
-}
-
 .dark button {
   background: #444;
   color: #CCC;

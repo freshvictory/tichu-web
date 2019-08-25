@@ -3,7 +3,6 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
-import Dict exposing (Dict)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing
   ( id, type_, class, css, for, min, max, step, name, value, checked)
@@ -33,7 +32,7 @@ port updateAvailable : (() -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     updateAvailable (\_ -> UpdateAvailable)
 
 
@@ -191,7 +190,7 @@ update msg model =
     ChangeTeamScore val ->
       ( case String.toInt val of
           Nothing -> model
-          Just s -> { model | scorer = (changeTurnScore model.scorer s) }
+          Just s -> { model | scorer = changeTurnScore model.scorer s }
       , Cmd.none
       )
     ChangeTeamName team name ->
@@ -234,7 +233,7 @@ changeTeamName model team name =
 view : Model -> Html Msg
 view model =
   if model.crashed then
-    text "The app crashed :("
+    div [ class "safe-area" ] [ text "The app crashed :(" ]
   else 
     div [ class ("app " ++ if model.lighting == Light then "light" else "dark" ) ]
       [ div [ class "safe-area" ]
@@ -267,7 +266,7 @@ viewScorer model =
     [ viewTeams model
     , viewCircle model
     , viewActions model
-    , if (abs (model.scorer.vertScore - model.scorer.horzScore)) > 400 then
+    , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
         button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
       else
         text ""
@@ -296,34 +295,42 @@ viewTeam model team name score =
     [ css
       [ border3 (px 3) solid colors.border
       , borderRadius (px 10)
-      , padding (px 10)
       , marginTop (px 20)
-      , width (px 100)
+      , width (px 90)
       ]
     ]
-    [ input
-      [ type_ "text"
-      , value name
-      , onInput (ChangeTeamName team)
-      , css
-          [ textAlign center
-          , border zero
-          , fontSize (px 15)
-          , marginLeft auto
-          , marginRight auto
-          , displayFlex
-          , width (pct 90)
-          , focus [ outline none ]
-          , backgroundColor transparent
-          , color colors.text
-          ]
+    [ div
+      [ css
+        [ padding2 (px 5) (px 5)
+        , borderTopRightRadius (px 7)
+        , borderTopLeftRadius (px 7)
+        , backgroundColor colors.menuBackground
+        ]
       ]
-      []
-    , hr [] []
+      [ input
+        [ type_ "text"
+        , value name
+        , onInput (ChangeTeamName team)
+        , css
+            [ textAlign center
+            , border zero
+            , fontSize (px 15)
+            , marginLeft auto
+            , marginRight auto
+            , displayFlex
+            , width (pct 90)
+            , focus [ outline none ]
+            , backgroundColor transparent
+            , color colors.text
+            ]
+        ]
+        []
+      ]
     , div
       [ css
         [ textAlign center
         , fontSize (px 35)
+        , padding (px 5)
         ]
       ]
       [ text (String.fromInt score) ]
@@ -398,18 +405,16 @@ viewCircle model =
       , flexDirection column
       ]
     ]
-    [ viewTopCircle model
+    [ viewTeamTurnScores model
     , viewTeamTurnScoreSlider model
     ]
 
 
-viewTopCircle : Model -> Html Msg
-viewTopCircle model =
-  let colors = colorValues model.lighting in
+viewTeamTurnScores : Model -> Html Msg
+viewTeamTurnScores model =
   div
     [ css
       [ margin auto
-      , position relative
       ]
     ]
     [ viewTeamTurnScore model model.scorer.vertTurnScore Vertical
@@ -419,37 +424,39 @@ viewTopCircle model =
 
 viewTeamTurnScore : Model -> Int -> Team -> Html Msg
 viewTeamTurnScore model teamScore team =
-  let colors = colorValues model.lighting in
+  let
+    colors = colorValues model.lighting
+    widthPx = 60
+  in
   div
     [ css
       [ display inlineBlock
-      , marginBottom (px 10)
       ]
     ]
     [ div
         [ css
-          [ height (px 30)
-          , width (px 50)
-          , padding2 zero (px 7)
-          , backgroundColor colors.background
+          [ height (px 25)
+          , width (px widthPx)
+          , padding2 zero (px 10)
+          , backgroundColor colors.menuBackground
           , border3 (px 3) solid colors.border
+          , borderBottom zero
           , boxSizing borderBox
           , borderRadius zero
+          , fontWeight bold
           , case team of
               -- Left
               Vertical ->
                 batch
-                  [ borderTopLeftRadius (px 40)
-                  , borderBottomLeftRadius (px 40)
+                  [ borderTopLeftRadius (px 25)
                   , borderRight zero
-                  , width (px 49)
+                  , width (px (widthPx - 1))
                   , textAlign right
                   ]
               -- Right
               Horizontal ->
                 batch
-                  [ borderTopRightRadius (px 40)
-                  , borderBottomRightRadius (px 40)
+                  [ borderTopRightRadius (px 25)
                   , textAlign left
                   ]
           ]
@@ -491,6 +498,7 @@ viewConsecutiveVictoryButton model elemid team ischecked =
           , boxSizing borderBox
           , padding2 zero (px 7)
           , backgroundColor colors.border
+          , cursor pointer
           , case team of
               -- Left
               Vertical ->
@@ -555,6 +563,8 @@ viewTeamTurnScoreSlider model =
               , height (px 50)
               , lineHeight (px 50)
               , backgroundColor colors.cta
+              , color (hex "000")
+              , cursor pointer
               , batch (case t of
                 (Horizontal, _) ->
                   [ textAlign right
@@ -562,6 +572,7 @@ viewTeamTurnScoreSlider model =
                 _ -> []
               )
               ]
+            , onClick (ConsecutiveVictory Vertical False)
             ]
             [ text "Consecutive victory" ]
         _ -> viewSlider model
@@ -610,6 +621,7 @@ viewActions model =
 
 viewSettings : Model -> Html Msg
 viewSettings model =
+  let colors = colorValues model.lighting in
   div [ class "settings" ]
     [ labeledCheckbox
         "lighting"
@@ -626,7 +638,7 @@ viewSettings model =
       , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
       ]
       [ text "Reset" ]
-    , hr [] []
+    , hr 1 colors.border [ margin2 (px 10) zero ]
     , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
     ]
 
@@ -757,22 +769,22 @@ type alias Colors =
 colorValues : Lighting -> Colors
 colorValues lighting =
   if lighting == Dark then
-    { border = (hex "333")
-    , background = (hex "000")
-    , menuBackground = (hex "111")
-    , text = (hex "CCC")
-    , cta = (hex "DBB004")
-    , ctaText = (hex "000")
-    , red = (hex "B84444")
+    { border = hex "444"
+    , background = hex "000"
+    , menuBackground = hex "222"
+    , text = hex "CCC"
+    , cta = hex "DBB004"
+    , ctaText = hex "000"
+    , red = hex "B84444"
     }
   else
-    { border = (hex "CCC")
-    , background = (hex "FFF")
-    , menuBackground = (hex "EEE")
-    , cta = (hex "DBB004")
-    , ctaText = (hex "000")
-    , text = (hex "000")
-    , red = (hex "B84444")
+    { border = hex "BBB"
+    , background = hex "FFF"
+    , menuBackground = hex "EEE"
+    , cta = hex "DBB004"
+    , ctaText = hex "000"
+    , text = hex "000"
+    , red = hex "B84444"
     }
 
 
@@ -806,6 +818,22 @@ decodeAsTuple2 fieldA decoderA fieldB decoderB =
         succeed result
             |> andMap (field fieldA decoderA)
             |> andMap (field fieldB decoderB)
+
+
+hr : Float -> Color -> List Style -> Html Msg
+hr heightPx color styles =
+  Html.Styled.hr
+    [ css
+        [ display block
+        , height (px heightPx)
+        , border zero
+        , borderTop3 (px heightPx) solid color
+        , padding zero
+        , margin zero
+        , batch styles
+        ]
+    ]
+    []
 
 
 type alias InputStyles =
