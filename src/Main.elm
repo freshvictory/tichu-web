@@ -13,6 +13,7 @@ import Json.Decode exposing
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (..)
+import Theme exposing (ThemeSettings, light, dark)
 
 
 -- MAIN
@@ -57,7 +58,7 @@ type alias Model =
   { scorer: Scorer
   , vertName: String
   , horzName: String
-  , lighting: Lighting
+  , theme: ThemeSettings
   , showSettings: Bool
   , updateAvailable: Bool
   , crashed: Bool
@@ -65,12 +66,12 @@ type alias Model =
   }
 
 
-defaultModel : Lighting -> String -> String -> Model
-defaultModel lighting vertName horzName =
+defaultModel : ThemeSettings -> String -> String -> Model
+defaultModel theme vertName horzName =
   { scorer = defaultScorer
   , vertName = vertName
   , horzName = horzName
-  , lighting = lighting
+  , theme = theme
   , showSettings = False
   , updateAvailable = False
   , crashed = False
@@ -82,7 +83,7 @@ modelFromState : State -> Model
 modelFromState state =
   let
     model = defaultModel
-      (if state.lighting == "dark" then Dark else Light)
+      (if state.lighting == "dark" then dark else light)
       state.vertName
       state.horzName
     scorer = model.scorer
@@ -119,18 +120,13 @@ decodeState =
 
 getState : Model -> State
 getState model =
-  { lighting = if model.lighting == Light then "light" else "dark"
+  { lighting = model.theme.id
   , vertName = model.vertName
   , horzName = model.horzName
   , vertScore = model.scorer.vertScore
   , horzScore = model.scorer.horzScore
   , history = model.scorer.history
   }
-
-
-type Lighting
-  = Light
-  | Dark
 
 
 type Confirm
@@ -145,7 +141,7 @@ init state =
     finalState = case decodedState of
       Ok s -> s
       Err _ ->
-        { lighting = "light"
+        { lighting = light.id
         , vertName = "Us"
         , horzName = "Them"
         , vertScore = 0
@@ -200,17 +196,17 @@ update msg model =
       ( { model | scorer = consecutiveVictory model.scorer team result }, Cmd.none )
     CrashApp ->
       let
-        resetModel = defaultModel model.lighting model.vertName model.horzName
+        resetModel = defaultModel model.theme model.vertName model.horzName
       in
         ( { resetModel | crashed = True }, Cmd.none )
     Clear ->
-      ( defaultModel model.lighting model.vertName model.horzName, Cmd.none )
+      ( defaultModel model.theme model.vertName model.horzName, Cmd.none )
     Undo ->
       ( { model | scorer = undo model.scorer }, Cmd.none )
     Update ->
       ( model, Browser.Navigation.reloadAndSkipCache )
     ChangeLighting checked ->
-      ( { model | lighting = if checked then Light else Dark }, Cmd.none )
+      ( { model | theme = if checked then light else dark }, Cmd.none )
     ToggleSettings checked ->
       ( { model | showSettings = checked }, Cmd.none )
     ShowConfirmation query confirmMsg ->
@@ -236,7 +232,7 @@ view model =
   if model.crashed then
     div [ class "safe-area" ] [ text "The app crashed :(" ]
   else 
-    div [ class ("app " ++ if model.lighting == Light then "light" else "dark" ) ]
+    div [ class ("app " ++ model.theme.id) ]
       [ div [ class "safe-area" ]
         [ viewScorer model
         , if model.showSettings then
@@ -289,12 +285,9 @@ viewTeams model =
 
 viewTeam : Model -> Team -> String -> Int -> Html Msg
 viewTeam model team name score =
-  let
-    colors = colorValues model.lighting
-  in
   div
     [ css
-      [ border3 (px 3) solid colors.border
+      [ border3 (px 3) solid model.theme.colors.border
       , borderRadius (px 10)
       , marginTop (px 20)
       , width (px 90)
@@ -305,7 +298,7 @@ viewTeam model team name score =
         [ padding2 (px 5) (px 5)
         , borderTopRightRadius (px 7)
         , borderTopLeftRadius (px 7)
-        , backgroundColor colors.menuBackground
+        , backgroundColor model.theme.colors.menuBackground
         ]
       ]
       [ input
@@ -322,7 +315,7 @@ viewTeam model team name score =
             , width (pct 90)
             , focus [ outline none ]
             , backgroundColor transparent
-            , color colors.text
+            , color model.theme.colors.text
             ]
         ]
         []
@@ -426,7 +419,6 @@ viewTeamTurnScores model =
 viewTeamTurnScore : Model -> Int -> Team -> Html Msg
 viewTeamTurnScore model teamScore team =
   let
-    colors = colorValues model.lighting
     widthPx = 60
   in
   div
@@ -439,8 +431,8 @@ viewTeamTurnScore model teamScore team =
           [ height (px 25)
           , width (px widthPx)
           , padding2 zero (px 10)
-          , backgroundColor colors.menuBackground
-          , border3 (px 3) solid colors.border
+          , backgroundColor model.theme.colors.menuBackground
+          , border3 (px 3) solid model.theme.colors.border
           , borderBottom zero
           , boxSizing borderBox
           , borderRadius zero
@@ -476,7 +468,6 @@ viewTeamTurnScore model teamScore team =
 
 viewConsecutiveVictoryButton : Model -> String -> Team -> Bool -> Html Msg
 viewConsecutiveVictoryButton model elemid team ischecked =
-  let colors = colorValues model.lighting in
   div
     [ css []
     ] 
@@ -492,13 +483,13 @@ viewConsecutiveVictoryButton model elemid team ischecked =
     , label
         [ for elemid
         , css
-          [ border3 (px 3) solid colors.border
+          [ border3 (px 3) solid model.theme.colors.border
           , width (px 50)
           , height (px 50)
           , display inlineBlock
           , boxSizing borderBox
           , padding2 zero (px 7)
-          , backgroundColor colors.border
+          , backgroundColor model.theme.colors.border
           , cursor pointer
           , case team of
               -- Left
@@ -517,8 +508,8 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                   , textAlign left
                   ]
           , if ischecked then batch
-              [ backgroundColor colors.cta
-              , borderColor colors.cta
+              [ backgroundColor model.theme.colors.cta
+              , borderColor model.theme.colors.cta
               ]
             else
               batch []
@@ -540,7 +531,6 @@ viewConsecutiveVictoryButton model elemid team ischecked =
 
 viewTeamTurnScoreSlider : Model -> Html Msg
 viewTeamTurnScoreSlider model =
-  let colors = colorValues model.lighting in
   div
     [ css
       [ displayFlex
@@ -563,7 +553,7 @@ viewTeamTurnScoreSlider model =
               [ width (px 240)
               , height (px 50)
               , lineHeight (px 50)
-              , backgroundColor colors.cta
+              , backgroundColor model.theme.colors.cta
               , color (hex "000")
               , cursor pointer
               , batch (case t of
@@ -590,7 +580,6 @@ viewTeamTurnScoreSlider model =
 
 viewSlider : Model -> Html Msg
 viewSlider model =
-  let colors = colorValues model.lighting in
   range
     {
       min = -25
@@ -602,15 +591,15 @@ viewSlider model =
     { width = 250
     , height = 50
     , padding = 5
-    , background = colors.background
+    , background = model.theme.colors.background
     , trackBorderRadius = 0
     , thumbHeight = 30
     , thumbWidth = 40
-    , thumbColor = colors.red
+    , thumbColor = model.theme.colors.red
     , thumbBorderRadius = 20
     , additional =
-      [ borderTop3 (px 3) solid colors.border
-      , borderBottom3 (px 3) solid colors.border
+      [ borderTop3 (px 3) solid model.theme.colors.border
+      , borderBottom3 (px 3) solid model.theme.colors.border
       ]
     }
 
@@ -625,14 +614,13 @@ viewActions model =
 
 viewSettings : Model -> Html Msg
 viewSettings model =
-  let colors = colorValues model.lighting in
   div [ class "settings" ]
     [ labeledCheckbox
         "lighting"
-        (if model.lighting == Light then "Dark mode" else "Light mode")
+        (if model.theme.id == "light" then "Dark mode" else "Light mode")
         "lighting"
         "lighting-label"
-        (model.lighting == Light)
+        (model.theme.id == "light")
         ChangeLighting
     , button
       [ css
@@ -642,7 +630,7 @@ viewSettings model =
       , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
       ]
       [ text "Reset" ]
-    , hr 1 colors.border [ margin2 (px 10) zero ]
+    , hr 1 model.theme.colors.border [ margin2 (px 10) zero ]
     , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
     ]
 
@@ -677,9 +665,6 @@ labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
 
 confirm : Model -> Html Msg
 confirm model =
-  let
-    colors = colorValues model.lighting
-  in
   case model.confirm of
     Hidden -> text ""
     Active query msg ->
@@ -698,9 +683,9 @@ confirm model =
           [
             div 
             [ css
-              [ backgroundColor colors.background
+              [ backgroundColor model.theme.colors.background
               , borderRadius (px 30)
-              , border3 (px 1) solid colors.border
+              , border3 (px 1) solid model.theme.colors.border
               , padding (px 20)
               ]
             ]
@@ -757,39 +742,6 @@ shield msg dim =
     , onClick msg
     ]
     []
-
-
-type alias Colors =
-  { border: Color
-  , background: Color
-  , menuBackground: Color
-  , cta: Color
-  , ctaText: Color
-  , text: Color
-  , red: Color
-  }
-
-
-colorValues : Lighting -> Colors
-colorValues lighting =
-  if lighting == Dark then
-    { border = hex "444"
-    , background = hex "000"
-    , menuBackground = hex "222"
-    , text = hex "CCC"
-    , cta = hex "DBB004"
-    , ctaText = hex "000"
-    , red = hex "B84444"
-    }
-  else
-    { border = hex "BBB"
-    , background = hex "FFF"
-    , menuBackground = hex "EEE"
-    , cta = hex "DBB004"
-    , ctaText = hex "000"
-    , text = hex "000"
-    , red = hex "B84444"
-    }
 
 
 confirmButtonStyle : Style
