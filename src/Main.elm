@@ -75,7 +75,7 @@ defaultModel theme vertName horzName =
   , vertName = vertName
   , horzName = horzName
   , theme = theme
-  , themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, glitter, light ])
+  , themes = themes
   , showSettings = False
   , changingTheme = False
   , updateAvailable = False
@@ -84,11 +84,18 @@ defaultModel theme vertName horzName =
   }
 
 
+themes : Dict String ThemeSettings
+themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, glitter, light ])
+
+
 modelFromState : State -> Model
 modelFromState state =
   let
     model = defaultModel
-      (if state.lighting == "dark" then dark else light)
+      ( case Dict.get state.lighting themes of
+          Just t -> t
+          Nothing -> light
+      )
       state.vertName
       state.horzName
     scorer = model.scorer
@@ -648,7 +655,7 @@ viewSlider model =
     , trackBorderRadius = 0
     , thumbHeight = 30
     , thumbWidth = 40
-    , thumbColor = model.theme.colors.red
+    , thumbColor = model.theme.colors.pop
     , thumbBorderRadius = 20
     , additional =
       [ borderTop3 (px 3) solid model.theme.colors.border
@@ -660,8 +667,22 @@ viewSlider model =
 viewActions : Model -> Html Msg
 viewActions model =
   div [ class "view-actions" ]
-    [ button [ class "undo", onClick Undo ] [ text "Undo" ]
-    , button [ class "score", onClick Score ] [ text "Score" ]
+    [ button
+      [ class "undo"
+      , onClick Undo
+      ]
+      [ text "Undo" ]
+    , button
+      [ css
+        [ width (px 150)
+        , padding2 (px 10) zero
+        , backgroundColor model.theme.colors.cta
+        , color model.theme.colors.ctaText
+        , borderRadius (px 10)
+        ]
+      , onClick Score
+      ]
+      [ text "Score" ]
     ]
 
 
@@ -672,7 +693,7 @@ viewSettings model =
       [ border3 (px 3) solid model.theme.colors.border
       , borderRadius (px 20)
       , padding (px 10)
-      , backgroundColor model.theme.colors.menuBackground
+      , backgroundColor model.theme.colors.background
       , width (px 150)
       , textAlign left
       , marginBottom (px 10)
@@ -683,26 +704,39 @@ viewSettings model =
 
 defaultSettings : Model -> List (Html Msg)
 defaultSettings model =
+  let
+    buttonStyles =
+      [ cursor pointer
+      , width (pct 100)
+      , padding2 (px 6) zero
+      , backgroundColor model.theme.colors.menuBackground
+      , color inherit
+      , borderRadius (px 10)
+      ]
+  in
   [ button
     [ onClick (ChangingTheme True)
     , css
-      [ cursor pointer
-      , width (pct 100)
-      , paddingRight zero
-      , paddingLeft zero
+      [ batch buttonStyles
       ]
     ]
-    [ text "Change theme..."]
+    [ text "Change theme"]
   , button
     [ css
-      [ width (pct 100)
+      [ batch buttonStyles
       , marginTop (px 10)
       ]
     , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
     ]
     [ text "Reset" ]
   , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
-  , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
+  , button
+    [ css
+      [ batch buttonStyles
+      ]
+    , onClick Update
+    ]
+    [ text (if model.updateAvailable then "Update" else "Reload") ]
   ]
 
 
@@ -736,7 +770,7 @@ themeSettings model =
           [ text theme.name
           ]
       )
-      (Dict.values model.themes))
+      (Dict.values themes))
   ]
   
 
@@ -817,7 +851,7 @@ confirm model =
                 [ onClick msg
                 , css
                   [ confirmButtonStyle
-                  , ctaStyle
+                  , backgroundColor model.theme.colors.cta
                   , marginLeft auto
                   ]
                 ]
@@ -857,14 +891,6 @@ confirmButtonStyle =
     , width (pct 45)
     , height (px 40)
     ]
-
-
-ctaStyle : Style
-ctaStyle = 
- batch
-  [ important (color (hex "000"))
-  , important (backgroundColor (hex "DBB004"))
-  ]
 
 
 {-| Decodes two fields into a tuple.

@@ -70,19 +70,6 @@ body {
   justify-content: space-around;
 }
 
-.score,
-.dark .score {
-  width: 150px;
-  padding: 10px 0;
-  background-color: #DBB004;
-  color: #000;
-}
-
-.undo,
-.clear {
-  padding: 10px 20px;
-}
-
 .uh-oh {
   color: red;
   font-weight: 500;
@@ -119,10 +106,6 @@ body {
   position: absolute;
 }
 
-.update {
-  width: 100%;
-}
-
 .settings-container.avail .update {
   background: red;
 }
@@ -131,20 +114,11 @@ body {
   padding: 3px 6px;
 }
 
-.dark button {
-  background: #444;
-  color: #CCC;
-}
-
 button {
   cursor: pointer;
   font-size: inherit;
   -webkit-appearance: none;
   -moz-appearance: none;
   border: none;
-  border-radius: 10px;
-  background: #CCC;
-  padding: 6px 20px;
-  color: #000;
 }
 

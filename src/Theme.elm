@@ -21,7 +21,7 @@ type alias Colors =
   , cta: Color
   , ctaText: Color
   , text: Color
-  , red: Color
+  , pop: Color
   }
 
 
@@ -36,7 +36,7 @@ light =
     , cta = hex "DBB004"
     , ctaText = hex "000"
     , text = hex "000"
-    , red = hex "B84444"
+    , pop = hex "B84444"
     }
   }
 
@@ -52,7 +52,7 @@ dark =
     , text = hex "CCC"
     , cta = hex "DBB004"
     , ctaText = hex "000"
-    , red = hex "B84444"
+    , pop = hex "B84444"
     }
   }
 
@@ -62,13 +62,12 @@ glitter =
   { id = "glitter"
   , name = "Glitter"
   , colors =
-    { border = hex "444"
-    , background = hex "000"
-    , menuBackground = hex "323232"
-    , text = hex "CCC"
-    , cta = hex "DBB004"
+    { border = hex "#F288C2"
+    , background = hex "F2B6DD"
+    , menuBackground = hex "F24B99"
+    , text = hex "ffeb09"
+    , cta = hex "#5CE3F2"
     , ctaText = hex "000"
-    , red = hex "B84444"
+    , pop = hex "ffeb09"
     }
   }
-
