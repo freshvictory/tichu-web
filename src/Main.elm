@@ -3,7 +3,8 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
-import Html.Styled exposing (..)
+import HtmlHelper exposing (hr, range)
+import Html.Styled exposing (Html, div, text, button, input, label, toUnstyled)
 import Html.Styled.Attributes exposing
   ( id, type_, class, css, for, min, max, step, name, value, checked)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
@@ -559,7 +560,7 @@ viewTeamTurnScoreSlider model =
         Team t -> 
           div
             [ css
-              [ width (px 230)
+              [ width (px 240)
               , height (px 50)
               , lineHeight (px 50)
               , backgroundColor colors.cta
@@ -590,25 +591,28 @@ viewTeamTurnScoreSlider model =
 viewSlider : Model -> Html Msg
 viewSlider model =
   let colors = colorValues model.lighting in
-  input
-    [ type_ "range"
-    , class "range"
-    , min "-25"
-    , max "125"
-    , value (String.fromInt model.scorer.vertTurnScore)
-    , step "5"
-    , onInput ChangeTeamScore
-    , css (inputStyling model
-      { width = 250
-      , background = colors.background
-      , trackBorderRadius = 0
-      , thumbHeight = 30
-      , thumbWidth = 40
-      , thumbColor = colors.red
-      , thumbBorderRadius = 20
-      })
-    ]
-    []
+  range
+    {
+      min = -25
+    , max = 125
+    , step = 5
+    , value = model.scorer.vertTurnScore
+    , onInput = ChangeTeamScore
+    }
+    { width = 250
+    , height = 50
+    , padding = 5
+    , background = colors.background
+    , trackBorderRadius = 0
+    , thumbHeight = 30
+    , thumbWidth = 40
+    , thumbColor = colors.red
+    , thumbBorderRadius = 20
+    , additional =
+      [ borderTop3 (px 3) solid colors.border
+      , borderBottom3 (px 3) solid colors.border
+      ]
+    }
 
 
 viewActions : Model -> Html Msg
@@ -818,83 +822,4 @@ decodeAsTuple2 fieldA decoderA fieldB decoderB =
         succeed result
             |> andMap (field fieldA decoderA)
             |> andMap (field fieldB decoderB)
-
-
-hr : Float -> Color -> List Style -> Html Msg
-hr heightPx color styles =
-  Html.Styled.hr
-    [ css
-        [ display block
-        , height (px heightPx)
-        , border zero
-        , borderTop3 (px heightPx) solid color
-        , padding zero
-        , margin zero
-        , batch styles
-        ]
-    ]
-    []
-
-
-type alias InputStyles =
-  { width: Float
-  , background: Color
-  , trackBorderRadius: Float
-  , thumbHeight: Float
-  , thumbWidth: Float
-  , thumbColor: Color
-  , thumbBorderRadius: Float
-  }
-
-
-inputStyling : Model -> InputStyles -> List Style
-inputStyling model styles =
-  let colors = colorValues model.lighting in
-  [ width (px (styles.width - 20))
-  , backgroundColor styles.background
-  , borderRadius (px styles.trackBorderRadius)
-  , padding (px 5)
-  , height (px 50)
-  , boxSizing borderBox
-  , borderTop3 (px 3) solid colors.border
-  , borderBottom3 (px 3) solid colors.border
-
-  , property "-webkit-appearance" "none"
-  , property "-webkit-tap-highlight-color" "transparent"
-  , focus [ outline none ]
-  , margin zero
-  
-  , pseudoElement "-webkit-slider-runnable-track" (inputTrackStyling styles)
-  , pseudoElement "-moz-range-track" (inputTrackStyling styles)
-  , pseudoElement "-ms-track" (inputTrackStyling styles)
-
-  , pseudoElement "-webkit-slider-thumb" [ batch (inputThumbStyling styles) ]
-  , pseudoElement "-moz-range-thumb" (inputThumbStyling styles)
-  , pseudoElement "-ms-thumb" [ batch (inputThumbStyling styles), marginTop (px 1) ]
-  ]
-
-
-inputTrackStyling : InputStyles -> List Style
-inputTrackStyling styles =
-  [ borderRadius (px styles.trackBorderRadius)
-  , backgroundColor transparent
-
-  , cursor pointer
-  , boxShadow none
-  , border zero
-  ]
-
-
-inputThumbStyling : InputStyles -> List Style
-inputThumbStyling styles =
-  [ height (px styles.thumbHeight)
-  , width (px styles.thumbWidth)
-  , borderRadius (px styles.thumbBorderRadius)
-  , backgroundColor styles.thumbColor
-
-  , property "-webkit-appearance" "none"
-  , cursor pointer
-  , boxShadow none
-  , border zero
-  ]
 
