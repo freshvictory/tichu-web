@@ -7,13 +7,13 @@ import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
 import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyled)
 import Html.Styled.Attributes exposing
-  ( id, type_, class, css, for, min, max, step, name, value, checked)
+  ( id, type_, class, css, for, name, value, checked)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
 import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
-import Svgs exposing (..)
+import Svgs exposing (consecutiveVictorySvg)
 import Theme exposing (ThemeSettings, light, dark)
 
 

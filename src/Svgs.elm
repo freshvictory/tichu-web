@@ -36,12 +36,12 @@ consecutiveVictoryPerson xOffset yOffset =
         , strokeWidth "2"
         , fill "#FFF"
         , d
-          (  "M" ++ (String.fromFloat xOffset) ++ "," ++ (String.fromFloat yOffset)
+          (  "M" ++ String.fromFloat xOffset ++ "," ++ String.fromFloat yOffset
           ++ "v -11"
           ++ "a "
-            ++ (String.fromInt bodyRadius) ++ "," ++ (String.fromInt bodyRadius)
+            ++ String.fromInt bodyRadius ++ "," ++ String.fromInt bodyRadius
             ++ " 0 0,1 "
-            ++ (String.fromInt (2 * bodyRadius)) ++ ",0"
+            ++ String.fromInt (2 * bodyRadius) ++ ",0"
           ++ "v 11"
           ++ "z"
           )
