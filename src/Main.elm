@@ -14,7 +14,7 @@ import Json.Decode exposing
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg)
-import Theme exposing (ThemeSettings, light, dark)
+import Theme exposing (ThemeSettings, light, dark, glitter)
 
 
 -- MAIN
@@ -75,7 +75,7 @@ defaultModel theme vertName horzName =
   , vertName = vertName
   , horzName = horzName
   , theme = theme
-  , themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, light ])
+  , themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, glitter, light ])
   , showSettings = False
   , changingTheme = False
   , updateAvailable = False
@@ -249,8 +249,39 @@ view model =
   if model.crashed then
     div [ class "safe-area" ] [ text "The app crashed :(" ]
   else 
-    div [ class ("app " ++ model.theme.id) ]
-      [ div [ class "safe-area" ]
+    div
+      [ css
+        [ width (pct 100)
+        , height (pct 100)
+        , position fixed
+        , property "user-select" "none"
+        , backgroundColor model.theme.colors.background
+        , color model.theme.colors.text
+        , fontFamilies
+          [ "-apple-system"
+          , "BlinkMacSystemFont"
+          , qt "Segoe UI"
+          , "Roboto"
+          , "Helvetica"
+          , "Arial"
+          , "san-serif"
+          , qt "Apple Color Emoji"
+          , qt "Segoe UI Emoji"
+          , qt "Segoe UI Symbol"
+          ]
+        ]
+      ]
+      [ div
+        [ css
+          [ width (pct 100)
+          , height (pct 100)
+          , boxSizing borderBox
+          , property "padding-left" "env(safe-area-inset-left)"
+          , property "padding-right" "env(safe-area-inset-right)"
+          , property "padding-top" "env(safe-area-inset-top)"
+          , property "padding-bottom" "env(safe-area-inset-bottom)"
+          ]
+        ]
         [ viewScorer model
         , if model.showSettings then
             shield (ToggleSettings False) False
@@ -276,9 +307,14 @@ view model =
 
 viewScorer : Model -> Html Msg
 viewScorer model =
-  div [ class "scorer" ] 
+  div
+    [ css
+      [ property "display" "grid"
+      , property "grid-row-gap" "20px"
+      ]
+    ] 
     [ viewTeams model
-    , viewCircle model
+    , viewTurnScores model
     , viewActions model
     , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
         button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
@@ -408,8 +444,8 @@ viewPlayerBet model (player, bet) =
       ]
 
 
-viewCircle : Model -> Html Msg
-viewCircle model =
+viewTurnScores : Model -> Html Msg
+viewTurnScores model =
   div
     [ css
       [ displayFlex

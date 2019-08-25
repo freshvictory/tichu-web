@@ -2,6 +2,7 @@ module Theme exposing
   ( ThemeSettings
   , light
   , dark
+  , glitter
   )
 
 import Css exposing (Color, hex)
@@ -44,6 +45,22 @@ dark : ThemeSettings
 dark =
   { id = "dark"
   , name = "Dark"
+  , colors =
+    { border = hex "444"
+    , background = hex "000"
+    , menuBackground = hex "323232"
+    , text = hex "CCC"
+    , cta = hex "DBB004"
+    , ctaText = hex "000"
+    , red = hex "B84444"
+    }
+  }
+
+
+glitter : ThemeSettings
+glitter =
+  { id = "glitter"
+  , name = "Glitter"
   , colors =
     { border = hex "444"
     , background = hex "000"
