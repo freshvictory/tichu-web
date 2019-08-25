@@ -1,4 +1,4 @@
-module Svgs exposing (consecutiveVictorySvg)
+module Svgs exposing (consecutiveVictorySvg, undoSvg)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (..)
@@ -58,4 +58,38 @@ consecutiveVictoryPerson xOffset yOffset =
         []
     ]
     
+
+undoSvg : Html msg
+undoSvg =
+  svg
+    [ viewBox "0 0 60 60"
+    ]
+    [ g
+      [ ]
+      [ Svg.Styled.path
+        [ fill "currentColor"
+        , d
+          (  "M 8,33"
+          ++ "A 22,22 0 1,0 30,13"
+          ++ "h -4"
+          ++ "l 10,-10"
+          ++ "h -5"
+          ++ "l -11,11"
+          ++ "h 1.75"
+          ++ "v -1"
+          ++ "a 2,2 0 0,0 0,4"
+          ++ "v -1"
+          ++ "h -1.75"
+          ++ "l 11,11"
+          ++ "h 5"
+          ++ "l -10,-10"
+          ++ "h 4"
+          ++ "A 18,18 0 1,1 12,33"
+          ++ "a 2,2 0 1,0 -4,0"
+          ++ "z"
+          )
+        ]
+        []
+      ]
+    ]
 

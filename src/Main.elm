@@ -13,7 +13,7 @@ import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
-import Svgs exposing (consecutiveVictorySvg)
+import Svgs exposing (consecutiveVictorySvg, undoSvg)
 import Theme exposing (ThemeSettings, light, dark, glitter)
 
 
@@ -254,7 +254,9 @@ changeTheme model id =
 view : Model -> Html Msg
 view model =
   if model.crashed then
-    div [ class "safe-area" ] [ text "The app crashed :(" ]
+    div
+      [ css [ property "margin-top" "env(safe-area-inset-top)" ] ]
+      [ text "The app crashed :(" ]
   else 
     div
       [ css
@@ -666,12 +668,18 @@ viewSlider model =
 
 viewActions : Model -> Html Msg
 viewActions model =
-  div [ class "view-actions" ]
-    [ button
-      [ class "undo"
-      , onClick Undo
+  div
+    [ css
+      [ displayFlex
+      , alignItems center
       ]
-      [ text "Undo" ]
+    ]
+    [ div
+      [ css
+        [ width (px 45)
+        ]
+      ]
+      []
     , button
       [ css
         [ width (px 150)
@@ -679,10 +687,22 @@ viewActions model =
         , backgroundColor model.theme.colors.cta
         , color model.theme.colors.ctaText
         , borderRadius (px 10)
+        , marginLeft auto
         ]
       , onClick Score
       ]
       [ text "Score" ]
+    , div
+      [ onClick Undo
+      , css
+        [ width (px 25)
+        , height (px 25)
+        , cursor pointer
+        , marginLeft (px 20)
+        , marginRight auto
+        ]
+      ]
+      [ undoSvg ]
     ]
 
 
