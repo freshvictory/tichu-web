@@ -221,7 +221,7 @@ update msg model =
     ChangeLighting id ->
       ( changeTheme model id, Cmd.none )
     ToggleSettings checked ->
-      ( { model | showSettings = checked }, Cmd.none )
+      ( { model | showSettings = checked, changingTheme = False }, Cmd.none )
     ChangingTheme checked ->
       ( { model | changingTheme = checked }, Cmd.none )
     ShowConfirmation query confirmMsg ->
