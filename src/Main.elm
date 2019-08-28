@@ -26,7 +26,7 @@ main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
-    , view = \model -> { title = "Tichu 2", body = [ model |> view |> toUnstyled ] }
+    , view = \model -> { title = "Tichu 3", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
     , subscriptions = subscriptions
     }
@@ -70,6 +70,9 @@ type alias Model =
   , showSettings: Bool
   , changingTheme: Bool
   , updateAvailable: Bool
+  , checkingForUpdate: Bool
+  , currentVersion: String
+  , foundVersion: String
   , crashed: Bool
   , confirm: Confirm
   }
@@ -85,6 +88,9 @@ defaultModel theme vertName horzName =
   , themes = themes
   , showSettings = False
   , changingTheme = False
+  , checkingForUpdate = False
+  , currentVersion = "0.0.0"
+  , foundVersion = "0.0.0"
   , updateAvailable = False
   , crashed = False
   , confirm = Hidden
@@ -322,6 +328,9 @@ view model =
           ]
         ]
         [ viewScorer model
+        , if model.checkingForUpdate then text "Checking for update..." else text ""
+        , text ("Current version: " ++ model.currentVersion)
+        , text ("Found version:  " ++ model.foundVersion)
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
