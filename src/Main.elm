@@ -9,12 +9,14 @@ import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyl
 import Html.Styled.Attributes exposing
   ( id, type_, class, css, for, name, value, checked)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
+import Http
 import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg)
 import Theme exposing (ThemeSettings, light, dark, glitter)
+import Version exposing (Version, versionDecoder, compareVersion)
 
 
 -- MAIN
@@ -193,6 +195,8 @@ type Msg
   | ShowConfirmation String Msg
   | ChangingTheme Bool
   | CloseConfirmation
+  | CheckedVersion (Result Http.Error Version)
+  | CheckedCurrentVersion Version (Result Http.Error Version)
   | UpdateAvailable
 
 
@@ -238,6 +242,14 @@ update msg model =
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
       ( { model | confirm = Hidden }, Cmd.none )
+    CheckedVersion versionResult ->
+      case versionResult of
+        Ok version -> ( model, getCurrentVersion version )
+        Err _ -> ( model, Cmd.none )
+    CheckedCurrentVersion theirs oursResult ->
+      case oursResult of
+        Ok ours -> ( { model | updateAvailable = compareVersion ours theirs }, Cmd.none )
+        Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
 
@@ -1096,4 +1108,23 @@ decodeAsTuple2 fieldA decoderA fieldB decoderB =
         succeed result
             |> andMap (field fieldA decoderA)
             |> andMap (field fieldB decoderB)
+
+
+-- HTTP
+
+
+checkForUpdate : Cmd Msg
+checkForUpdate =
+  Http.get
+    { url = "https://tichu.netlify.com/version.json"
+    , expect = Http.expectJson CheckedVersion versionDecoder
+    }
+
+
+getCurrentVersion : Version -> Cmd Msg
+getCurrentVersion version =
+  Http.get
+    { url = "/version.json"
+    , expect = Http.expectJson (CheckedCurrentVersion version) versionDecoder
+    }
 
