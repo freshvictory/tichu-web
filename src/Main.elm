@@ -26,7 +26,7 @@ main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
-    , view = \model -> { title = "Tichu 3", body = [ model |> view |> toUnstyled ] }
+    , view = \model -> { title = "Tichu 5", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
     , subscriptions = subscriptions
     }
@@ -255,11 +255,15 @@ update msg model =
     CheckForUpdate _ -> ( model, checkForUpdate )
     CheckedVersion versionResult ->
       case versionResult of
-        Ok version -> ( { model | foundVersion = version.version }, getCurrentVersion version )
+        Ok version ->
+          let _ = Debug.log "found version" version.version in
+          ( { model | foundVersion = version.version }, getCurrentVersion version )
         Err _ -> ( model, Cmd.none )
     CheckedCurrentVersion theirs oursResult ->
       case oursResult of
-        Ok ours -> ( { model | currentVersion = ours.version, updateAvailable = compareVersion ours theirs }, Cmd.none )
+        Ok ours -> 
+          let _ = Debug.log "our version" ours.version in
+          ( { model | currentVersion = ours.version, updateAvailable = compareVersion ours theirs }, Cmd.none )
         Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
