@@ -623,7 +623,7 @@ viewSettings model =
         (model.lighting == Light)
         ChangeLighting
     , hr [] []
-    , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update" else "Reload") ]
+    , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update!" else "Reload") ]
     ]
 
 
