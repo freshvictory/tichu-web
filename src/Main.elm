@@ -15,6 +15,7 @@ import Json.Decode exposing
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg)
+import Time exposing (Posix, every)
 import Theme exposing (ThemeSettings, light, dark, glitter)
 import Version exposing (Version, versionDecoder, compareVersion)
 
@@ -37,8 +38,10 @@ port updateAvailable : (() -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    updateAvailable (\_ -> UpdateAvailable)
+subscriptions _ = Sub.batch
+  [ updateAvailable (\_ -> UpdateAvailable)
+  , every (5 * 1000) CheckForUpdate
+  ]
 
 
 {-| We want to `setStorage` on every update. This function adds the setStorage
@@ -195,6 +198,7 @@ type Msg
   | ShowConfirmation String Msg
   | ChangingTheme Bool
   | CloseConfirmation
+  | CheckForUpdate Posix
   | CheckedVersion (Result Http.Error Version)
   | CheckedCurrentVersion Version (Result Http.Error Version)
   | UpdateAvailable
@@ -242,6 +246,7 @@ update msg model =
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
       ( { model | confirm = Hidden }, Cmd.none )
+    CheckForUpdate _ -> ( model, checkForUpdate )
     CheckedVersion versionResult ->
       case versionResult of
         Ok version -> ( model, getCurrentVersion version )

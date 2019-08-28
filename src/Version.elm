@@ -3,6 +3,7 @@ module Version exposing (Version, versionDecoder, compareVersion)
 import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 
+
 type alias Version =
   { version: String
   }
