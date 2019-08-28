@@ -255,11 +255,11 @@ update msg model =
     CheckForUpdate _ -> ( model, checkForUpdate )
     CheckedVersion versionResult ->
       case versionResult of
-        Ok version -> ( model, getCurrentVersion version )
+        Ok version -> ( { model | foundVersion = version.version }, getCurrentVersion version )
         Err _ -> ( model, Cmd.none )
     CheckedCurrentVersion theirs oursResult ->
       case oursResult of
-        Ok ours -> ( { model | updateAvailable = compareVersion ours theirs }, Cmd.none )
+        Ok ours -> ( { model | currentVersion = ours.version, updateAvailable = compareVersion ours theirs }, Cmd.none )
         Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
