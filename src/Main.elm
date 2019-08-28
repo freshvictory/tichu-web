@@ -256,13 +256,11 @@ update msg model =
     CheckedVersion versionResult ->
       case versionResult of
         Ok version ->
-          let _ = Debug.log "found version" version.version in
           ( { model | foundVersion = version.version }, getCurrentVersion version )
         Err _ -> ( model, Cmd.none )
     CheckedCurrentVersion theirs oursResult ->
       case oursResult of
-        Ok ours -> 
-          let _ = Debug.log "our version" ours.version in
+        Ok ours ->
           ( { model | currentVersion = ours.version, updateAvailable = compareVersion ours theirs }, Cmd.none )
         Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
