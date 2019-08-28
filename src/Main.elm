@@ -392,6 +392,7 @@ viewTeam model team name score =
             , focus [ outline none ]
             , backgroundColor transparent
             , color model.theme.colors.text
+            , alignText center
             ]
         ]
         []
