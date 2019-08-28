@@ -57,6 +57,7 @@ updateWithStorage msg model =
 
 type alias Model =
   { scorer: Scorer
+  , settingBet: SettingBet
   , vertName: String
   , horzName: String
   , theme: ThemeSettings
@@ -72,6 +73,7 @@ type alias Model =
 defaultModel : ThemeSettings -> String -> String -> Model
 defaultModel theme vertName horzName =
   { scorer = defaultScorer
+  , settingBet = NoOne
   , vertName = vertName
   , horzName = horzName
   , theme = theme
@@ -146,6 +148,11 @@ type Confirm
   | Active String Msg
 
 
+type SettingBet
+  = NoOne
+  | Person Player
+
+
 init : Value -> ( Model, Cmd Msg )
 init state =
   let
@@ -171,6 +178,7 @@ init state =
 
 type Msg
   = ChangePlayerBet Player Bet Bool
+  | ChangeSettingBet Player
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
   | ChangeTeamName Team String
@@ -192,7 +200,9 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ChangePlayerBet playerType bet checked ->
-      ( { model | scorer = changePlayerBet model.scorer playerType (if checked then bet else Zero) }, Cmd.none )
+      ( { model | scorer = changePlayerBet model.scorer playerType (if checked then bet else Zero), settingBet = NoOne }, Cmd.none )
+    ChangeSettingBet player ->
+      ( { model | settingBet = Person player }, Cmd.none )
     ChangeFirstOut playerType result ->
       ( { model | scorer = changeFirstOut model.scorer playerType result }, Cmd.none )
     Score ->
@@ -264,6 +274,9 @@ view model =
         , height (pct 100)
         , position fixed
         , property "user-select" "none"
+        , property "-moz-user-select" "none"
+        , property "-webkit-user-select" "none"
+        , property "-ms-user-select" "none"
         , backgroundColor model.theme.colors.background
         , color model.theme.colors.text
         , fontFamilies
@@ -324,6 +337,7 @@ viewScorer model =
     ] 
     [ viewTeams model
     , viewTurnScores model
+    , viewBetRow model
     , viewActions model
     , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
         button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
@@ -393,17 +407,180 @@ viewTeam model team name score =
     ]
 
 
+viewBetRow : Model -> Html Msg
+viewBetRow model =
+  div
+    [ css
+      [ marginBottom (px 10)
+      , border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , displayFlex
+      , alignItems center
+      , margin auto
+      , maxWidth maxContent
+      ]
+    ]
+    ( case model.settingBet of
+        Person player ->
+          [ div
+            [ onClick (ChangePlayerBet player Tichu True)
+            , css
+              [ cursor pointer
+              , borderRight3 (px 2) solid model.theme.colors.border
+              , display inlineBlock
+              , paddingRight (px 10)
+              , marginRight (px 10)
+              ]
+            ]
+            [ text "Tichu" ]
+            , div
+              [ onClick (ChangePlayerBet player GrandTichu True)
+              , css
+                [ cursor pointer
+                ]
+              ]
+              [ text "Grand"]
+          ]
+        NoOne ->
+          [ div
+            [ css
+              [ borderRight3 (px 2) solid model.theme.colors.border
+              , display inlineBlock
+              , paddingRight (px 10)
+              , marginRight (px 10)
+              ]
+            ] [ viewBets model model.scorer.north model.scorer.south ]
+          , viewBets model model.scorer.west model.scorer.east
+          ]
+    )
+
 viewBets : Model -> (Player, Bet) -> (Player, Bet) -> Html Msg
-viewBets model player1 player2 =
-  div []
-    [ viewPlayer model.scorer player1
-    , viewPlayer model.scorer player2
+viewBets model (player1, bet1) (player2, bet2) =
+  div
+    [ css
+      [ position relative
+      ]
+    ]
+    [ viewAddBet model (player1, bet1)
+    , (if bet1 /= Zero then
+      ( if bet2 == Zero then
+          viewAddBetMin model (player2, bet2)
+        else
+          viewAddBet model (player2, bet2)
+      )
+      else
+        text "")
     ]
 
 
-viewPlayer : Scorer -> (Player, Bet) -> Html Msg
-viewPlayer model playerBet =
-  viewPlayerBet model playerBet
+viewAddBet : Model -> (Player, Bet) -> Html Msg
+viewAddBet model (player, bet) =
+  div
+    [ css
+      [ position relative
+      , nthChild "2" [ marginTop (px 10) ]
+      ]
+    ]
+    [ if bet == Zero then
+        div
+          [ css
+            [ padding2 (px 6) (px 10)
+            , border3 (px 2) solid model.theme.colors.border
+            , borderRadius (px 10)
+            , width (px 94)
+            , boxSizing borderBox
+            , textAlign center
+            , cursor pointer
+            ]
+          , onClick (ChangeSettingBet player)
+          ]
+          [ text "+ Bet" ]
+      else
+        viewBet model (player, bet)
+    ]
+
+
+viewAddBetMin : Model -> (Player, Bet) -> Html Msg
+viewAddBetMin model (player, bet) =
+  div
+    [ css
+      [ position absolute
+      , backgroundColor model.theme.colors.background
+      , left (pct 50)
+      , transform (translateX (pct -50))
+      , padding2 (px 1) (px 10)
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      , borderBottomLeftRadius (px 10)
+      , borderBottomRightRadius (px 10)
+      , borderTop zero
+      , boxSizing borderBox
+      , textAlign center
+      , lineHeight initial
+      , cursor pointer
+      ]
+    , onClick (ChangeSettingBet player)
+    ]
+    [ text "+" ]
+
+
+viewBet : Model -> (Player, Bet) -> Html Msg
+viewBet model (player, bet) =
+  let
+    betLabel = if bet == Tichu then "Tichu" else "Grand"
+    playerId = getPlayerId player
+    successful = bet /= Zero
+      && (case model.scorer.firstOut of
+            One p -> p == player
+            Team (_, Just p) -> p == player
+            _ -> False)
+  in
+    div
+      [ css
+        [ displayFlex
+        , alignItems center
+        , border3 (px 2) solid transparent
+        ]
+      ]
+      [ div
+        [ css
+          [ borderRight3 (px 1) solid model.theme.colors.border
+          , padding2 (px 6) (px 10)
+          , cursor pointer
+          , backgroundColor model.theme.colors.border
+          , borderTopLeftRadius (px 10)
+          , borderBottomLeftRadius (px 10)
+          ]
+        , onClick (ChangePlayerBet player bet False)
+        ]
+        [ text "x" ]
+      , div
+        [ css
+          []
+        ]
+        [ input
+          [ type_ "checkbox"
+          , id ("success" ++ "-" ++ playerId)
+          , checked successful
+          , onCheck (ChangeFirstOut player)
+          , css
+            [ display none
+            ]
+          ]
+          []
+        , label
+          [ for ("success" ++ "-" ++ playerId)
+          , css
+            [ padding2 (px 6) (px 10)
+            , cursor pointer
+            , borderTopRightRadius (px 10)
+            , borderBottomRightRadius (px 10)
+            , backgroundColor (hex (if successful then "71be44" else "be6044"))
+            ]
+          ]
+          [ text betLabel ]
+        ]
+      ]
 
 
 viewPlayerBet : Scorer -> (Player, Bet) -> Html Msg
@@ -417,39 +594,47 @@ viewPlayerBet model (player, bet) =
             _ -> False 
           )
   in  
-    div [ class "bets" ]
-      [ div [ class "bet" ]
-          [ labeledCheckbox
-              ("tichu" ++ "-" ++ playerId)
-              "Tichu"
-              "bet-radio"
-              "bet-label"
-              (bet == Tichu)
-              (ChangePlayerBet player Tichu)
-          , labeledCheckbox
-              ("grand" ++ "-" ++ playerId)
-              "Grand"
-              "bet-radio"
-              "bet-label"
-              (bet == GrandTichu)
-              (ChangePlayerBet player GrandTichu)
-          , if bet /= Zero then
-              div [ class "success"]
-                [ input
-                [ type_ "checkbox"
-                , class "bet-success"
-                , id ("success" ++ "-" ++ playerId)
-                , checked successful
-                , onCheck (ChangeFirstOut player) ] []
-                , label
-                  [ class ("bet-success-label" ++ if successful then " successful" else "" )
-                  , for ("success" ++ "-" ++ playerId)
-                  ]
-                  [ text (if successful then "✓" else "✗") ]
-                ]
-            else
-              text ""
+    div
+      [ css
+        [
+        ]
+      ]
+      [ div
+        [ css
+          [
           ]
+        ]
+        [ labeledCheckbox
+            ("tichu" ++ "-" ++ playerId)
+            "Tichu"
+            "bet-radio"
+            "bet-label"
+            (bet == Tichu)
+            (ChangePlayerBet player Tichu)
+        , labeledCheckbox
+            ("grand" ++ "-" ++ playerId)
+            "Grand"
+            "bet-radio"
+            "bet-label"
+            (bet == GrandTichu)
+            (ChangePlayerBet player GrandTichu)
+        , if bet /= Zero then
+            div [ class "success"]
+              [ input
+              [ type_ "checkbox"
+              , class "bet-success"
+              , id ("success" ++ "-" ++ playerId)
+              , checked successful
+              , onCheck (ChangeFirstOut player) ] []
+              , label
+                [ class ("bet-success-label" ++ if successful then " successful" else "" )
+                , for ("success" ++ "-" ++ playerId)
+                ]
+                [ text (if successful then "✓" else "✗") ]
+              ]
+          else
+            text ""
+        ]
       ]
 
 
@@ -792,22 +977,6 @@ themeSettings model =
       )
       (Dict.values themes))
   ]
-  
-
-
-labeledRadio : String -> String -> String -> String -> String -> Bool -> (String -> Msg) -> Html Msg
-labeledRadio elemid elemlabel rgroup elemclass labelclass isChecked msg =
-  div []
-    [ input 
-      [ type_ "radio"
-      , class elemclass
-      , id elemid
-      , name rgroup
-      , checked isChecked
-      , onInput msg
-      ] []
-    , label [ class labelclass, for elemid ] [ text elemlabel ]
-    ]
 
 labeledCheckbox : String -> String -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
 labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
