@@ -71,8 +71,8 @@ type alias Model =
   , changingTheme: Bool
   , updateAvailable: Bool
   , checkingForUpdate: Bool
-  , currentVersion: String
-  , foundVersion: String
+  , currentVersion: Version
+  , foundVersion: Version
   , crashed: Bool
   , confirm: Confirm
   }
@@ -89,8 +89,8 @@ defaultModel theme vertName horzName =
   , showSettings = False
   , changingTheme = False
   , checkingForUpdate = False
-  , currentVersion = "0.0.0"
-  , foundVersion = "0.0.0"
+  , currentVersion = { version = "0.0.6" }
+  , foundVersion = { version = "0.0.0" }
   , updateAvailable = False
   , crashed = False
   , confirm = Hidden
@@ -206,7 +206,6 @@ type Msg
   | CloseConfirmation
   | CheckForUpdate Posix
   | CheckedVersion (Result Http.Error Version)
-  | CheckedCurrentVersion Version (Result Http.Error Version)
   | UpdateAvailable
 
 
@@ -256,12 +255,7 @@ update msg model =
     CheckedVersion versionResult ->
       case versionResult of
         Ok version ->
-          ( { model | foundVersion = version.version }, getCurrentVersion version )
-        Err _ -> ( model, Cmd.none )
-    CheckedCurrentVersion theirs oursResult ->
-      case oursResult of
-        Ok ours ->
-          ( { model | currentVersion = ours.version, updateAvailable = compareVersion ours theirs }, Cmd.none )
+          ( { model | foundVersion = version, updateAvailable = compareVersion model.currentVersion version }, Cmd.none )
         Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
@@ -331,8 +325,8 @@ view model =
         ]
         [ viewScorer model
         , if model.checkingForUpdate then text "Checking for update..." else text ""
-        , text ("Current version: " ++ model.currentVersion)
-        , text ("Found version:  " ++ model.foundVersion)
+        , text ("Current version: " ++ model.currentVersion.version)
+        , text ("Found version:  " ++ model.foundVersion.version)
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
@@ -1134,13 +1128,5 @@ checkForUpdate =
   Http.get
     { url = "https://tichu.netlify.com/version.json"
     , expect = Http.expectJson CheckedVersion versionDecoder
-    }
-
-
-getCurrentVersion : Version -> Cmd Msg
-getCurrentVersion version =
-  Http.get
-    { url = "/version.json"
-    , expect = Http.expectJson (CheckedCurrentVersion version) versionDecoder
     }
 
