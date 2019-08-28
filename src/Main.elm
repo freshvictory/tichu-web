@@ -40,7 +40,7 @@ port updateAvailable : (() -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.batch
   [ updateAvailable (\_ -> UpdateAvailable)
-  , every (5 * 1000) CheckForUpdate
+  , every (5 * 60 * 1000) CheckForUpdate
   ]
 
 
@@ -180,7 +180,7 @@ init state =
         }
   in
   ( modelFromState finalState
-  , Cmd.none
+  , checkForUpdate
   )
 
 
