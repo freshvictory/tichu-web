@@ -2,7 +2,7 @@ module Theme exposing
   ( ThemeSettings
   , light
   , dark
-  , glitter
+  , strawberry
   )
 
 import Css exposing (Color, hex)
@@ -57,10 +57,10 @@ dark =
   }
 
 
-glitter : ThemeSettings
-glitter =
-  { id = "glitter"
-  , name = "Glitter"
+strawberry : ThemeSettings
+strawberry =
+  { id = "strawberry"
+  , name = "Strawberry"
   , colors =
     { border = hex "#F288C2"
     , background = hex "F2B6DD"

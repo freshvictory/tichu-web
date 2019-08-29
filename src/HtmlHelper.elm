@@ -32,8 +32,7 @@ type alias RangeConfig msg =
   }
 
 type alias RangeStyles =
-  { width: Float
-  , height: Float
+  { height: Float
   , padding: Float
   , background: Color
   , trackBorderRadius: Float
@@ -61,7 +60,7 @@ range config styles =
 
 inputStyling : RangeStyles -> List Style
 inputStyling styles =
-  [ width (px (styles.width - (2 * styles.padding)))
+  [ width (pct 100)
   , backgroundColor styles.background
   , borderRadius (px styles.trackBorderRadius)
   , padding (px styles.padding)

@@ -3,6 +3,7 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
+import Css.Transitions exposing (transition, easeInOut, linear)
 import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
 import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyled)
@@ -16,7 +17,7 @@ import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg)
 import Time exposing (Posix, every)
-import Theme exposing (ThemeSettings, light, dark, glitter)
+import Theme exposing (ThemeSettings, light, dark, strawberry)
 import Version exposing (Version, versionDecoder, compareVersion)
 
 
@@ -26,7 +27,7 @@ main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
-    , view = \model -> { title = "Tichu 8", body = [ model |> view |> toUnstyled ] }
+    , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
     , subscriptions = subscriptions
     }
@@ -98,7 +99,7 @@ defaultModel theme vertName horzName =
 
 
 themes : Dict String ThemeSettings
-themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, glitter, light ])
+themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, strawberry, light ])
 
 
 modelFromState : State -> Model
@@ -324,9 +325,6 @@ view model =
           ]
         ]
         [ viewScorer model
-        , if model.checkingForUpdate then text "Checking for update..." else text ""
-        , text ("Current version: " ++ model.currentVersion.version)
-        , text ("Found version:  " ++ model.foundVersion.version)
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
@@ -478,6 +476,7 @@ viewBetRow model =
           ]
     )
 
+
 viewBets : Model -> (Player, Bet) -> (Player, Bet) -> Html Msg
 viewBets model (player1, bet1) (player2, bet2) =
   div
@@ -486,14 +485,13 @@ viewBets model (player1, bet1) (player2, bet2) =
       ]
     ]
     [ viewAddBet model (player1, bet1)
-    , (if bet1 /= Zero then
-      ( if bet2 == Zero then
+    , if bet1 /= Zero then
+        if bet2 == Zero then
           viewAddBetMin model (player2, bet2)
         else
           viewAddBet model (player2, bet2)
-      )
       else
-        text "")
+        text ""
     ]
 
 
@@ -525,7 +523,7 @@ viewAddBet model (player, bet) =
 
 
 viewAddBetMin : Model -> (Player, Bet) -> Html Msg
-viewAddBetMin model (player, bet) =
+viewAddBetMin model (player, _) =
   div
     [ css
       [ position absolute
@@ -679,6 +677,17 @@ viewTeamTurnScores model =
   div
     [ css
       [ margin auto
+      , position relative
+      , bottom zero
+      , transition [ Css.Transitions.bottom3 200 0 easeInOut ]
+      , zIndex (Css.int 1)
+      , batch
+        ( case model.scorer.firstOut of
+            Team _ ->
+              [ bottom (px -25)
+              ]
+            _ -> []
+        )
       ]
     ]
     [ viewTeamTurnScore model model.scorer.vertTurnScore Vertical
@@ -756,7 +765,8 @@ viewConsecutiveVictoryButton model elemid team ischecked =
           [ border3 (px 3) solid model.theme.colors.border
           , width (px 50)
           , height (px 50)
-          , display inlineBlock
+          , display inlineFlex
+          , alignItems center
           , boxSizing borderBox
           , padding2 zero (px 7)
           , backgroundColor model.theme.colors.border
@@ -787,10 +797,7 @@ viewConsecutiveVictoryButton model elemid team ischecked =
         ]
         [ div
           [ css
-            [ top (pct 50)
-            , transform (translateY (pct -50))
-            , position relative
-            , width (px 22)
+            [ width (px 22)
             , height (px 22)
             ]
           ]
@@ -806,37 +813,28 @@ viewTeamTurnScoreSlider model =
       [ displayFlex
       , flexDirection row
       , justifyContent center
+      , zIndex (Css.int 2)
+      , position relative
+      , margin auto
+      , width (px (50 + 50 + 240))
       ]
     ]
     [ viewConsecutiveVictoryButton
       model
       "vert-cv"
-      Vertical        
+      Vertical
       (case model.scorer.firstOut of
         Team (Vertical, _) -> True      
         _ -> False
       )
-    , case model.scorer.firstOut of 
-        Team t -> 
-          div
-            [ css
-              [ width (px 240)
-              , height (px 50)
-              , lineHeight (px 50)
-              , backgroundColor model.theme.colors.cta
-              , color (hex "000")
-              , cursor pointer
-              , batch (case t of
-                (Horizontal, _) ->
-                  [ textAlign right
-                  ]
-                _ -> []
-              )
-              ]
-            , onClick (ConsecutiveVictory Vertical False)
-            ]
-            [ text "Consecutive victory" ]
-        _ -> viewSlider model
+    , viewConsecutiveVictoryOverlays model
+    , div
+        [ css
+          [ overflow hidden
+          , width (px 240)
+          ]
+        ]
+        [ viewSlider model ]
     , viewConsecutiveVictoryButton
       model
       "horz-cv"
@@ -846,6 +844,81 @@ viewTeamTurnScoreSlider model =
         _ -> False
       )
     ]
+
+
+viewConsecutiveVictoryOverlays : Model -> Html Msg
+viewConsecutiveVictoryOverlays model =
+  div
+    [ css
+      [ position absolute
+      , width (px (50 + 240 + 50))
+      , height (px 50)
+      , pointerEvents none
+      ]
+    ]
+    [ div
+      [ css
+        [ position absolute
+        , left (px 50)
+        , right (px 50)
+        , width (px 240)
+        , height (pct 100)
+        ]
+      ]
+      [ viewConsecutiveVictoryOverlay
+        model
+        Vertical
+        (case model.scorer.firstOut of
+          Team (Vertical, _) -> True      
+          _ -> False
+        )
+      , viewConsecutiveVictoryOverlay
+        model
+        Horizontal
+        (case model.scorer.firstOut of
+          Team (Horizontal, _) -> True      
+          _ -> False
+        )
+      ]
+    ]
+
+
+viewConsecutiveVictoryOverlay : Model -> Team -> Bool -> Html Msg
+viewConsecutiveVictoryOverlay model team active =
+  let
+    (direction, opposite, transitionDirection) =
+      case team of
+        Vertical -> (right, left, Css.Transitions.right3)
+        Horizontal -> (left, right, Css.Transitions.left3)
+  in
+  div
+    [ css
+      [ position absolute
+      , height (pct 100)
+      , overflow hidden
+      , lineHeight (px 50)
+      , backgroundColor model.theme.colors.cta
+      , color (hex "000")
+      , cursor pointer
+      , pointerEvents auto
+      , opposite zero
+      , direction (pct 100)
+      , transition [ transitionDirection 200 0 easeInOut ]
+      , batch (if active then
+        [ direction zero ]
+        else
+          []
+      )
+      , batch (case team of
+        Horizontal ->
+          [ textAlign right
+          ]
+        Vertical ->[]
+      )
+      ]
+    , onClick (ConsecutiveVictory Vertical False)
+    ]
+    [ text "Consecutive victory" ]
 
 
 viewSlider : Model -> Html Msg
@@ -858,8 +931,7 @@ viewSlider model =
     , value = model.scorer.vertTurnScore
     , onInput = ChangeTeamScore
     }
-    { width = 250
-    , height = 50
+    { height = 50
     , padding = 5
     , background = model.theme.colors.background
     , trackBorderRadius = 0
