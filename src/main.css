@@ -37,39 +37,6 @@ body {
   display: none;
 }
 
-.bet-success-label.successful {
-  background: rgb(113, 190, 68);
-  color: white;
-  border: 1px solid rgb(113, 190, 68);
-  padding: 0 4px;
-}
-
-.dark .bet-success-label.successful {
-  color: #444;
-}
-
-.bet-success-label:not(.successful) {
-  color: rgb(190, 96, 68);
-  border: 1px solid rgb(190, 96, 68);
-}
-
-.cv-check:checked + label,
-.bet-radio:checked + label {
-  font-weight: 600;
-  border-bottom: 2px solid #DBB004;
-}
-
-.bet-success-label {
-  padding: 0 3px;
-  box-sizing: border-box;
-  border-radius: 4px;
-}
-
-.view-actions {
-  display: flex;
-  justify-content: space-around;
-}
-
 .uh-oh {
   color: red;
   font-weight: 500;
@@ -88,15 +55,6 @@ body {
       1px 1px 0 #000;
 }
 
-.settings-container {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: inherit;
-  margin: 20px;
-  text-align: right;
-}
-
 .settings-container.avail .settings-label:after {
   content: '';
   width: 8px;
@@ -104,14 +62,6 @@ body {
   border-radius: 8px;
   background: red;
   position: absolute;
-}
-
-.settings-container.avail .update {
-  background: red;
-}
-
-.lighting-label {
-  padding: 3px 6px;
 }
 
 button {

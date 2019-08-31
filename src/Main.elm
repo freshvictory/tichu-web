@@ -190,7 +190,7 @@ init state =
 
 type Msg
   = ChangePlayerBet Player Bet Bool
-  | ChangeSettingBet Player
+  | ChangeSettingBet SettingBet
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
   | ChangeTeamName Team String
@@ -216,7 +216,7 @@ update msg model =
     ChangePlayerBet playerType bet checked ->
       ( { model | scorer = changePlayerBet model.scorer playerType (if checked then bet else Zero), settingBet = NoOne }, Cmd.none )
     ChangeSettingBet player ->
-      ( { model | settingBet = Person player }, Cmd.none )
+      ( { model | settingBet = player }, Cmd.none )
     ChangeFirstOut playerType result ->
       ( { model | scorer = changeFirstOut model.scorer playerType result }, Cmd.none )
     Score ->
@@ -330,7 +330,18 @@ view model =
           else
             text ""
         , confirm model 
-        , div [ class ("settings-container" ++ (if model.updateAvailable then " avail" else "")) ]
+        , div
+          [ class ("settings-container" ++ (if model.updateAvailable then " avail" else ""))
+          , css
+            [ position absolute
+            , bottom zero
+            , right zero
+            , padding inherit
+            , margin (px 20)
+            , textAlign right
+            , zIndex (Css.int 150)
+            ]
+          ]
           [ if model.showSettings then
               viewSettings model
             else
@@ -431,74 +442,84 @@ viewBetRow : Model -> Html Msg
 viewBetRow model =
   div
     [ css
-      [ marginBottom (px 10)
-      , border3 (px 2) solid model.theme.colors.border
+      [ displayFlex
+      , property "justify-content" "space-evenly"
+      ]
+    ]
+    ( case model.settingBet of
+        Person player ->
+          [ shield (ChangeSettingBet NoOne) True
+          , viewBetChoice model player
+          ]
+        NoOne ->
+          [ viewBets model model.scorer.north model.scorer.south
+          , viewBets model model.scorer.west model.scorer.east
+          ]
+    )
+
+
+viewBetChoice : Model -> Player -> Html Msg
+viewBetChoice model player =
+  div
+    [ css
+      [ border3 (px 2) solid model.theme.colors.border
       , borderRadius (px 20)
       , padding (px 10)
       , displayFlex
       , alignItems center
       , margin auto
       , boxSizing borderBox
-      , width (px 218)
-      , justifyContent spaceBetween
       , backgroundColor model.theme.colors.menuBackground
+      , zIndex (Css.int 150)
       ]
     ]
-    ( case model.settingBet of
-        Person player ->
-          [ div
-            [ onClick (ChangePlayerBet player Tichu True)
-            , css
-              [ cursor pointer
-              , borderRight3 (px 2) solid model.theme.colors.border
-              , display inlineBlock
-              , marginRight (px 10)
-              , padding2 (px 5) (px 10)
-              , border3 (px 2) solid model.theme.colors.border
-              , borderRadius (px 10)
-              , width (px 86)
-              , boxSizing borderBox
-              , textAlign center
-              , cursor pointer
-              , backgroundColor model.theme.colors.background
-              ]
-            ]
-            [ text "Tichu" ]
-            , div
-              [ onClick (ChangePlayerBet player GrandTichu True)
-              , css
-                [ cursor pointer
-                , padding2 (px 5) (px 10)
-                , border3 (px 2) solid model.theme.colors.border
-                , borderRadius (px 10)
-                , width (px 86)
-                , boxSizing borderBox
-                , textAlign center
-                , cursor pointer
-                , backgroundColor model.theme.colors.background
-                ]
-              ]
-              [ text "Grand"]
-          ]
-        NoOne ->
-          [ div
-            [ css
-              [ borderRight3 (px 2) solid model.theme.colors.border
-              , display inlineBlock
-              , paddingRight (px 10)
-              , marginRight (px 10)
-              ]
-            ] [ viewBets model model.scorer.north model.scorer.south ]
-          , viewBets model model.scorer.west model.scorer.east
-          ]
-    )
+    [ div
+      [ onClick (ChangePlayerBet player Tichu True)
+      , css
+        [ cursor pointer
+        , borderRight3 (px 2) solid model.theme.colors.border
+        , display inlineBlock
+        , marginRight (px 10)
+        , padding2 (px 5) (px 10)
+        , border3 (px 2) solid model.theme.colors.border
+        , borderRadius (px 10)
+        , width (px 86)
+        , boxSizing borderBox
+        , textAlign center
+        , cursor pointer
+        , backgroundColor model.theme.colors.background
+        ]
+      ]
+      [ text "Tichu" ]
+    , div
+      [ onClick (ChangePlayerBet player GrandTichu True)
+      , css
+        [ cursor pointer
+        , padding2 (px 5) (px 10)
+        , border3 (px 2) solid model.theme.colors.border
+        , borderRadius (px 10)
+        , width (px 86)
+        , boxSizing borderBox
+        , textAlign center
+        , cursor pointer
+        , backgroundColor model.theme.colors.background
+        ]
+      ]
+      [ text "Grand"]
+    ]
 
 
 viewBets : Model -> (Player, Bet) -> (Player, Bet) -> Html Msg
 viewBets model (player1, bet1) (player2, bet2) =
   div
     [ css
-      [ position relative
+      [ border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , displayFlex
+      , alignItems center
+      , boxSizing borderBox
+      , backgroundColor model.theme.colors.menuBackground
       ]
     ]
     [ viewAddBet model (player1, bet1)
@@ -533,7 +554,7 @@ viewAddBet model (player, bet) =
             , fontStyle italic
             , backgroundColor model.theme.colors.background
             ]
-          , onClick (ChangeSettingBet player)
+          , onClick (ChangeSettingBet (Person player))
           ]
           [ text "add bet" ]
       else
@@ -559,7 +580,7 @@ viewAddBetMin model (player, _) =
       , lineHeight initial
       , cursor pointer
       ]
-    , onClick (ChangeSettingBet player)
+    , onClick (ChangeSettingBet (Person player))
     ]
     [ text "+" ]
 
@@ -580,7 +601,7 @@ viewBet model (player, bet) =
         [ border3 (px 2) solid transparent
         , position relative
         , borderRadius (px 10)
-        , backgroundColor (hex (if successful then "71be44" else "B84444"))
+        , backgroundColor (if successful then hex "71be44" else model.theme.colors.border)
         ]
       ]
       [ div
@@ -595,7 +616,6 @@ viewBet model (player, bet) =
           , position absolute
           , top (px -8)
           , left (px -8)
-          , fontSize (px 11)
           ]
         , onClick (ChangePlayerBet player bet False)
         ]
@@ -644,16 +664,17 @@ viewBet model (player, bet) =
           [ css
             [ margin (px 5)
             , cursor pointer
-            -- , border3 (px 1) solid model.theme.colors.border
             , borderRadius (px 5)
             , boxSizing borderBox
-            , minWidth (px 18)
+            , width (px 18)
+            , height (px 18)
             , fontSize (px 12)
             , displayFlex
             , alignItems center
             , justifyContent center
             , backgroundColor (hex "FFF")
             , color (hex "111")
+            , fontWeight bold
             ]
           , for ("success" ++ "-" ++ playerId)
           ]
@@ -1042,11 +1063,15 @@ viewActions model =
     , div
       [ onClick Undo
       , css
-        [ width (px 25)
-        , height (px 25)
+        [ width (px 20)
+        , height (px 20)
         , cursor pointer
-        , marginLeft (px 20)
+        , marginLeft (px 15)
         , marginRight auto
+        , padding (px 3)
+        , border3 (px 2) solid model.theme.colors.border
+        , backgroundColor model.theme.colors.menuBackground
+        , borderRadius (px 10)
         ]
       ]
       [ undoSvg ]
@@ -1064,6 +1089,7 @@ viewSettings model =
       , width (px 150)
       , textAlign left
       , marginBottom (px 10)
+      , zIndex (Css.int 150)
       ]
     ]
     (if model.changingTheme then themeSettings model else defaultSettings model)
@@ -1169,6 +1195,7 @@ confirm model =
             , top (pct 50)
             , transform (translate2 (pct -50) (pct -66))
             , minWidth maxContent
+            , zIndex (Css.int 150)
             ]
           ]
           [
@@ -1222,6 +1249,7 @@ shield msg dim =
       , top (px 0)
       , right (px 0)
       , bottom (px 0)
+      , zIndex (Css.int 100)
       , if dim then
           batch
           [ backgroundColor (hex "#111")
