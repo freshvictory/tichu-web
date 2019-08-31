@@ -342,6 +342,7 @@ view model =
             else
               text ""
           , settingsCheckbox
+              model
               "settings-toggle"
               "settings-label"
               model.showSettings
@@ -1111,8 +1112,8 @@ themeSettings model =
       (Dict.values themes))
   ]
 
-settingsCheckbox : String -> String -> Bool -> (Bool -> Msg) -> Html Msg
-settingsCheckbox elemid labelclass isChecked msg =
+settingsCheckbox : Model -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
+settingsCheckbox model elemid labelclass isChecked msg =
   div
     [ css
       [ height (px 30)
@@ -1136,6 +1137,7 @@ settingsCheckbox elemid labelclass isChecked msg =
         , right zero
         , width (px 30)
         , height (px 30)
+        , color model.theme.colors.border
         ]
       ]
       [ gearSvg ]
