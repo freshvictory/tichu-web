@@ -137,13 +137,13 @@ gearSvg =
         , r "12"
         , fill "none"
         , stroke "currentColor"
-        , strokeWidth "3"
+        , strokeWidth "8"
         ]
         []
       , Svg.Styled.path
         [ stroke "currentColor"
         , fill "none"
-        , strokeWidth "4"
+        , strokeWidth "6"
         , d -- 15.9,15.9
           (  "M 30,2"
           ++ "v 5.5"
