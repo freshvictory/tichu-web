@@ -662,78 +662,31 @@ viewBet model (player, bet) =
           [ text betLabel ]
         , label
           [ css
-            [ margin (px 5)
+            [ padding (px 5)
             , cursor pointer
-            , borderRadius (px 5)
-            , boxSizing borderBox
-            , width (px 18)
-            , height (px 18)
-            , fontSize (px 12)
             , displayFlex
             , alignItems center
             , justifyContent center
-            , backgroundColor (hex "FFF")
-            , color (hex "111")
-            , fontWeight bold
             ]
           , for ("success" ++ "-" ++ playerId)
           ]
-          [ text (if successful then "✓" else " ") ]
-        ]
-      ]
-
-
-viewPlayerBet : Scorer -> (Player, Bet) -> Html Msg
-viewPlayerBet model (player, bet) =
-  let
-    playerId = getPlayerId player
-    successful = bet /= Zero
-      && (case model.firstOut of
-            One p -> p == player
-            Team (_, Just p) -> p == player
-            _ -> False 
-          )
-  in  
-    div
-      [ css
-        [
-        ]
-      ]
-      [ div
-        [ css
-          [
-          ]
-        ]
-        [ labeledCheckbox
-            ("tichu" ++ "-" ++ playerId)
-            "Tichu"
-            "bet-radio"
-            "bet-label"
-            (bet == Tichu)
-            (ChangePlayerBet player Tichu)
-        , labeledCheckbox
-            ("grand" ++ "-" ++ playerId)
-            "Grand"
-            "bet-radio"
-            "bet-label"
-            (bet == GrandTichu)
-            (ChangePlayerBet player GrandTichu)
-        , if bet /= Zero then
-            div [ class "success"]
-              [ input
-              [ type_ "checkbox"
-              , class "bet-success"
-              , id ("success" ++ "-" ++ playerId)
-              , checked successful
-              , onCheck (ChangeFirstOut player) ] []
-              , label
-                [ class ("bet-success-label" ++ if successful then " successful" else "" )
-                , for ("success" ++ "-" ++ playerId)
+          [ div
+              [ css
+                [ borderRadius (px 5)
+                , boxSizing borderBox
+                , width (px 18)
+                , height (px 18)
+                , fontSize (px 12)
+                , displayFlex
+                , alignItems center
+                , justifyContent center
+                , backgroundColor (hex "FFF")
+                , color (hex "111")
+                , fontWeight bold
                 ]
-                [ text (if successful then "✓" else "✗") ]
               ]
-          else
-            text ""
+              [ text (if successful then "✓" else " ") ]
+          ]
         ]
       ]
 
