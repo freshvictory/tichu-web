@@ -69,7 +69,6 @@ type alias Model =
   , theme: ThemeSettings
   , themes: Dict String ThemeSettings
   , showSettings: Bool
-  , changingTheme: Bool
   , updateAvailable: Bool
   , checkingForUpdate: Bool
   , currentVersion: Version
@@ -88,7 +87,6 @@ defaultModel theme vertName horzName =
   , theme = theme
   , themes = themes
   , showSettings = False
-  , changingTheme = False
   , checkingForUpdate = False
   , currentVersion = { version = "0.0.8" }
   , foundVersion = { version = "0.0.0" }
@@ -203,7 +201,6 @@ type Msg
   | Update
   | ChangeLighting String
   | ShowConfirmation String Msg
-  | ChangingTheme Bool
   | CloseConfirmation
   | CheckForUpdate Posix
   | CheckedVersion (Result Http.Error Version)
@@ -245,9 +242,7 @@ update msg model =
     ChangeLighting id ->
       ( changeTheme model id, Cmd.none )
     ToggleSettings checked ->
-      ( { model | showSettings = checked, changingTheme = False }, Cmd.none )
-    ChangingTheme checked ->
-      ( { model | changingTheme = checked }, Cmd.none )
+      ( { model | showSettings = checked }, Cmd.none )
     ShowConfirmation query confirmMsg ->
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
@@ -1045,7 +1040,7 @@ viewSettings model =
       , zIndex (Css.int 150)
       ]
     ]
-    (if model.changingTheme then themeSettings model else defaultSettings model)
+    (defaultSettings model)
 
 
 defaultSettings : Model -> List (Html Msg)
@@ -1061,12 +1056,13 @@ defaultSettings model =
       ]
   in
   [ button
-    [ onClick (ChangingTheme True)
-    , css
+    [ css
       [ batch buttonStyles
+      , textAlign left
+      , padding (px 10)
       ]
     ]
-    [ text "Change theme"]
+    (themeSettings model)
   , button
     [ css
       [ batch buttonStyles
@@ -1090,25 +1086,23 @@ themeSettings : Model -> List (Html Msg)
 themeSettings model =
   [ div
     [ css
-      [ paddingBottom (px 10)
-      , marginBottom (px 10)
+      [ paddingBottom (px 5)
+      , marginBottom (px 5)
+      , textAlign center
       , fontWeight bold
-      , cursor pointer
       , borderBottom3 (px 2) solid model.theme.colors.border
       ]
-    , onClick (ChangingTheme False)
     ]
-    [ text "< Theme" ]
+    [ text "Theme" ]
   , div
-    [
-    ]
+    [ ]
     (List.map
       (\theme ->
         li
           [ onClick (ChangeLighting theme.id)
           , css
             [ batch (if model.theme.id == theme.id then [ fontWeight bold ] else [])
-            , marginBottom (px 10)
+            , marginBottom (px 5)
             , cursor pointer
             , lastChild [ marginBottom zero ]
             ]
