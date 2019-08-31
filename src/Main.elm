@@ -3,12 +3,12 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
-import Css.Transitions exposing (transition, easeInOut, linear)
+import Css.Transitions exposing (transition, easeInOut)
 import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
 import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyled)
 import Html.Styled.Attributes exposing
-  ( id, type_, class, css, for, name, value, checked)
+  ( id, type_, css, for, value, checked)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
 import Http
 import Json.Decode exposing
@@ -326,8 +326,7 @@ view model =
             text ""
         , confirm model 
         , div
-          [ class ("settings-container" ++ (if model.updateAvailable then " avail" else ""))
-          , css
+          [ css
             [ position absolute
             , bottom zero
             , right zero
@@ -341,12 +340,7 @@ view model =
               viewSettings model
             else
               text ""
-          , settingsCheckbox
-              model
-              "settings-toggle"
-              "settings-label"
-              model.showSettings
-              ToggleSettings
+          , settingsGear model
           ]
         ]
       ]
@@ -365,7 +359,18 @@ viewScorer model =
     , viewBetRow model
     , viewActions model
     , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
-        button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
+        button
+          [ css
+            [ color (hex "FF0000")
+            , fontWeight bold
+            , border3 (px 1) solid (hex "FF0000")
+            , borderRadius (px 10)
+            , property "background" "repeating-linear-gradient(45deg,yellow,yellow 10px,black 10px,black 20px)"
+            , property "text-shadow" "-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000"
+            ]
+          , onClick CrashApp
+          ]
+          [ text "Things are not looking good" ]
       else
         text ""
     ]
@@ -1112,8 +1117,8 @@ themeSettings model =
       (Dict.values themes))
   ]
 
-settingsCheckbox : Model -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
-settingsCheckbox model elemid labelclass isChecked msg =
+settingsGear : Model -> Html Msg
+settingsGear model  =
   div
     [ css
       [ height (px 30)
@@ -1122,22 +1127,37 @@ settingsCheckbox model elemid labelclass isChecked msg =
     ] 
     [ input
       [ type_ "checkbox"
-      , id elemid
-      , checked isChecked
-      , onCheck msg
+      , id "settings-toggle"
+      , checked model.showSettings
+      , onCheck ToggleSettings
       , css
         [ display none
         ]
       ] []
     , label
-      [ class labelclass
-      , for elemid
+      [ for "settings-toggle"
       , css
         [ position absolute
         , right zero
         , width (px 30)
         , height (px 30)
         , color model.theme.colors.border
+        , batch
+          ( if model.updateAvailable then
+            [ after
+              [ property "content" "''"
+              , width (px 8)
+              , height (px 8)
+              , borderRadius (px 8)
+              , backgroundColor model.theme.colors.pop
+              , position absolute
+              , top (px -4)
+              , right (px -4)
+              ]
+            ]
+          else
+            []
+          )
         ]
       ]
       [ gearSvg ]

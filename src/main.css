@@ -16,33 +16,6 @@ body {
   overflow: hidden;
 }
 
-.uh-oh {
-  color: red;
-  font-weight: 500;
-  border: 1px red solid;
-  background: repeating-linear-gradient(
-    45deg,
-    yellow,
-    yellow 10px,
-    black 10px,
-    black 20px
-  );
-  text-shadow:
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-     -1px 1px 0 #000,
-      1px 1px 0 #000;
-}
-
-.settings-container.avail .settings-label:after {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 8px;
-  background: red;
-  position: absolute;
-}
-
 button {
   cursor: pointer;
   font-size: inherit;
