@@ -1,4 +1,4 @@
-module Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg)
+module Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (..)
@@ -116,6 +116,59 @@ xSvg =
           ++ "L 8 2"
           ++ "a 4,4 -135 0,0 -6,6"
           ++ "L 24 30"
+          ++ "z"
+          )
+        ]
+        []
+      ]
+    ]
+
+
+gearSvg : Html msg
+gearSvg =
+  svg
+    [ viewBox "0 0 60 60"
+    ]
+    [ g
+      [ ]
+      [ circle 
+        [ cx "30"
+        , cy "30"
+        , r "12"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        ]
+        []
+      , Svg.Styled.path
+        [ stroke "currentColor"
+        , fill "none"
+        , strokeWidth "4"
+        , d -- 15.9,15.9
+          (  "M 30,2"
+          ++ "v 5.5"
+          ++ "A 22.5,22.5 0 0,0 14.1,14.1"
+          ++ "l -3.8891 -3.8891"
+          ++ "l 3.8891 3.8891"
+          ++ "A 22.5,22.5, 0 0,0 7.5,30"
+          ++ "h -5.5"
+          ++ "h 5.5"
+          ++ "A 22.5,22.5 0 0,0 14.1,45.9"
+          ++ "l -3.8891 3.8891"
+          ++ "l 3.8891 -3.8891"
+          ++ "A 22.5,22.5 0 0,0 30 52.5"
+          ++ "v 5.5"
+          ++ "v -5.5"
+          ++ "A 22.5,22.5 0 0,0 45.9,45.9"
+          ++ "l 3.8891 3.8891"
+          ++ "l -3.8891 -3.8891"
+          ++ "A 22.5,22.5, 0 0,0 52.5,30"
+          ++ "h 5.5"
+          ++ "h -5.5"
+          ++ "A 22.5,22.5 0 0,0 45.9,14.1"
+          ++ "l 3.8891 -3.8891"
+          ++ "l -3.8891 3.8891"
+          ++ "A 22.5,22.5 0 0,0 30,7.5"
           ++ "z"
           )
         ]

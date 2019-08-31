@@ -15,7 +15,7 @@ import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
-import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg)
+import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg)
 import Time exposing (Posix, every)
 import Theme exposing (ThemeSettings, light, dark, strawberry)
 import Version exposing (Version, versionDecoder, compareVersion)
@@ -341,9 +341,7 @@ view model =
               viewSettings model
             else
               text ""
-          , labeledCheckbox
-              "settings-toggle"
-              "Settings"
+          , settingsCheckbox
               "settings-toggle"
               "settings-label"
               model.showSettings
@@ -1113,17 +1111,34 @@ themeSettings model =
       (Dict.values themes))
   ]
 
-labeledCheckbox : String -> String -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
-labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
-  div [] 
+settingsCheckbox : String -> String -> Bool -> (Bool -> Msg) -> Html Msg
+settingsCheckbox elemid labelclass isChecked msg =
+  div
+    [ css
+      [ height (px 30)
+      , position relative
+      ]
+    ] 
     [ input
       [ type_ "checkbox"
       , id elemid
-      , class elemclass
       , checked isChecked
       , onCheck msg
+      , css
+        [ display none
+        ]
       ] []
-    , label [ class labelclass, for elemid ] [ text elemlabel ]
+    , label
+      [ class labelclass
+      , for elemid
+      , css
+        [ position absolute
+        , right zero
+        , width (px 30)
+        , height (px 30)
+        ]
+      ]
+      [ gearSvg ]
     ]
 
 

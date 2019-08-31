@@ -16,27 +16,6 @@ body {
   overflow: hidden;
 }
 
-.bets {
-  text-align: center;
-  margin-top: 40px;
-}
-
-.bet {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: min-content;
-  justify-content: center;
-  grid-column-gap: 15px;
-}
-
-.lighting,
-.settings-toggle,
-.bet-success,
-.bet-radio,
-.cv-check {
-  display: none;
-}
-
 .uh-oh {
   color: red;
   font-weight: 500;
