@@ -15,7 +15,7 @@ import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
-import Svgs exposing (consecutiveVictorySvg, undoSvg)
+import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg)
 import Time exposing (Posix, every)
 import Theme exposing (ThemeSettings, light, dark, strawberry)
 import Version exposing (Version, versionDecoder, compareVersion)
@@ -405,10 +405,9 @@ viewTeam model team name score =
             [ textAlign center
             , border zero
             , fontSize (px 15)
-            , marginLeft auto
-            , marginRight auto
-            , displayFlex
-            , width (pct 90)
+            , display block -- Fix iOS centering
+            , width (pct 100)
+            , boxSizing borderBox
             , focus [ outline none ]
             , backgroundColor transparent
             , color model.theme.colors.text
@@ -439,7 +438,10 @@ viewBetRow model =
       , displayFlex
       , alignItems center
       , margin auto
-      , maxWidth maxContent
+      , boxSizing borderBox
+      , width (px 218)
+      , justifyContent spaceBetween
+      , backgroundColor model.theme.colors.menuBackground
       ]
     ]
     ( case model.settingBet of
@@ -450,8 +452,15 @@ viewBetRow model =
               [ cursor pointer
               , borderRight3 (px 2) solid model.theme.colors.border
               , display inlineBlock
-              , paddingRight (px 10)
               , marginRight (px 10)
+              , padding2 (px 5) (px 10)
+              , border3 (px 2) solid model.theme.colors.border
+              , borderRadius (px 10)
+              , width (px 86)
+              , boxSizing borderBox
+              , textAlign center
+              , cursor pointer
+              , backgroundColor model.theme.colors.background
               ]
             ]
             [ text "Tichu" ]
@@ -459,6 +468,14 @@ viewBetRow model =
               [ onClick (ChangePlayerBet player GrandTichu True)
               , css
                 [ cursor pointer
+                , padding2 (px 5) (px 10)
+                , border3 (px 2) solid model.theme.colors.border
+                , borderRadius (px 10)
+                , width (px 86)
+                , boxSizing borderBox
+                , textAlign center
+                , cursor pointer
+                , backgroundColor model.theme.colors.background
                 ]
               ]
               [ text "Grand"]
@@ -487,7 +504,7 @@ viewBets model (player1, bet1) (player2, bet2) =
     [ viewAddBet model (player1, bet1)
     , if bet1 /= Zero then
         if bet2 == Zero then
-          viewAddBetMin model (player2, bet2)
+          text ""--viewAddBetMin model (player2, bet2)
         else
           viewAddBet model (player2, bet2)
       else
@@ -506,17 +523,19 @@ viewAddBet model (player, bet) =
     [ if bet == Zero then
         div
           [ css
-            [ padding2 (px 6) (px 10)
+            [ padding2 (px 5) (px 10)
             , border3 (px 2) solid model.theme.colors.border
             , borderRadius (px 10)
-            , width (px 94)
+            , width (px 86)
             , boxSizing borderBox
             , textAlign center
             , cursor pointer
+            , fontStyle italic
+            , backgroundColor model.theme.colors.background
             ]
           , onClick (ChangeSettingBet player)
           ]
-          [ text "+ Bet" ]
+          [ text "add bet" ]
       else
         viewBet model (player, bet)
     ]
@@ -558,26 +577,44 @@ viewBet model (player, bet) =
   in
     div
       [ css
-        [ displayFlex
-        , alignItems center
-        , border3 (px 2) solid transparent
+        [ border3 (px 2) solid transparent
+        , position relative
+        , borderRadius (px 10)
+        , backgroundColor (hex (if successful then "71be44" else "B84444"))
         ]
       ]
       [ div
         [ css
-          [ borderRight3 (px 1) solid model.theme.colors.border
-          , padding2 (px 6) (px 10)
+          [ width (px 15)
+          , height (px 15)
           , cursor pointer
-          , backgroundColor model.theme.colors.border
-          , borderTopLeftRadius (px 10)
-          , borderBottomLeftRadius (px 10)
+          , borderRadius (pct 100)
+          , backgroundColor model.theme.colors.menuBackground
+          , border3 (px 1) solid model.theme.colors.border
+          , boxSizing borderBox
+          , position absolute
+          , top (px -8)
+          , left (px -8)
+          , fontSize (px 11)
           ]
         , onClick (ChangePlayerBet player bet False)
         ]
-        [ text "x" ]
+        [ div
+          [ css
+            [ width (px 7)
+            , lineHeight zero
+            , position absolute
+            , top (pct 50)
+            , left (pct 50)
+            , transform (translate2 (pct -50) (pct -50))
+            ]
+          ]
+          [ xSvg ]
+        ]
       , div
         [ css
-          []
+          [ displayFlex
+          ]
         ]
         [ input
           [ type_ "checkbox"
@@ -592,14 +629,35 @@ viewBet model (player, bet) =
         , label
           [ for ("success" ++ "-" ++ playerId)
           , css
-            [ padding2 (px 6) (px 10)
+            [ padding (px 5)
             , cursor pointer
-            , borderTopRightRadius (px 10)
-            , borderBottomRightRadius (px 10)
-            , backgroundColor (hex (if successful then "71be44" else "be6044"))
+            , backgroundColor model.theme.colors.background
+            , borderTopLeftRadius (px 8)
+            , borderBottomLeftRadius (px 8)
+            , width (px 54)
+            , boxSizing borderBox
+            , textAlign center
             ]
           ]
           [ text betLabel ]
+        , label
+          [ css
+            [ margin (px 5)
+            , cursor pointer
+            -- , border3 (px 1) solid model.theme.colors.border
+            , borderRadius (px 5)
+            , boxSizing borderBox
+            , minWidth (px 18)
+            , fontSize (px 12)
+            , displayFlex
+            , alignItems center
+            , justifyContent center
+            , backgroundColor (hex "FFF")
+            , color (hex "111")
+            ]
+          , for ("success" ++ "-" ++ playerId)
+          ]
+          [ text (if successful then "✓" else " ") ]
         ]
       ]
 
@@ -771,6 +829,13 @@ viewConsecutiveVictoryButton model elemid team ischecked =
           , padding2 zero (px 7)
           , backgroundColor model.theme.colors.border
           , cursor pointer
+          , batch (if ischecked then
+            [ transition
+              [ Css.Transitions.backgroundColor2 200 0
+              , Css.Transitions.borderColor2 200 0
+              ]
+            ]
+            else [])
           , case team of
               -- Left
               Vertical ->
@@ -904,6 +969,8 @@ viewConsecutiveVictoryOverlay model team active =
       , opposite zero
       , direction (pct 100)
       , transition [ transitionDirection 200 0 easeInOut ]
+      , whiteSpace noWrap
+      , padding2 zero (px 10)
       , batch (if active then
         [ direction zero ]
         else

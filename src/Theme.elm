@@ -62,11 +62,11 @@ strawberry =
   { id = "strawberry"
   , name = "Strawberry"
   , colors =
-    { border = hex "#F288C2"
+    { border = hex "F288C2"
     , background = hex "F2B6DD"
     , menuBackground = hex "F24B99"
     , text = hex "ffeb09"
-    , cta = hex "#5CE3F2"
+    , cta = hex "71be44"
     , ctaText = hex "000"
     , pop = hex "ffeb09"
     }

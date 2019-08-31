@@ -1,4 +1,4 @@
-module Svgs exposing (consecutiveVictorySvg, undoSvg)
+module Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (..)
@@ -86,6 +86,36 @@ undoSvg =
           ++ "h 4"
           ++ "A 18,18 0 1,1 12,33"
           ++ "a 2,2 0 1,0 -4,0"
+          ++ "z"
+          )
+        ]
+        []
+      ]
+    ]
+
+
+xSvg : Html msg
+xSvg =
+  svg
+    [ viewBox "0 0 60 60"
+    ]
+    [ g
+      [ ]
+      [ Svg.Styled.path
+        [ fill "currentColor"
+        , d
+          (  "M 2,52"
+          ++ "a 4,4 -45 0,0 6,6"
+          ++ "L 30 36"
+          ++ "L 52 58"
+          ++ "a 4,4 45 0,0 6,-6"
+          ++ "L 36 30"
+          ++ "L 58 8"
+          ++ "a 4,4 135 0,0 -6,-6"
+          ++ "L 30 24"
+          ++ "L 8 2"
+          ++ "a 4,4 -135 0,0 -6,6"
+          ++ "L 24 30"
           ++ "z"
           )
         ]
