@@ -1220,7 +1220,11 @@ confirm model =
               ]
               [ button
                 [ onClick CloseConfirmation
-                , css [ confirmButtonStyle ]
+                , css
+                  [ confirmButtonStyle
+                  , backgroundColor model.theme.colors.menuBackground
+                  , color model.theme.colors.text
+                  ]
                 ]
                 [ text "No" ]
               , button
@@ -1228,6 +1232,7 @@ confirm model =
                 , css
                   [ confirmButtonStyle
                   , backgroundColor model.theme.colors.cta
+                  , color model.theme.colors.ctaText
                   , marginLeft auto
                   ]
                 ]
