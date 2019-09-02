@@ -482,7 +482,6 @@ viewBetChoice model player =
         , padding2 (px 5) (px 10)
         , border3 (px 2) solid model.theme.colors.border
         , borderRadius (px 10)
-        , width (px 86)
         , boxSizing borderBox
         , textAlign center
         , cursor pointer
@@ -497,14 +496,13 @@ viewBetChoice model player =
         , padding2 (px 5) (px 10)
         , border3 (px 2) solid model.theme.colors.border
         , borderRadius (px 10)
-        , width (px 86)
         , boxSizing borderBox
         , textAlign center
         , cursor pointer
         , backgroundColor model.theme.colors.background
         ]
       ]
-      [ text "Grand"]
+      [ text "Grand Tichu"]
     ]
 
 
@@ -516,15 +514,18 @@ viewBets model (player1, bet1) (player2, bet2) =
       , borderRadius (px 20)
       , padding (px 10)
       , displayFlex
+      , flexDirection column
       , alignItems center
       , boxSizing borderBox
       , backgroundColor model.theme.colors.menuBackground
+      , maxHeight maxContent
+      , position relative
       ]
     ]
     [ viewAddBet model (player1, bet1)
     , if bet1 /= Zero then
         if bet2 == Zero then
-          text ""--viewAddBetMin model (player2, bet2)
+          viewAddBetMin model (player2, bet2)
         else
           viewAddBet model (player2, bet2)
       else
@@ -566,10 +567,11 @@ viewAddBetMin model (player, _) =
   div
     [ css
       [ position absolute
-      , backgroundColor model.theme.colors.background
+      , backgroundColor model.theme.colors.menuBackground
       , left (pct 50)
-      , transform (translateX (pct -50))
-      , padding2 (px 1) (px 10)
+      , transform (translate2 (pct -50) (pct -50))
+      , top (pct 100)
+      , padding2 zero (px 10)
       , borderBottom3 (px 2) solid model.theme.colors.border
       , borderBottomLeftRadius (px 10)
       , borderBottomRightRadius (px 10)
