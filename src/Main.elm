@@ -6,9 +6,9 @@ import Css exposing (..)
 import Css.Transitions exposing (transition, easeInOut)
 import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
-import Html.Styled exposing (Html, div, text, button, input, label, li, toUnstyled)
+import Html.Styled exposing (Html, a, div, text, button, input, label, li, span, toUnstyled)
 import Html.Styled.Attributes exposing
-  ( id, type_, css, for, value, checked)
+  ( id, type_, css, for, value, checked, href, target, title)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
 import Http
 import Json.Decode exposing
@@ -75,6 +75,7 @@ type alias Model =
   , foundVersion: Version
   , crashed: Bool
   , confirm: Confirm
+  , showAbout: Bool
   }
 
 
@@ -93,6 +94,7 @@ defaultModel theme vertName horzName =
   , updateAvailable = False
   , crashed = False
   , confirm = Hidden
+  , showAbout = False
   }
 
 
@@ -205,6 +207,7 @@ type Msg
   | CheckForUpdate Posix
   | CheckedVersion (Result Http.Error Version)
   | UpdateAvailable
+  | ShowAbout Bool
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -242,7 +245,7 @@ update msg model =
     ChangeLighting id ->
       ( changeTheme model id, Cmd.none )
     ToggleSettings checked ->
-      ( { model | showSettings = checked }, Cmd.none )
+      ( { model | showSettings = checked, showAbout = False }, Cmd.none )
     ShowConfirmation query confirmMsg ->
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
@@ -255,6 +258,8 @@ update msg model =
         Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
+    ShowAbout checked ->
+      ( { model | showAbout = checked }, Cmd.none )
 
 
 changeTeamName : Model -> Team -> String -> Model
@@ -1014,21 +1019,14 @@ viewActions model =
       , onClick Score
       ]
       [ text "Score" ]
-    , div
-      [ onClick Undo
-      , css
-        [ width (px 20)
-        , height (px 20)
-        , cursor pointer
-        , marginLeft (px 15)
-        , marginRight auto
-        , padding (px 3)
-        , border3 (px 2) solid model.theme.colors.border
-        , backgroundColor model.theme.colors.menuBackground
-        , borderRadius (px 10)
-        ]
+    , iconButton
+      model
+      undoSvg
+      [ marginLeft (px 15)
+      , marginRight auto
       ]
-      [ undoSvg ]
+      "Undo"
+      Undo
     ]
 
 
@@ -1040,12 +1038,13 @@ viewSettings model =
       , borderRadius (px 20)
       , padding (px 10)
       , backgroundColor model.theme.colors.background
-      , width (px 150)
+      , width (if model.showAbout then px 300 else px 150)
+      , transition [ (Css.Transitions.width3 100 0 easeInOut) ]
       , textAlign left
       , marginBottom (px 10)
       ]
     ]
-    (defaultSettings model)
+    (if model.showAbout then [ viewAbout model ] else defaultSettings model)
 
 
 defaultSettings : Model -> List (Html Msg)
@@ -1077,13 +1076,28 @@ defaultSettings model =
     ]
     [ text "Reset" ]
   , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
-  , button
+  , div
     [ css
-      [ batch buttonStyles
+      [ displayFlex
+      , property "justify-content" "space-evenly"
       ]
-    , onClick Update
     ]
-    [ text (if model.updateAvailable then "Update" else "Reload") ]
+    [ iconButton
+      model
+      (div [ css [ textAlign center ] ] [ text "i" ])
+      [ ]
+      "About"
+      (ShowAbout True)
+    , iconButton
+      model
+      undoSvg
+      [ backgroundColor (if model.updateAvailable then model.theme.colors.cta else model.theme.colors.menuBackground)
+      , color (if model.updateAvailable then model.theme.colors.ctaText else model.theme.colors.text)
+      , transform (scale2 -1 1)
+      ]
+      "Reload"
+      Update
+    ]
   ]
 
 
@@ -1118,6 +1132,70 @@ themeSettings model =
       )
       (Dict.values themes))
   ]
+
+
+viewAbout : Model -> Html Msg
+viewAbout model =
+  div
+  [ css
+    [ backgroundColor model.theme.colors.menuBackground
+    , color inherit
+    , borderRadius (px 10)
+    , textAlign left
+    , padding (px 10)
+    ]
+  ]
+  [ div
+    [ css
+      [ paddingBottom (px 5)
+      , marginBottom (px 5)
+      , textAlign center
+      , fontWeight bold
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      ]
+    ]
+    [ text "About" ]
+  , div
+    []
+    [ aboutEntry "Version" model.currentVersion.version
+    , aboutEntry "Developed by" "Justin Renjilian"
+    , a
+      [ href "https://github.com/freshvictory/tichu-web/issues/new"
+      , target "_blank"
+      , title "hep"
+      , css
+        [ color inherit
+        , visited [ color inherit ]
+        , fontWeight bold
+        , textDecoration none
+        , fontStyle italic
+        , display block
+        , boxSizing borderBox
+        , marginTop (px 10)
+        ]
+      ]
+      [ text "I'm having a problem..." ]
+    ]
+  ]
+
+
+aboutEntry : String -> String -> Html Msg
+aboutEntry label value =
+  li
+  [ css
+    [ marginBottom (px 5)
+    , lastChild [ marginBottom zero ]
+    ]
+  ]
+  [ text (label ++ " ")
+  , span
+    [ css
+      [ fontWeight bold
+      ]
+    ]
+    [ text value ]
+  ]
+
 
 settingsGear : Model -> Html Msg
 settingsGear model  =
@@ -1172,6 +1250,26 @@ settingsGear model  =
     ]
 
 
+iconButton : Model -> Html Msg -> List Style -> String -> Msg -> Html Msg
+iconButton model icon styles t onclick =
+  div
+    [ css
+      [ width (px 20)
+      , height (px 20)
+      , display inlineBlock
+      , cursor pointer
+      , padding (px 3)
+      , border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 10)
+      , backgroundColor model.theme.colors.menuBackground
+      , batch styles
+      ]
+    , title t
+    , onClick onclick
+    ]
+    [ icon ]
+
+
 confirm : Model -> Html Msg
 confirm model =
   case model.confirm of
@@ -1201,7 +1299,7 @@ confirm model =
             [ css
               [ backgroundColor model.theme.colors.background
               , borderRadius (px 30)
-              , border3 (px 1) solid model.theme.colors.border
+              , border3 (px 3) solid model.theme.colors.border
               , padding (px 20)
               ]
             ]
