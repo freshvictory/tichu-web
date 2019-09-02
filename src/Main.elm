@@ -943,9 +943,10 @@ viewConsecutiveVictoryOverlay model team active =
       , direction (pct 100)
       , transition [ transitionDirection 200 0 easeInOut ]
       , whiteSpace noWrap
-      , padding2 zero (px 10)
       , batch (if active then
-        [ direction zero ]
+        [ direction zero
+        , padding2 zero (px 10)
+        ]
         else
           []
       )
