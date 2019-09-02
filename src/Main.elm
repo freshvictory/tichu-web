@@ -308,8 +308,7 @@ view model =
           ]
         ]
       ]
-      [ settingsGear model
-      , div
+      [ div
         [ css
           [ width (pct 100)
           , height (pct 100)
@@ -320,7 +319,8 @@ view model =
           , property "padding-bottom" "env(safe-area-inset-bottom)"
           ]
         ]
-        [ viewScorer model
+        [ settingsGear model
+        , viewScorer model
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
@@ -517,7 +517,7 @@ viewBets model (player1, bet1) (player2, bet2) =
       , alignItems center
       , boxSizing borderBox
       , backgroundColor model.theme.colors.menuBackground
-      , maxHeight (if bet2 == Zero then (px 56) else (px 300))
+      , maxHeight maxContent
       , position relative
       ]
     ]
