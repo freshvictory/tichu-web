@@ -308,7 +308,8 @@ view model =
           ]
         ]
       ]
-      [ div
+      [ settingsGear model
+      , div
         [ css
           [ width (pct 100)
           , height (pct 100)
@@ -324,24 +325,22 @@ view model =
             shield (ToggleSettings False) False
           else
             text ""
-        , confirm model 
         , div
           [ css
             [ position absolute
-            , bottom zero
+            , bottom (px 30)
             , right zero
             , padding inherit
             , margin (px 20)
             , textAlign right
-            , zIndex (Css.int 150)
             ]
           ]
           [ if model.showSettings then
               viewSettings model
             else
               text ""
-          , settingsGear model
           ]
+        , confirm model
         ]
       ]
 
@@ -469,7 +468,7 @@ viewBetChoice model player =
       , margin auto
       , boxSizing borderBox
       , backgroundColor model.theme.colors.menuBackground
-      , zIndex (Css.int 150)
+      , position relative
       ]
     ]
     [ div
@@ -714,7 +713,6 @@ viewTeamTurnScores model =
       , position relative
       , bottom zero
       , transition [ Css.Transitions.bottom3 200 0 easeInOut ]
-      , zIndex (Css.int 1)
       , batch
         ( case model.scorer.firstOut of
             Team _ ->
@@ -854,7 +852,6 @@ viewTeamTurnScoreSlider model =
       [ displayFlex
       , flexDirection row
       , justifyContent center
-      , zIndex (Css.int 2)
       , position relative
       , margin auto
       , width (px (50 + 50 + 240))
@@ -1045,7 +1042,6 @@ viewSettings model =
       , width (px 150)
       , textAlign left
       , marginBottom (px 10)
-      , zIndex (Css.int 150)
       ]
     ]
     (defaultSettings model)
@@ -1127,7 +1123,12 @@ settingsGear model  =
   div
     [ css
       [ height (px 30)
-      , position relative
+      , position absolute
+      , bottom zero
+      , right zero
+      , padding inherit
+      , margin (px 20)
+      , textAlign right
       ]
     ] 
     [ input
@@ -1176,7 +1177,14 @@ confirm model =
     Hidden -> text ""
     Active query msg ->
       div
-        []
+        [ css
+          [ position absolute
+          , left zero
+          , right zero
+          , top zero
+          , bottom zero
+          ]
+        ]
         [ shield CloseConfirmation True
         , div
           [ css
@@ -1185,7 +1193,6 @@ confirm model =
             , top (pct 50)
             , transform (translate2 (pct -50) (pct -66))
             , minWidth maxContent
-            , zIndex (Css.int 150)
             ]
           ]
           [
@@ -1239,7 +1246,6 @@ shield msg dim =
       , top (px 0)
       , right (px 0)
       , bottom (px 0)
-      , zIndex (Css.int 100)
       , if dim then
           batch
           [ backgroundColor (hex "#111")
