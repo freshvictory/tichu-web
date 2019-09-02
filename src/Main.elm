@@ -518,23 +518,23 @@ viewBets model (player1, bet1) (player2, bet2) =
       , alignItems center
       , boxSizing borderBox
       , backgroundColor model.theme.colors.menuBackground
-      , maxHeight maxContent
+      , maxHeight (if bet2 == Zero then (px 56) else (px 300))
       , position relative
       ]
     ]
-    [ viewAddBet model (player1, bet1)
+    [ viewAddBet model (player1, bet1) (bet2 == Zero)
     , if bet1 /= Zero then
         if bet2 == Zero then
           viewAddBetMin model (player2, bet2)
         else
-          viewAddBet model (player2, bet2)
+          viewAddBet model (player2, bet2) True
       else
         text ""
     ]
 
 
-viewAddBet : Model -> (Player, Bet) -> Html Msg
-viewAddBet model (player, bet) =
+viewAddBet : Model -> (Player, Bet) -> Bool -> Html Msg
+viewAddBet model (player, bet) showClose =
   div
     [ css
       [ position relative
@@ -558,7 +558,7 @@ viewAddBet model (player, bet) =
           ]
           [ text "add bet" ]
       else
-        viewBet model (player, bet)
+        viewBet model (player, bet) showClose
     ]
 
 
@@ -586,8 +586,8 @@ viewAddBetMin model (player, _) =
     [ text "+" ]
 
 
-viewBet : Model -> (Player, Bet) -> Html Msg
-viewBet model (player, bet) =
+viewBet : Model -> (Player, Bet) -> Bool -> Html Msg
+viewBet model (player, bet) showClose =
   let
     betLabel = if bet == Tichu then "Tichu" else "Grand"
     playerId = getPlayerId player
@@ -617,6 +617,7 @@ viewBet model (player, bet) =
           , position absolute
           , top (px -8)
           , left (px -8)
+          , batch (if showClose then [ ] else [ display none ])
           ]
         , onClick (ChangePlayerBet player bet False)
         ]
@@ -1107,6 +1108,7 @@ themeSettings model =
       (\theme ->
         li
           [ onClick (ChangeLighting theme.id)
+          , type_ (if model.theme.id == theme.id then "filled" else "circle")
           , css
             [ batch (if model.theme.id == theme.id then [ fontWeight bold ] else [])
             , marginBottom (px 5)
@@ -1145,6 +1147,7 @@ settingsGear model  =
         , width (px 30)
         , height (px 30)
         , color model.theme.colors.border
+        , cursor pointer
         , batch
           ( if model.updateAvailable then
             [ after
