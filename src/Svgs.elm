@@ -1,4 +1,4 @@
-module Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg)
+module Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (..)
@@ -171,6 +171,75 @@ gearSvg =
           ++ "A 22.5,22.5 0 0,0 30,7.5"
           ++ "z"
           )
+        ]
+        []
+      ]
+    ]
+
+
+trashSvg : Html msg
+trashSvg =
+  svg
+    [ viewBox "0 0 60 60"
+    ]
+    [ g
+      [ ]
+      [ rect
+        [ fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , x "10"
+        , y "16"
+        , rx "3"
+        , width "40"
+        , height "42"
+        ]
+        []
+      , line
+        [ x1 "20"
+        , y1 "20"
+        , x2 "20"
+        , y2 "53"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        ]
+        []
+      , line
+        [ x1 "30"
+        , y1 "20"
+        , x2 "30"
+        , y2 "53"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        ]
+        []
+      , line
+        [ x1 "40"
+        , y1 "20"
+        , x2 "40"
+        , y2 "53"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        ]
+        []
+      , rect
+        [ fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , x "6"
+        , y "8"
+        , rx "3"
+        , width "48"
+        , height "8"
+        ]
+        []
+      , circle
+        [ fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , cx "30"
+        , cy "5"
+        , r "3"
         ]
         []
       ]

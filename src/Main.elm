@@ -15,7 +15,7 @@ import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
-import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg)
+import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
 import Time exposing (Posix, every)
 import Theme exposing (ThemeSettings, light, dark, strawberry)
 import Version exposing (Version, versionDecoder, compareVersion)
@@ -1037,7 +1037,7 @@ viewSettings model =
       [ border3 (px 3) solid model.theme.colors.border
       , borderRadius (px 20)
       , padding (px 10)
-      , backgroundColor model.theme.colors.background
+      , backgroundColor model.theme.colors.menuBackground
       , width (if model.showAbout then px 300 else px 150)
       , transition [ (Css.Transitions.width3 100 0 easeInOut) ]
       , textAlign left
@@ -1054,7 +1054,9 @@ defaultSettings model =
       [ cursor pointer
       , width (pct 100)
       , padding2 (px 6) zero
-      , backgroundColor model.theme.colors.menuBackground
+      , backgroundColor model.theme.colors.background
+      , border3 (px 2) solid model.theme.colors.border
+      , boxSizing borderBox
       , color inherit
       , borderRadius (px 10)
       ]
@@ -1067,14 +1069,6 @@ defaultSettings model =
       ]
     ]
     (themeSettings model)
-  , button
-    [ css
-      [ batch buttonStyles
-      , marginTop (px 10)
-      ]
-    , onClick (ShowConfirmation "Are you sure you want to reset?" Clear)
-    ]
-    [ text "Reset" ]
   , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
   , div
     [ css
@@ -1084,14 +1078,20 @@ defaultSettings model =
     ]
     [ iconButton
       model
-      (div [ css [ textAlign center ] ] [ text "i" ])
-      [ ]
+      trashSvg
+      [ backgroundColor model.theme.colors.background ]
+      "Reset"
+      (ShowConfirmation "Are you sure you want to reset?" Clear)
+    , iconButton
+      model
+      (div [ css [ textAlign center, fontSize (px 18), fontWeight bold ] ] [ text "i" ])
+      [ backgroundColor model.theme.colors.background ]
       "About"
       (ShowAbout True)
     , iconButton
       model
       undoSvg
-      [ backgroundColor (if model.updateAvailable then model.theme.colors.cta else model.theme.colors.menuBackground)
+      [ backgroundColor (if model.updateAvailable then model.theme.colors.cta else model.theme.colors.background)
       , color (if model.updateAvailable then model.theme.colors.ctaText else model.theme.colors.text)
       , transform (scale2 -1 1)
       ]
@@ -1138,11 +1138,8 @@ viewAbout : Model -> Html Msg
 viewAbout model =
   div
   [ css
-    [ backgroundColor model.theme.colors.menuBackground
-    , color inherit
-    , borderRadius (px 10)
+    [ color inherit
     , textAlign left
-    , padding (px 10)
     ]
   ]
   [ div
