@@ -65,9 +65,9 @@ strawberry =
     { border = hex "ef5b95"
     , background = hex "f7a3cc"
     , menuBackground = hex "f67fb6"
-    , text = hex "ffeb09"
+    , text = hex "FFF"
     , cta = hex "d53032"
-    , ctaText = hex "000"
+    , ctaText = hex "FFF"
     , pop = hex "9cbe45"
     }
   }

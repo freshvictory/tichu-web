@@ -571,6 +571,7 @@ viewAddBetMin model (player, _) =
       , transform (translate2 (pct -50) (pct -50))
       , top (pct 100)
       , padding2 zero (px 10)
+      , height (px 20)
       , borderBottom3 (px 2) solid model.theme.colors.border
       , borderBottomLeftRadius (px 10)
       , borderBottomRightRadius (px 10)
@@ -936,7 +937,7 @@ viewConsecutiveVictoryOverlay model team active =
       , overflow hidden
       , lineHeight (px 50)
       , backgroundColor model.theme.colors.cta
-      , color (hex "000")
+      , color model.theme.colors.ctaText
       , cursor pointer
       , pointerEvents auto
       , opposite zero
