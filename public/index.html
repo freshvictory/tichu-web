@@ -16,9 +16,236 @@
     <link rel="apple-touch-icon" sizes="192x192" href="%PUBLIC_URL%/favicon.ico">
     <title>Tichu</title>
 </head>
+<style>
+.main {
+  counter-reset: turn team1 0 team2 100;
+}
+
+.turn-scores {
+  margin-bottom: 20px;
+}
+
+.turn-increase {
+  display: none;
+}
+
+.turn-increase + label {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+}
+
+.turn-increase:checked + label {
+  background-color: red;
+}
+
+.turn-increase--25:checked + label { counter-increment: team1 -25 team2 25; }
+.turn-increase--20:checked + label { counter-increment: team1 -20 team2 20; }
+.turn-increase--15:checked + label { counter-increment: team1 -15 team2 15; }
+.turn-increase--10:checked + label { counter-increment: team1 -10 team2 10; }
+.turn-increase--5:checked + label { counter-increment: team1 -5 team2 5; }
+.turn-increase-0:checked + label { counter-increment: team1 0 team2 0; }
+.turn-increase-5:checked + label { counter-increment: team1 5 team2 -5; }
+.turn-increase-10:checked + label { counter-increment: team1 10 team2 -10; }
+.turn-increase-15:checked + label { counter-increment: team1 15 team2 -15; }
+.turn-increase-20:checked + label { counter-increment: team1 20 team2 -20; }
+.turn-increase-25:checked + label { counter-increment: team1 25 team2 -25; }
+.turn-increase-30:checked + label { counter-increment: team1 30 team2 -30; }
+.turn-increase-35:checked + label { counter-increment: team1 35 team2 -35; }
+.turn-increase-40:checked + label { counter-increment: team1 40 team2 -40; }
+.turn-increase-45:checked + label { counter-increment: team1 45 team2 -45; }
+.turn-increase-50:checked + label { counter-increment: team1 50 team2 -50; }
+.turn-increase-55:checked + label { counter-increment: team1 55 team2 -55; }
+.turn-increase-60:checked + label { counter-increment: team1 60 team2 -60; }
+.turn-increase-65:checked + label { counter-increment: team1 65 team2 -65; }
+.turn-increase-70:checked + label { counter-increment: team1 70 team2 -70; }
+.turn-increase-75:checked + label { counter-increment: team1 75 team2 -75; }
+.turn-increase-80:checked + label { counter-increment: team1 80 team2 -80; }
+.turn-increase-85:checked + label { counter-increment: team1 85 team2 -85; }
+.turn-increase-90:checked + label { counter-increment: team1 90 team2 -90; }
+.turn-increase-95:checked + label { counter-increment: team1 95 team2 -95; }
+.turn-increase-100:checked + label { counter-increment: team1 100 team2 -100; }
+.turn-increase-105:checked + label { counter-increment: team1 105 team2 -105; }
+.turn-increase-110:checked + label { counter-increment: team1 110 team2 -110; }
+.turn-increase-115:checked + label { counter-increment: team1 115 team2 -115; }
+.turn-increase-120:checked + label { counter-increment: team1 120 team2 -120; }
+.turn-increase-125:checked + label { counter-increment: team1 125 team2 -125; }
+
+.team1,
+.team2 {
+  margin-bottom: 20px;
+}
+
+.tichu {
+  display: none;
+}
+
+.tichu + label {
+  display: inline-block;
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid;
+  margin: 5px;
+}
+
+.tichu:checked + label {
+  background-color: gainsboro;
+}
+
+.team-1-successful-tichu:checked + label { counter-increment: team1 100; }
+.team-1-fail-tichu:checked + label { counter-increment: team1 -100; }
+.team-1-successful-grand-tichu:checked + label { counter-increment: team1 200; }
+.team-1-fail-grand-tichu:checked + label { counter-increment: team1 -200; }
+.team-1-cv:checked + label { counter-increment: team1 200 team2 -100 }
+
+.team-2-successful-tichu:checked + label { counter-increment: team2 100; }
+.team-2-fail-tichu:checked + label { counter-increment: team2 -100; }
+.team-2-successful-grand-tichu:checked + label { counter-increment: team2 200; }
+.team-2-fail-grand-tichu:checked + label { counter-increment: team2 -200; }
+.team-2-cv:checked + label { counter-increment: team2 100 }
+
+.clear-tichu {
+  display: none;
+}
+.clear-tichu + label {
+  display: block;
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+.clear-tichu:checked + label {
+  display: none;
+}
+
+.scores::after {
+  content: "Team 1: " counter(team1) ", Team 2: " counter(team2);
+  font-size: 32px;
+}
+
+</style>
 <body>
     <noscript>
-        You need to enable JavaScript to run this app.
+        <div class="main">
+            Team 1 Score
+            <hr/>
+            <div class="turn-scores">
+                <input type="radio" name="turn-increase" id="turn-increase--25" class="turn-increase turn-increase--25"/>
+                <label for="turn-increase--25">-25</label>
+                <input type="radio" name="turn-increase" id="turn-increase--20" class="turn-increase turn-increase--20"/>
+                <label for="turn-increase--20">-20</label>
+                <input type="radio" name="turn-increase" id="turn-increase--15" class="turn-increase turn-increase--15"/>
+                <label for="turn-increase--15">-15</label>
+                <input type="radio" name="turn-increase" id="turn-increase--10" class="turn-increase turn-increase--10"/>
+                <label for="turn-increase--10">-10</label>
+                <input type="radio" name="turn-increase" id="turn-increase--5" class="turn-increase turn-increase--5"/>
+                <label for="turn-increase--5">-5</label>
+                <input type="radio" name="turn-increase" id="turn-increase-0" class="turn-increase turn-increase-0" checked />
+                <label for="turn-increase-0">0</label>
+                <input type="radio" name="turn-increase" id="turn-increase-5" class="turn-increase turn-increase-5"/>
+                <label for="turn-increase-5">5</label>
+                <input type="radio" name="turn-increase" id="turn-increase-10" class="turn-increase turn-increase-10"/>
+                <label for="turn-increase-10">10</label>
+                <input type="radio" name="turn-increase" id="turn-increase-15" class="turn-increase turn-increase-15"/>
+                <label for="turn-increase-15">15</label>
+                <input type="radio" name="turn-increase" id="turn-increase-20" class="turn-increase turn-increase-20"/>
+                <label for="turn-increase-20">20</label>
+                <input type="radio" name="turn-increase" id="turn-increase-25" class="turn-increase turn-increase-25"/>
+                <label for="turn-increase-25">25</label>
+                <input type="radio" name="turn-increase" id="turn-increase-30" class="turn-increase turn-increase-30"/>
+                <label for="turn-increase-30">30</label>
+                <input type="radio" name="turn-increase" id="turn-increase-35" class="turn-increase turn-increase-35"/>
+                <label for="turn-increase-35">35</label>
+                <input type="radio" name="turn-increase" id="turn-increase-40" class="turn-increase turn-increase-40"/>
+                <label for="turn-increase-40">40</label>
+                <input type="radio" name="turn-increase" id="turn-increase-45" class="turn-increase turn-increase-45"/>
+                <label for="turn-increase-45">45</label>
+                <input type="radio" name="turn-increase" id="turn-increase-50" class="turn-increase turn-increase-50"/>
+                <label for="turn-increase-50">50</label>
+                <input type="radio" name="turn-increase" id="turn-increase-55" class="turn-increase turn-increase-55"/>
+                <label for="turn-increase-55">55</label>
+                <input type="radio" name="turn-increase" id="turn-increase-60" class="turn-increase turn-increase-60"/>
+                <label for="turn-increase-60">60</label>
+                <input type="radio" name="turn-increase" id="turn-increase-65" class="turn-increase turn-increase-65"/>
+                <label for="turn-increase-65">65</label>
+                <input type="radio" name="turn-increase" id="turn-increase-70" class="turn-increase turn-increase-70"/>
+                <label for="turn-increase-70">70</label>
+                <input type="radio" name="turn-increase" id="turn-increase-75" class="turn-increase turn-increase-75"/>
+                <label for="turn-increase-75">75</label>
+                <input type="radio" name="turn-increase" id="turn-increase-80" class="turn-increase turn-increase-80"/>
+                <label for="turn-increase-80">80</label>
+                <input type="radio" name="turn-increase" id="turn-increase-85" class="turn-increase turn-increase-85"/>
+                <label for="turn-increase-85">85</label>
+                <input type="radio" name="turn-increase" id="turn-increase-90" class="turn-increase turn-increase-90"/>
+                <label for="turn-increase-90">90</label>
+                <input type="radio" name="turn-increase" id="turn-increase-95" class="turn-increase turn-increase-95"/>
+                <label for="turn-increase-95">95</label>
+                <input type="radio" name="turn-increase" id="turn-increase-100" class="turn-increase turn-increase-100"/>
+                <label for="turn-increase-100">100</label>
+                <input type="radio" name="turn-increase" id="turn-increase-105" class="turn-increase turn-increase-105"/>
+                <label for="turn-increase-105">105</label>
+                <input type="radio" name="turn-increase" id="turn-increase-110" class="turn-increase turn-increase-110"/>
+                <label for="turn-increase-110">110</label>
+                <input type="radio" name="turn-increase" id="turn-increase-115" class="turn-increase turn-increase-115"/>
+                <label for="turn-increase-115">115</label>
+                <input type="radio" name="turn-increase" id="turn-increase-120" class="turn-increase turn-increase-120"/>
+                <label for="turn-increase-120">120</label>
+                <input type="radio" name="turn-increase" id="turn-increase-125" class="turn-increase turn-increase-125"/>
+                <label for="turn-increase-125">125</label>
+            </div>
+        
+            <div class="tichus">
+                <div class="team1">
+                    Team 1 Bets
+                    <hr/>
+                    <input type="radio" name="success" id="team-1-successful-tichu" class="tichu team-1-successful-tichu"/>
+                    <label for="team-1-successful-tichu">Successful Tichu</label>
+                    
+                    <input type="checkbox" id="team-1-fail-tichu" class="tichu team-1-fail-tichu"/>
+                    <label for="team-1-fail-tichu">Failed Tichu</label>
+        
+                    <input type="radio" name="success" id="team-1-successful-grand-tichu" class="tichu team-1-successful-grand-tichu"/>
+                    <label for="team-1-successful-grand-tichu">Successful Grand Tichu</label>
+                    
+                    <input type="checkbox" id="team-1-fail-grand-tichu" class="tichu team-1-fail-tichu"/>
+                    <label for="team-1-fail-grand-tichu">Failed Grand Tichu</label>
+        
+                    <input type="radio" name="turn-increase" id="team-1-cv" class="tichu team-1-cv"/>
+                    <label for="team-1-cv">Consecutive</label>
+                </div>
+            
+                <div class="team2"> 
+                    Team 2 Bets
+                    <hr/>
+                    <input type="radio" name="success" id="team-2-successful-tichu" class="tichu team-2-successful-tichu"/>
+                    <label for="team-2-successful-tichu">Successful Tichu</label>
+                    
+                    <input type="checkbox" id="team-2-fail-tichu" class="tichu team-2-fail-tichu"/>
+                    <label for="team-2-fail-tichu">Failed Tichu</label>
+                
+                    <input type="radio" name="success" id="team-2-successful-grand-tichu" class="tichu team-2-successful-grand-tichu"/>
+                    <label for="team-2-successful-grand-tichu">Successful Grand Tichu</label>
+                    
+                    <input type="checkbox" id="team-2-fail-grand-tichu" class="tichu team-2-fail-grand-tichu"/>
+                    <label for="team-2-fail-grand-tichu">Failed Grand Tichu</label>
+        
+                    <input type="radio" name="turn-increase" id="team-2-cv" class="tichu team-2-cv"/>
+                    <label for="team-2-cv">Consecutive</label>
+                </div>
+        
+                <input type="radio" name="success" id="clear-tichu" class="clear-tichu" checked />
+                <label for="clear-tichu">Clear Tichus</label>
+            </div>
+        
+            <div class="scores"></div>
+        </div>
     </noscript>
     <div id="root"></div>
 </body>
