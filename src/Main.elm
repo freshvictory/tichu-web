@@ -1156,6 +1156,7 @@ viewAbout model =
     []
     [ aboutEntry "Version" model.currentVersion.version
     , aboutEntry "Developed by" "Justin Renjilian"
+    , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
     , a
       [ href "https://github.com/freshvictory/tichu-web/issues/new"
       , target "_blank"
@@ -1168,7 +1169,7 @@ viewAbout model =
         , fontStyle italic
         , display block
         , boxSizing borderBox
-        , marginTop (px 10)
+        , margin2 (px 5) zero
         ]
       ]
       [ text "I'm having a problem..." ]
