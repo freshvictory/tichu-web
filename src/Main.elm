@@ -3,13 +3,22 @@ port module Main exposing (..)
 import Browser
 import Browser.Navigation
 import Css exposing (..)
+import Css.Transitions exposing (transition, easeInOut)
 import Dict exposing (Dict)
-import Html
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
-import Json.Decode exposing (..)
-import Json.Decode.Extra exposing (..)
+import HtmlHelper exposing (hr, range)
+import Html.Styled exposing (Html, a, div, text, button, input, label, li, span, toUnstyled)
+import Html.Styled.Attributes exposing
+  ( id, type_, css, for, value, checked, href, target, title)
+import Html.Styled.Events exposing (onInput, onClick, onCheck)
+import Http
+import Json.Decode exposing
+  (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
+import Json.Decode.Extra exposing (andMap)
+import Scorer exposing (..)
+import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
+import Time exposing (Posix, every)
+import Theme exposing (ThemeSettings, light, dark, strawberry)
+import Version exposing (Version, versionDecoder, compareVersion)
 
 
 -- MAIN
@@ -30,8 +39,10 @@ port updateAvailable : (() -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    updateAvailable (\_ -> UpdateAvailable)
+subscriptions _ = Sub.batch
+  [ updateAvailable (\_ -> UpdateAvailable)
+  , every (5 * 60 * 1000) CheckForUpdate
+  ]
 
 
 {-| We want to `setStorage` on every update. This function adds the setStorage
@@ -51,59 +62,65 @@ updateWithStorage msg model =
 -- MODEL
 
 type alias Model =
-  { north: (Player, Bet)
-  , south: (Player, Bet)
-  , east: (Player, Bet)
-  , west: (Player, Bet)
-  , firstOut: FirstOut
-  , vertTurnScore: Int
-  , vertScore: Int
-  , horzScore: Int
-  , history: List (Int, Int)
+  { scorer: Scorer
+  , settingBet: SettingBet
   , vertName: String
   , horzName: String
-  , lighting: Lighting
+  , theme: ThemeSettings
+  , themes: Dict String ThemeSettings
   , showSettings: Bool
   , updateAvailable: Bool
+  , checkingForUpdate: Bool
+  , currentVersion: Version
+  , foundVersion: Version
   , crashed: Bool
   , confirm: Confirm
+  , showAbout: Bool
   }
 
 
-defaultModel : Lighting -> String -> String -> Model
-defaultModel lighting vertName horzName =
-  { north = (North, Zero)
-  , south = (South, Zero)
-  , east = (East, Zero)
-  , west = (West, Zero)
-  , firstOut = None
-  , vertTurnScore = 50
-  , vertScore = 0
-  , horzScore = 0
-  , history = [(0,0)]
+defaultModel : ThemeSettings -> String -> String -> Model
+defaultModel theme vertName horzName =
+  { scorer = defaultScorer
+  , settingBet = NoOne
   , vertName = vertName
   , horzName = horzName
-  , lighting = lighting
+  , theme = theme
+  , themes = themes
   , showSettings = False
+  , checkingForUpdate = False
+  , currentVersion = { version = "1.0.0" }
+  , foundVersion = { version = "0.0.0" }
   , updateAvailable = False
   , crashed = False
   , confirm = Hidden
+  , showAbout = False
   }
+
+
+themes : Dict String ThemeSettings
+themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, strawberry, light ])
 
 
 modelFromState : State -> Model
 modelFromState state =
   let
     model = defaultModel
-      (if state.lighting == "dark" then Dark else Light)
+      ( case Dict.get state.lighting themes of
+          Just t -> t
+          Nothing -> light
+      )
       state.vertName
       state.horzName
+    scorer = model.scorer
+    newScorer = 
+      { scorer
+      | vertScore = state.vertScore
+      , horzScore = state.horzScore
+      , history = state.history
+      }
   in
-    { model
-    | vertScore = state.vertScore
-    , horzScore = state.horzScore
-    , history = state.history
-    }
+    { model | scorer = newScorer }
 
 
 type alias State =
@@ -122,60 +139,20 @@ decodeState =
     (field "lighting" string)
     (field "vertName" string)
     (field "horzName" string)
-    (field "vertScore" Json.Decode.int)
-    (field "horzScore" Json.Decode.int)
-    (field "history" (Json.Decode.list (decodeAsTuple2 "0" Json.Decode.int "1" Json.Decode.int)))
+    (field "vertScore" int)
+    (field "horzScore" int)
+    (field "history" (list (decodeAsTuple2 "0" int "1" int)))
 
 
 getState : Model -> State
 getState model =
-  { lighting = if model.lighting == Light then "light" else "dark"
+  { lighting = model.theme.id
   , vertName = model.vertName
   , horzName = model.horzName
-  , vertScore = model.vertScore
-  , horzScore = model.horzScore
-  , history = model.history
+  , vertScore = model.scorer.vertScore
+  , horzScore = model.scorer.horzScore
+  , history = model.scorer.history
   }
-
-
-type Bet
-  = Zero
-  | Tichu
-  | GrandTichu
-
-
-getScore : Bet -> Int
-getScore bet =
-  case bet of
-      Zero ->
-        0
-      Tichu ->
-        100
-      GrandTichu ->
-        200
-
-
-type Player
-  = North
-  | South
-  | East
-  | West
-
-
-type FirstOut
-  = None
-  | One Player
-  | Team (Team, (Maybe Player))
-
-
-type Team
-  = Vertical
-  | Horizontal
-
-
-type Lighting
-  = Light
-  | Dark
 
 
 type Confirm
@@ -183,30 +160,19 @@ type Confirm
   | Active String Msg
 
 
-inTeam : Player -> Team -> Bool
-inTeam player team =
-  case team of
-    Vertical -> player == North || player == South
-    Horizontal -> player == East || player == West
+type SettingBet
+  = NoOne
+  | Person Player
 
 
-getPlayerId : Player -> String
-getPlayerId player =
-  case player of
-    North -> "north"
-    South -> "south"
-    East -> "east"
-    West -> "west"
-
-
-init : Json.Decode.Value -> ( Model, Cmd Msg )
+init : Value -> ( Model, Cmd Msg )
 init state =
   let
-    decodedState = Json.Decode.decodeValue decodeState state
+    decodedState = decodeValue decodeState state
     finalState = case decodedState of
       Ok s -> s
       Err _ ->
-        { lighting = "light"
+        { lighting = light.id
         , vertName = "Us"
         , horzName = "Them"
         , vertScore = 0
@@ -215,7 +181,7 @@ init state =
         }
   in
   ( modelFromState finalState
-  , Cmd.none
+  , checkForUpdate
   )
 
 
@@ -224,6 +190,7 @@ init state =
 
 type Msg
   = ChangePlayerBet Player Bet Bool
+  | ChangeSettingBet SettingBet
   | ChangeFirstOut Player Bool
   | ChangeTeamScore String
   | ChangeTeamName Team String
@@ -234,175 +201,82 @@ type Msg
   | Undo
   | ToggleSettings Bool
   | Update
-  | ChangeLighting Bool
+  | ChangeLighting String
   | ShowConfirmation String Msg
   | CloseConfirmation
+  | CheckForUpdate Posix
+  | CheckedVersion (Result Http.Error Version)
   | UpdateAvailable
+  | ShowAbout Bool
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ChangePlayerBet playerType bet checked ->
-      ( changePlayerBet model playerType (if checked then bet else Zero), Cmd.none )
+      ( { model | scorer = changePlayerBet model.scorer playerType (if checked then bet else Zero), settingBet = NoOne }, Cmd.none )
+    ChangeSettingBet player ->
+      ( { model | settingBet = player }, Cmd.none )
     ChangeFirstOut playerType result ->
-      ( changeFirstOut model playerType result, Cmd.none )
+      ( { model | scorer = changeFirstOut model.scorer playerType result }, Cmd.none )
     Score ->
-      ( scoreAll model, Cmd.none )
+      ( { model | scorer = scoreAll model.scorer }, Cmd.none )
     ChangeTeamScore val ->
       ( case String.toInt val of
           Nothing -> model
-          Just s -> if s >= -25 && s <= 125 then { model | vertTurnScore = s } else model
+          Just s -> { model | scorer = changeTurnScore model.scorer s }
       , Cmd.none
       )
     ChangeTeamName team name ->
       ( changeTeamName model team name, Cmd.none )
     ConsecutiveVictory team result ->
-      ( consecutiveVictory model team result, Cmd.none )
+      ( { model | scorer = consecutiveVictory model.scorer team result }, Cmd.none )
     CrashApp ->
       let
-        resetModel = defaultModel model.lighting model.vertName model.horzName
+        resetModel = defaultModel model.theme model.vertName model.horzName
       in
         ( { resetModel | crashed = True }, Cmd.none )
     Clear ->
-      ( defaultModel model.lighting model.vertName model.horzName, Cmd.none )
+      ( defaultModel model.theme model.vertName model.horzName, Cmd.none )
     Undo ->
-      ( undo model, Cmd.none )
+      ( { model | scorer = undo model.scorer }, Cmd.none )
     Update ->
       ( model, Browser.Navigation.reloadAndSkipCache )
-    ChangeLighting checked ->
-      ( { model | lighting = if checked then Light else Dark }, Cmd.none )
+    ChangeLighting id ->
+      ( changeTheme model id, Cmd.none )
     ToggleSettings checked ->
-      ( { model | showSettings = checked }, Cmd.none )
+      ( { model | showSettings = checked, showAbout = False }, Cmd.none )
     ShowConfirmation query confirmMsg ->
       ( { model | confirm = Active query confirmMsg }, Cmd.none )
     CloseConfirmation ->
       ( { model | confirm = Hidden }, Cmd.none )
+    CheckForUpdate _ -> ( model, checkForUpdate )
+    CheckedVersion versionResult ->
+      case versionResult of
+        Ok version ->
+          ( { model | foundVersion = version, updateAvailable = compareVersion model.currentVersion version }, Cmd.none )
+        Err _ -> ( model, Cmd.none )
     UpdateAvailable ->
       ( { model | updateAvailable = True }, Cmd.none )
-
-
-
-changePlayerBet : Model -> Player -> Bet -> Model
-changePlayerBet model player bet =
-  case player of
-    North -> { model | north = (player, bet) }
-    South -> { model | south = (player, bet) }
-    East -> { model | east = (player, bet) }
-    West -> { model | west = (player, bet) }
+    ShowAbout checked ->
+      ( { model | showAbout = checked }, Cmd.none )
 
 
 changeTeamName : Model -> Team -> String -> Model
 changeTeamName model team name =
   case team of
     Vertical -> { model | vertName = name }
-    Horizontal -> { model | horzName = name }  
+    Horizontal -> { model | horzName = name }
 
 
-changeFirstOut : Model -> Player -> Bool -> Model
-changeFirstOut model player result =
-  if result then
-    let        
-      firstOut =
-        case model.firstOut of
-          Team (team, _) -> if inTeam player team then Team (team, Just player) else One player
-          _ -> One player
-    in    
-      { model | firstOut = firstOut }
-  else
-    { model | firstOut = None }
-
-
-consecutiveVictory : Model -> Team -> Bool -> Model
-consecutiveVictory model team result =
+changeTheme : Model -> String -> Model
+changeTheme model id =
   let
-    firstOut =
-      if not result then
-        case model.firstOut of
-          Team (t, Just p) -> One p
-          _ -> None
-      else
-        case model.firstOut of
-          None -> Team (team, Nothing)
-          One player -> if inTeam player team then Team (team, Just player) else Team (team, Nothing)
-          Team (t, p) -> if team == t then Team (t, p) else Team (team, Nothing)
+    maybeTheme = Dict.get id model.themes
   in
-    { model | firstOut = firstOut }
-
-
-undo : Model -> Model
-undo model =
-  let
-    ((vS, hS), history) = case model.history of
-      [] ->
-        ((0, 0), [(0, 0)])
-      [x] ->
-        (x, [(0, 0)])
-      (x :: xs) ->
-        (x, xs)
-  in
-    { model
-    | vertScore = model.vertScore - vS
-    , horzScore = model.horzScore - hS
-    , history = history
-    }  
-
-
-scoreAll : Model -> Model
-scoreAll model =
-  reset (
-    let
-      vertDiff = getTeamScore
-        model
-        model.north
-        model.south
-        Vertical
-        model.vertTurnScore
-      horzDiff = getTeamScore
-        model
-        model.west
-        model.east
-        Horizontal
-        (100 - model.vertTurnScore)
-    in
-      { model
-      | vertScore = model.vertScore + vertDiff
-      , horzScore = model.horzScore + horzDiff
-      , history = (vertDiff, horzDiff) :: model.history
-      }
-  )
-
-
-getTeamScore : Model -> (Player, Bet) -> (Player, Bet) -> Team -> Int -> Int
-getTeamScore model player1 player2 team score =
-  getPlayerBonus model player1
-  + getPlayerBonus model player2
-  + (case model.firstOut of
-      Team (t, _) -> if t == team then 200 else 0
-      _ -> score
-    )
-
-
-getPlayerBonus : Model -> (Player, Bet) -> Int
-getPlayerBonus model (player, bet) =
-  (getScore bet) * (
-    case model.firstOut of
-      One p -> if p == player then 1 else -1
-      Team (_, Just p) -> if p == player then 1 else -1
-      _ -> -1
-  )
-
-
-reset : Model -> Model
-reset model =
-  { model
-  | north = (North, Zero)
-  , south = (South, Zero)
-  , east = (East, Zero)
-  , west = (West, Zero)
-  , firstOut = None
-  , vertTurnScore = 50
-  }
+    case maybeTheme of
+      Just theme -> { model | theme = theme }
+      Nothing -> model
 
 
 -- VIEW
@@ -410,42 +284,97 @@ reset model =
 view : Model -> Html Msg
 view model =
   if model.crashed then
-    text "The app crashed :("
+    div
+      [ css [ property "margin-top" "env(safe-area-inset-top)" ] ]
+      [ text "The app crashed :(" ]
   else 
-    div [ class ("app " ++ if model.lighting == Light then "light" else "dark" ) ]
-      [ div [ class "safe-area" ]
-        [ viewScorer model
+    div
+      [ css
+        [ width (pct 100)
+        , height (pct 100)
+        , position fixed
+        , property "user-select" "none"
+        , property "-moz-user-select" "none"
+        , property "-webkit-user-select" "none"
+        , property "-ms-user-select" "none"
+        , backgroundColor model.theme.colors.background
+        , color model.theme.colors.text
+        , fontFamilies
+          [ "-apple-system"
+          , "BlinkMacSystemFont"
+          , qt "Segoe UI"
+          , "Roboto"
+          , "Helvetica"
+          , "Arial"
+          , "san-serif"
+          , qt "Apple Color Emoji"
+          , qt "Segoe UI Emoji"
+          , qt "Segoe UI Symbol"
+          ]
+        ]
+      ]
+      [ div
+        [ css
+          [ width (pct 100)
+          , height (pct 100)
+          , boxSizing borderBox
+          , property "padding-left" "env(safe-area-inset-left)"
+          , property "padding-right" "env(safe-area-inset-right)"
+          , property "padding-top" "env(safe-area-inset-top)"
+          , property "padding-bottom" "env(safe-area-inset-bottom)"
+          ]
+        ]
+        [ settingsGear model
+        , viewScorer model
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
             text ""
-        , confirm model 
-        , div [ class ("settings-container" ++ (if model.updateAvailable then " avail" else "")) ]
+        , div
+          [ css
+            [ position absolute
+            , bottom (px 30)
+            , right zero
+            , padding inherit
+            , margin (px 20)
+            , textAlign right
+            ]
+          ]
           [ if model.showSettings then
               viewSettings model
             else
               text ""
-          , labeledCheckbox
-              "settings-toggle"
-              "Settings"
-              "settings-toggle"
-              "settings-label"
-              model.showSettings
-              ToggleSettings
           ]
+        , confirm model
         ]
       ]
 
 
 viewScorer : Model -> Html Msg
 viewScorer model =
-  div [ class "scorer" ] 
+  div
+    [ css
+      [ property "display" "grid"
+      , property "grid-row-gap" "20px"
+      ]
+    ] 
     [ viewTeams model
-    , viewTeamTurnScore model
-    , viewConsecutiveVictory model
+    , viewTurnScores model
+    , viewBetRow model
     , viewActions model
-    , if (abs (model.vertScore - model.horzScore)) > 400 then
-        button [ class "uh-oh", onClick CrashApp ] [ text "Things are not looking good" ]
+    , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
+        button
+          [ css
+            [ color (hex "FF0000")
+            , fontWeight bold
+            , border3 (px 1) solid (hex "FF0000")
+            , borderRadius (px 10)
+            , property "background" "repeating-linear-gradient(45deg,yellow,yellow 10px,black 10px,black 20px)"
+            , property "text-shadow" "-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000"
+            ]
+          , onClick CrashApp
+          ]
+          [ text "Things are not looking good" ]
       else
         text ""
     ]
@@ -453,218 +382,906 @@ viewScorer model =
 
 viewTeams : Model -> Html Msg
 viewTeams model =
-  div [ class "teams" ]
-    [ viewTeam model Vertical model.vertName model.vertScore model.north model.south
-    , viewTeam model Horizontal model.horzName model.horzScore model.east model.west
-    ]
-
-
-viewTeam : Model -> Team -> String -> Int -> (Player, Bet) -> (Player, Bet) -> Html Msg
-viewTeam model team name score player1 player2 =
-  let
-    colors = colorValues model.lighting
-  in
-  div [ class "team" ]
-    [ input
-      [ type_ "text"
-      , Html.Styled.Attributes.value name
-      , onInput (ChangeTeamName team)
-      , css
-          [ textAlign center
-          , border zero
-          , fontSize (px 20)
-          , marginTop (px 20)
-          , marginLeft auto
-          , marginRight auto
-          , displayFlex
-          , paddingBottom (px 10)
-          , Css.width (pct 90)
-          , focus [ outline none ]
-          , backgroundColor transparent
-          , color colors.text
-          ]
+  div
+    [ css
+      [ displayFlex
+      , property "justify-content" "space-evenly"
       ]
-      []
-    , div [ class "team-score"] [ text (String.fromInt score) ]
-    , viewPlayer model player1
-    , viewPlayer model player2
+    ]
+    [ viewTeam model Vertical model.vertName model.scorer.vertScore
+    , viewTeam model Horizontal model.horzName model.scorer.horzScore
     ]
 
 
-viewPlayer : Model -> (Player, Bet) -> Html Msg
-viewPlayer model playerBet =
-  viewPlayerBet model playerBet
+viewTeam : Model -> Team -> String -> Int -> Html Msg
+viewTeam model team name score =
+  div
+    [ css
+      [ border3 (px 3) solid model.theme.colors.border
+      , borderRadius (px 10)
+      , marginTop (px 20)
+      , width (px 90)
+      ]
+    ]
+    [ div
+      [ css
+        [ padding2 (px 5) (px 5)
+        , borderTopRightRadius (px 7)
+        , borderTopLeftRadius (px 7)
+        , backgroundColor model.theme.colors.menuBackground
+        ]
+      ]
+      [ input
+        [ type_ "text"
+        , value name
+        , onInput (ChangeTeamName team)
+        , css
+            [ textAlign center
+            , border zero
+            , fontSize (px 15)
+            , display block -- Fix iOS centering
+            , width (pct 100)
+            , boxSizing borderBox
+            , focus [ outline none ]
+            , backgroundColor transparent
+            , color model.theme.colors.text
+            , textAlign center
+            ]
+        ]
+        []
+      ]
+    , div
+      [ css
+        [ textAlign center
+        , fontSize (px 35)
+        , padding (px 5)
+        ]
+      ]
+      [ text (String.fromInt score) ]
+    ]
 
 
-viewPlayerBet : Model -> (Player, Bet) -> Html Msg
-viewPlayerBet model (player, bet) =
+viewBetRow : Model -> Html Msg
+viewBetRow model =
+  div
+    [ css
+      [ displayFlex
+      , property "justify-content" "space-evenly"
+      ]
+    ]
+    ( case model.settingBet of
+        Person player ->
+          [ shield (ChangeSettingBet NoOne) True
+          , viewBetChoice model player
+          ]
+        NoOne ->
+          [ viewBets model model.scorer.north model.scorer.south
+          , viewBets model model.scorer.west model.scorer.east
+          ]
+    )
+
+
+viewBetChoice : Model -> Player -> Html Msg
+viewBetChoice model player =
+  div
+    [ css
+      [ border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , displayFlex
+      , alignItems center
+      , margin auto
+      , boxSizing borderBox
+      , backgroundColor model.theme.colors.menuBackground
+      , position relative
+      ]
+    ]
+    [ div
+      [ onClick (ChangePlayerBet player Tichu True)
+      , css
+        [ cursor pointer
+        , borderRight3 (px 2) solid model.theme.colors.border
+        , display inlineBlock
+        , marginRight (px 10)
+        , padding2 (px 5) (px 10)
+        , border3 (px 2) solid model.theme.colors.border
+        , borderRadius (px 10)
+        , boxSizing borderBox
+        , textAlign center
+        , cursor pointer
+        , backgroundColor model.theme.colors.background
+        ]
+      ]
+      [ text "Tichu" ]
+    , div
+      [ onClick (ChangePlayerBet player GrandTichu True)
+      , css
+        [ cursor pointer
+        , padding2 (px 5) (px 10)
+        , border3 (px 2) solid model.theme.colors.border
+        , borderRadius (px 10)
+        , boxSizing borderBox
+        , textAlign center
+        , cursor pointer
+        , backgroundColor model.theme.colors.background
+        ]
+      ]
+      [ text "Grand Tichu"]
+    ]
+
+
+viewBets : Model -> (Player, Bet) -> (Player, Bet) -> Html Msg
+viewBets model (player1, bet1) (player2, bet2) =
+  div
+    [ css
+      [ border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , displayFlex
+      , flexDirection column
+      , alignItems center
+      , boxSizing borderBox
+      , backgroundColor model.theme.colors.menuBackground
+      , maxHeight maxContent
+      , position relative
+      ]
+    ]
+    [ viewAddBet model (player1, bet1) (bet2 == Zero)
+    , if bet1 /= Zero then
+        if bet2 == Zero then
+          viewAddBetMin model (player2, bet2)
+        else
+          viewAddBet model (player2, bet2) True
+      else
+        text ""
+    ]
+
+
+viewAddBet : Model -> (Player, Bet) -> Bool -> Html Msg
+viewAddBet model (player, bet) showClose =
+  div
+    [ css
+      [ position relative
+      , nthChild "2" [ marginTop (px 10) ]
+      ]
+    ]
+    [ if bet == Zero then
+        div
+          [ css
+            [ padding2 (px 5) (px 10)
+            , border3 (px 2) solid model.theme.colors.border
+            , borderRadius (px 10)
+            , width (px 86)
+            , boxSizing borderBox
+            , textAlign center
+            , cursor pointer
+            , fontStyle italic
+            , backgroundColor model.theme.colors.background
+            ]
+          , onClick (ChangeSettingBet (Person player))
+          ]
+          [ text "add bet" ]
+      else
+        viewBet model (player, bet) showClose
+    ]
+
+
+viewAddBetMin : Model -> (Player, Bet) -> Html Msg
+viewAddBetMin model (player, _) =
+  div
+    [ css
+      [ position absolute
+      , backgroundColor model.theme.colors.menuBackground
+      , left (pct 50)
+      , transform (translate2 (pct -50) (pct -50))
+      , top (pct 100)
+      , padding2 zero (px 10)
+      , height (px 20)
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      , borderBottomLeftRadius (px 10)
+      , borderBottomRightRadius (px 10)
+      , borderTop zero
+      , boxSizing borderBox
+      , textAlign center
+      , lineHeight initial
+      , cursor pointer
+      ]
+    , onClick (ChangeSettingBet (Person player))
+    ]
+    [ text "+" ]
+
+
+viewBet : Model -> (Player, Bet) -> Bool -> Html Msg
+viewBet model (player, bet) showClose =
   let
+    betLabel = if bet == Tichu then "Tichu" else "Grand"
     playerId = getPlayerId player
     successful = bet /= Zero
-      && (case model.firstOut of
+      && (case model.scorer.firstOut of
             One p -> p == player
             Team (_, Just p) -> p == player
-            _ -> False 
-          )
-  in  
-    div [ class "bets" ]
-      [ div [ class "bet" ]
-          [ labeledCheckbox
-              ("tichu" ++ "-" ++ playerId)
-              "Tichu"
-              "bet-radio"
-              "bet-label"
-              (bet == Tichu)
-              (ChangePlayerBet player Tichu)
-          , labeledCheckbox
-              ("grand" ++ "-" ++ playerId)
-              "Grand"
-              "bet-radio"
-              "bet-label"
-              (bet == GrandTichu)
-              (ChangePlayerBet player GrandTichu)
-          , if bet /= Zero then
-              div [ class "success"]
-                [ input
-                [ type_ "checkbox"
-                , class "bet-success"
-                , id ("success" ++ "-" ++ playerId)
-                , Html.Styled.Attributes.checked successful
-                , onCheck (ChangeFirstOut player) ] []
-                , label
-                  [ class ("bet-success-label" ++ if successful then " successful" else "" )
-                  , for ("success" ++ "-" ++ playerId)
-                  ]
-                  [ text (if successful then "✓" else "✗") ]
-                ]
-            else
-              text ""
+            _ -> False)
+  in
+    div
+      [ css
+        [ border3 (px 2) solid transparent
+        , position relative
+        , borderRadius (px 10)
+        , backgroundColor (if successful then hex "71be44" else model.theme.colors.border)
+        ]
+      ]
+      [ div
+        [ css
+          [ width (px 15)
+          , height (px 15)
+          , cursor pointer
+          , borderRadius (pct 100)
+          , backgroundColor model.theme.colors.menuBackground
+          , border3 (px 1) solid model.theme.colors.border
+          , boxSizing borderBox
+          , position absolute
+          , top (px -8)
+          , left (px -8)
+          , batch (if showClose then [ ] else [ display none ])
           ]
+        , onClick (ChangePlayerBet player bet False)
+        ]
+        [ div
+          [ css
+            [ width (px 7)
+            , lineHeight zero
+            , position absolute
+            , top (pct 50)
+            , left (pct 50)
+            , transform (translate2 (pct -50) (pct -50))
+            ]
+          ]
+          [ xSvg ]
+        ]
+      , div
+        [ css
+          [ displayFlex
+          ]
+        ]
+        [ input
+          [ type_ "checkbox"
+          , id ("success" ++ "-" ++ playerId)
+          , checked successful
+          , onCheck (ChangeFirstOut player)
+          , css
+            [ display none
+            ]
+          ]
+          []
+        , label
+          [ for ("success" ++ "-" ++ playerId)
+          , css
+            [ padding (px 5)
+            , cursor pointer
+            , backgroundColor model.theme.colors.background
+            , borderTopLeftRadius (px 8)
+            , borderBottomLeftRadius (px 8)
+            , width (px 54)
+            , boxSizing borderBox
+            , textAlign center
+            ]
+          ]
+          [ text betLabel ]
+        , label
+          [ css
+            [ padding (px 5)
+            , cursor pointer
+            , displayFlex
+            , alignItems center
+            , justifyContent center
+            ]
+          , for ("success" ++ "-" ++ playerId)
+          ]
+          [ div
+              [ css
+                [ borderRadius (px 5)
+                , boxSizing borderBox
+                , width (px 18)
+                , height (px 18)
+                , fontSize (px 12)
+                , displayFlex
+                , alignItems center
+                , justifyContent center
+                , backgroundColor (hex "FFF")
+                , color (hex "111")
+                , fontWeight bold
+                ]
+              ]
+              [ text (if successful then "✓" else " ") ]
+          ]
+        ]
       ]
 
 
-viewTeamTurnScore : Model -> Html Msg
-viewTeamTurnScore model =
-  div [ class "turn-scores", css [ displayFlex, flexDirection row ] ]
-    [ button
-        [ class "score-step"
-        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore - 5)))
-        ]
-        [ text "<" ]
-    , div [ class "turn-score vert" ] [ text (String.fromInt model.vertTurnScore) ]
-    , input
-      [ type_ "range"
-      , class "range"
-      , Html.Styled.Attributes.min "-25"
-      , Html.Styled.Attributes.max "125"
-      , Html.Styled.Attributes.value (String.fromInt model.vertTurnScore)
-      , step "5"
-      , onInput ChangeTeamScore ] []
-    , div [ class "turn-score horz" ] [ text (String.fromInt (100 - model.vertTurnScore)) ]
-    , button
-        [ class "score-step"
-        , onClick (ChangeTeamScore (String.fromInt (model.vertTurnScore + 5)))
-        ]
-        [ text ">" ]
+viewTurnScores : Model -> Html Msg
+viewTurnScores model =
+  div
+    [ css
+      [ displayFlex
+      , flexDirection column
+      ]
+    ]
+    [ viewTeamTurnScores model
+    , viewTeamTurnScoreSlider model
     ]
 
 
-viewConsecutiveVictory : Model -> Html Msg
-viewConsecutiveVictory model =
-  div [ class "consecutives", css [ displayFlex, flexDirection row ] ]
-    [ div [ class "consecutive"] 
-      [ input
-        [ type_ "checkbox"
-        , class "cv-check"
-        , id "vert-cv"
-        , Html.Styled.Attributes.checked
-          (case model.firstOut of
-            Team (Vertical, _) -> True      
-            _ -> False
-          )
-        , onCheck (ConsecutiveVictory Vertical)
-        ][]
-      , label [ class "cv-label", for "vert-cv" ] [ text "Consecutive" ]
-      ]
-    , div [ class "consecutive" ] 
-      [ input
-        [ type_ "checkbox"
-        , class "cv-check"
-        , id "horz-cv"
-        , Html.Styled.Attributes.checked
-          (case model.firstOut of
-            Team (Horizontal, _) -> True      
-            _ -> False
-          )
-        , onCheck (ConsecutiveVictory Horizontal)
-        ][]
-      , label [ class "cv-label", for "horz-cv" ] [ text "Consecutive" ]
+viewTeamTurnScores : Model -> Html Msg
+viewTeamTurnScores model =
+  div
+    [ css
+      [ margin auto
+      , position relative
+      , bottom zero
+      , transition [ Css.Transitions.bottom3 200 0 easeInOut ]
+      , batch
+        ( case model.scorer.firstOut of
+            Team _ ->
+              [ bottom (px -25)
+              ]
+            _ -> []
+        )
       ]
     ]
+    [ viewTeamTurnScore model model.scorer.vertTurnScore Vertical
+    , viewTeamTurnScore model (100 - model.scorer.vertTurnScore) Horizontal
+    ]
+
+
+viewTeamTurnScore : Model -> Int -> Team -> Html Msg
+viewTeamTurnScore model teamScore team =
+  let
+    widthPx = 60
+  in
+  div
+    [ css
+      [ display inlineBlock
+      ]
+    ]
+    [ div
+        [ css
+          [ height (px 25)
+          , width (px widthPx)
+          , padding2 zero (px 10)
+          , backgroundColor model.theme.colors.menuBackground
+          , border3 (px 3) solid model.theme.colors.border
+          , borderBottom zero
+          , boxSizing borderBox
+          , borderRadius zero
+          , fontWeight bold
+          , case team of
+              -- Left
+              Vertical ->
+                batch
+                  [ borderTopLeftRadius (px 25)
+                  , borderRight zero
+                  , width (px (widthPx - 1))
+                  , textAlign right
+                  ]
+              -- Right
+              Horizontal ->
+                batch
+                  [ borderTopRightRadius (px 25)
+                  , textAlign left
+                  ]
+          ]
+        ]
+        [ div
+            [ css
+              [ top (pct 50)
+              , transform (translateY (pct -50))
+              , position relative
+              ]
+            ]
+            [ text (String.fromInt teamScore) ]
+        ]
+    ]
+
+
+viewConsecutiveVictoryButton : Model -> String -> Team -> Bool -> Html Msg
+viewConsecutiveVictoryButton model elemid team ischecked =
+  div
+    [ css []
+    ] 
+    [ input
+      [ type_ "checkbox"
+      , id elemid
+      , checked ischecked
+      , onCheck (ConsecutiveVictory team)
+      , css
+        [ display none
+        ]
+      ][]
+    , label
+        [ for elemid
+        , css
+          [ border3 (px 3) solid model.theme.colors.border
+          , width (px 50)
+          , height (px 50)
+          , display inlineFlex
+          , alignItems center
+          , boxSizing borderBox
+          , padding2 zero (px 7)
+          , backgroundColor model.theme.colors.border
+          , cursor pointer
+          , batch (if ischecked then
+            [ transition
+              [ Css.Transitions.backgroundColor2 200 0
+              , Css.Transitions.borderColor2 200 0
+              ]
+            ]
+            else [])
+          , case team of
+              -- Left
+              Vertical ->
+                batch
+                  [ borderTopLeftRadius (px 25)
+                  , borderBottomLeftRadius (px 25)
+                  , paddingLeft (px 16)
+                  , textAlign right
+                  ]
+              -- Right
+              Horizontal ->
+                batch
+                  [ borderTopRightRadius (px 25)
+                  , borderBottomRightRadius (px 25)
+                  , textAlign left
+                  ]
+          , if ischecked then batch
+              [ backgroundColor model.theme.colors.cta
+              , borderColor model.theme.colors.cta
+              ]
+            else
+              batch []
+          ]
+        ]
+        [ div
+          [ css
+            [ width (px 22)
+            , height (px 22)
+            ]
+          ]
+          [ consecutiveVictorySvg ]
+        ]
+    ]
+
+
+viewTeamTurnScoreSlider : Model -> Html Msg
+viewTeamTurnScoreSlider model =
+  div
+    [ css
+      [ displayFlex
+      , flexDirection row
+      , justifyContent center
+      , position relative
+      , margin auto
+      , width (px (50 + 50 + 240))
+      ]
+    ]
+    [ viewConsecutiveVictoryButton
+      model
+      "vert-cv"
+      Vertical
+      (case model.scorer.firstOut of
+        Team (Vertical, _) -> True      
+        _ -> False
+      )
+    , viewConsecutiveVictoryOverlays model
+    , div
+        [ css
+          [ overflow hidden
+          , width (px 240)
+          ]
+        ]
+        [ viewSlider model ]
+    , viewConsecutiveVictoryButton
+      model
+      "horz-cv"
+      Horizontal
+      (case model.scorer.firstOut of
+        Team (Horizontal, _) -> True      
+        _ -> False
+      )
+    ]
+
+
+viewConsecutiveVictoryOverlays : Model -> Html Msg
+viewConsecutiveVictoryOverlays model =
+  div
+    [ css
+      [ position absolute
+      , width (px (50 + 240 + 50))
+      , height (px 50)
+      , pointerEvents none
+      ]
+    ]
+    [ div
+      [ css
+        [ position absolute
+        , left (px 50)
+        , right (px 50)
+        , width (px 240)
+        , height (pct 100)
+        ]
+      ]
+      [ viewConsecutiveVictoryOverlay
+        model
+        Vertical
+        (case model.scorer.firstOut of
+          Team (Vertical, _) -> True      
+          _ -> False
+        )
+      , viewConsecutiveVictoryOverlay
+        model
+        Horizontal
+        (case model.scorer.firstOut of
+          Team (Horizontal, _) -> True      
+          _ -> False
+        )
+      ]
+    ]
+
+
+viewConsecutiveVictoryOverlay : Model -> Team -> Bool -> Html Msg
+viewConsecutiveVictoryOverlay model team active =
+  let
+    (direction, opposite, transitionDirection) =
+      case team of
+        Vertical -> (right, left, Css.Transitions.right3)
+        Horizontal -> (left, right, Css.Transitions.left3)
+  in
+  div
+    [ css
+      [ position absolute
+      , height (pct 100)
+      , overflow hidden
+      , lineHeight (px 50)
+      , backgroundColor model.theme.colors.cta
+      , color model.theme.colors.ctaText
+      , cursor pointer
+      , pointerEvents auto
+      , opposite zero
+      , direction (pct 100)
+      , transition [ transitionDirection 200 0 easeInOut ]
+      , whiteSpace noWrap
+      , batch (if active then
+        [ direction zero
+        , padding2 zero (px 10)
+        ]
+        else
+          []
+      )
+      , batch (case team of
+        Horizontal ->
+          [ textAlign right
+          ]
+        Vertical ->[]
+      )
+      ]
+    , onClick (ConsecutiveVictory Vertical False)
+    ]
+    [ text "Consecutive victory" ]
+
+
+viewSlider : Model -> Html Msg
+viewSlider model =
+  range
+    {
+      min = -25
+    , max = 125
+    , step = 5
+    , value = model.scorer.vertTurnScore
+    , onInput = ChangeTeamScore
+    }
+    { height = 50
+    , padding = 5
+    , background = model.theme.colors.background
+    , trackBorderRadius = 0
+    , thumbHeight = 30
+    , thumbWidth = 40
+    , thumbColor = model.theme.colors.pop
+    , thumbBorderRadius = 20
+    , additional =
+      [ borderTop3 (px 3) solid model.theme.colors.border
+      , borderBottom3 (px 3) solid model.theme.colors.border
+      ]
+    }
 
 
 viewActions : Model -> Html Msg
 viewActions model =
-  div [ class "view-actions" ]
-    [ button [ class "undo", onClick Undo ] [ text "Undo" ]
-    , button [ class "score", onClick Score ] [ text "Score" ]
-    , button [ class "clear", onClick (ShowConfirmation "Are you sure you want to reset?" Clear) ] [ text "Reset" ]
+  div
+    [ css
+      [ displayFlex
+      , alignItems center
+      ]
+    ]
+    [ div
+      [ css
+        [ width (px 45)
+        ]
+      ]
+      []
+    , button
+      [ css
+        [ width (px 150)
+        , padding2 (px 10) zero
+        , backgroundColor model.theme.colors.cta
+        , color model.theme.colors.ctaText
+        , borderRadius (px 10)
+        , marginLeft auto
+        ]
+      , onClick Score
+      ]
+      [ text "Score" ]
+    , iconButton
+      model
+      undoSvg
+      [ marginLeft (px 15)
+      , marginRight auto
+      ]
+      "Undo"
+      Undo
     ]
 
 
 viewSettings : Model -> Html Msg
 viewSettings model =
-  div [ class "settings" ]
-    [ labeledCheckbox
-        "lighting"
-        (if model.lighting == Light then "Dark mode" else "Light mode")
-        "lighting"
-        "lighting-label"
-        (model.lighting == Light)
-        ChangeLighting
-    , hr [] []
-    , button [ class "update", onClick Update ] [ text (if model.updateAvailable then "Update!" else "Reload") ]
+  div
+    [ css
+      [ border3 (px 3) solid model.theme.colors.border
+      , borderRadius (px 20)
+      , padding (px 10)
+      , backgroundColor model.theme.colors.menuBackground
+      , width (if model.showAbout then px 300 else px 150)
+      , transition [ (Css.Transitions.width3 100 0 easeInOut) ]
+      , textAlign left
+      , marginBottom (px 10)
+      ]
     ]
+    (if model.showAbout then [ viewAbout model ] else defaultSettings model)
 
 
-labeledRadio : String -> String -> String -> String -> String -> Bool -> (String -> Msg) -> Html Msg
-labeledRadio elemid elemlabel rgroup elemclass labelclass isChecked msg =
-  div []
-    [ input 
-      [ type_ "radio"
-      , class elemclass
-      , id elemid
-      , name rgroup
-      , Html.Styled.Attributes.checked isChecked
-      , onInput msg
-      ] []
-    , label [ class labelclass, for elemid ] [ text elemlabel ]
+defaultSettings : Model -> List (Html Msg)
+defaultSettings model =
+  let
+    buttonStyles =
+      [ cursor pointer
+      , width (pct 100)
+      , padding2 (px 6) zero
+      , backgroundColor model.theme.colors.background
+      , border3 (px 2) solid model.theme.colors.border
+      , boxSizing borderBox
+      , color inherit
+      , borderRadius (px 10)
+      ]
+  in
+  [ button
+    [ css
+      [ batch buttonStyles
+      , textAlign left
+      , padding (px 10)
+      ]
     ]
+    (themeSettings model)
+  , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
+  , div
+    [ css
+      [ displayFlex
+      , property "justify-content" "space-evenly"
+      ]
+    ]
+    [ iconButton
+      model
+      trashSvg
+      [ backgroundColor model.theme.colors.background ]
+      "Reset"
+      (ShowConfirmation "Are you sure you want to reset?" Clear)
+    , iconButton
+      model
+      (div [ css [ textAlign center, fontSize (px 18), fontWeight bold ] ] [ text "i" ])
+      [ backgroundColor model.theme.colors.background ]
+      "About"
+      (ShowAbout True)
+    , iconButton
+      model
+      undoSvg
+      [ backgroundColor (if model.updateAvailable then model.theme.colors.cta else model.theme.colors.background)
+      , color (if model.updateAvailable then model.theme.colors.ctaText else model.theme.colors.text)
+      , transform (scale2 -1 1)
+      ]
+      "Reload"
+      Update
+    ]
+  ]
 
-labeledCheckbox : String -> String -> String -> String -> Bool -> (Bool -> Msg) -> Html Msg
-labeledCheckbox elemid elemlabel elemclass labelclass isChecked msg =
-  div [] 
+
+themeSettings : Model -> List (Html Msg)
+themeSettings model =
+  [ div
+    [ css
+      [ paddingBottom (px 5)
+      , marginBottom (px 5)
+      , textAlign center
+      , fontWeight bold
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      ]
+    ]
+    [ text "Theme" ]
+  , div
+    [ ]
+    (List.map
+      (\theme ->
+        li
+          [ onClick (ChangeLighting theme.id)
+          , type_ (if model.theme.id == theme.id then "filled" else "circle")
+          , css
+            [ batch (if model.theme.id == theme.id then [ fontWeight bold ] else [])
+            , marginBottom (px 5)
+            , cursor pointer
+            , lastChild [ marginBottom zero ]
+            ]
+          ]
+          [ text theme.name
+          ]
+      )
+      (Dict.values themes))
+  ]
+
+
+viewAbout : Model -> Html Msg
+viewAbout model =
+  div
+  [ css
+    [ color inherit
+    , textAlign left
+    ]
+  ]
+  [ div
+    [ css
+      [ paddingBottom (px 5)
+      , marginBottom (px 5)
+      , textAlign center
+      , fontWeight bold
+      , borderBottom3 (px 2) solid model.theme.colors.border
+      ]
+    ]
+    [ text "About" ]
+  , div
+    []
+    [ aboutEntry "Version" model.currentVersion.version
+    , aboutEntry "Developed by" "Justin Renjilian"
+    , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
+    , a
+      [ href "https://github.com/freshvictory/tichu-web/issues/new"
+      , target "_blank"
+      , title "hep"
+      , css
+        [ color inherit
+        , visited [ color inherit ]
+        , fontWeight bold
+        , textDecoration none
+        , fontStyle italic
+        , display block
+        , boxSizing borderBox
+        , margin2 (px 5) zero
+        ]
+      ]
+      [ text "I'm having a problem..." ]
+    ]
+  ]
+
+
+aboutEntry : String -> String -> Html Msg
+aboutEntry label value =
+  li
+  [ css
+    [ marginBottom (px 5)
+    , lastChild [ marginBottom zero ]
+    ]
+  ]
+  [ text (label ++ " ")
+  , span
+    [ css
+      [ fontWeight bold
+      ]
+    ]
+    [ text value ]
+  ]
+
+
+settingsGear : Model -> Html Msg
+settingsGear model  =
+  div
+    [ css
+      [ height (px 30)
+      , position absolute
+      , bottom zero
+      , right zero
+      , padding inherit
+      , margin (px 20)
+      , textAlign right
+      ]
+    ] 
     [ input
       [ type_ "checkbox"
-      , id elemid
-      , class elemclass
-      , Html.Styled.Attributes.checked isChecked
-      , onCheck msg
+      , id "settings-toggle"
+      , checked model.showSettings
+      , onCheck ToggleSettings
+      , css
+        [ display none
+        ]
       ] []
-    , label [ class labelclass, for elemid ] [ text elemlabel ]
+    , label
+      [ for "settings-toggle"
+      , css
+        [ position absolute
+        , right zero
+        , width (px 30)
+        , height (px 30)
+        , color model.theme.colors.border
+        , cursor pointer
+        , batch
+          ( if model.updateAvailable then
+            [ after
+              [ property "content" "''"
+              , width (px 8)
+              , height (px 8)
+              , borderRadius (px 8)
+              , backgroundColor model.theme.colors.pop
+              , position absolute
+              , top (px -4)
+              , right (px -4)
+              ]
+            ]
+          else
+            []
+          )
+        ]
+      ]
+      [ gearSvg ]
     ]
+
+
+iconButton : Model -> Html Msg -> List Style -> String -> Msg -> Html Msg
+iconButton model icon styles t onclick =
+  div
+    [ css
+      [ width (px 20)
+      , height (px 20)
+      , display inlineBlock
+      , cursor pointer
+      , padding (px 3)
+      , border3 (px 2) solid model.theme.colors.border
+      , borderRadius (px 10)
+      , backgroundColor model.theme.colors.menuBackground
+      , batch styles
+      ]
+    , title t
+    , onClick onclick
+    ]
+    [ icon ]
 
 
 confirm : Model -> Html Msg
 confirm model =
-  let
-    colors = colorValues model.lighting
-  in
   case model.confirm of
     Hidden -> text ""
     Active query msg ->
       div
-        []
+        [ css
+          [ position absolute
+          , left zero
+          , right zero
+          , top zero
+          , bottom zero
+          ]
+        ]
         [ shield CloseConfirmation True
         , div
           [ css
@@ -678,9 +1295,9 @@ confirm model =
           [
             div 
             [ css
-              [ backgroundColor colors.background
+              [ backgroundColor model.theme.colors.background
               , borderRadius (px 30)
-              , border3 (px 1) solid colors.border
+              , border3 (px 3) solid model.theme.colors.border
               , padding (px 20)
               ]
             ]
@@ -699,14 +1316,19 @@ confirm model =
               ]
               [ button
                 [ onClick CloseConfirmation
-                , css [ confirmButtonStyle ]
+                , css
+                  [ confirmButtonStyle
+                  , backgroundColor model.theme.colors.menuBackground
+                  , color model.theme.colors.text
+                  ]
                 ]
                 [ text "No" ]
               , button
                 [ onClick msg
                 , css
                   [ confirmButtonStyle
-                  , ctaStyle
+                  , backgroundColor model.theme.colors.cta
+                  , color model.theme.colors.ctaText
                   , marginLeft auto
                   ]
                 ]
@@ -739,63 +1361,37 @@ shield msg dim =
     []
 
 
-type alias Colors =
-  { border: Color
-  , background: Color
-  , menuBackground: Color
-  , cta: Color
-  , ctaText: Color
-  , text: Color
-  }
-
-
-colorValues : Lighting -> Colors
-colorValues lighting =
-  if lighting == Dark then
-    { border = (hex "333")
-    , background = (hex "000")
-    , menuBackground = (hex "111")
-    , text = (hex "CCC")
-    , cta = (hex "DBB004")
-    , ctaText = (hex "000")
-    }
-  else
-    { border = (hex "CCC")
-    , background = (hex "FFF")
-    , menuBackground = (hex "EEE")
-    , cta = (hex "DBB004")
-    , ctaText = (hex "000")
-    , text = (hex "000")
-    }
-
-
 confirmButtonStyle : Style
 confirmButtonStyle =
   batch
     [ borderRadius (px 10)
-    , Css.width (pct 45)
-    , Css.height (px 40)
+    , width (pct 45)
+    , height (px 40)
     ]
-
-
-ctaStyle : Style
-ctaStyle = 
- batch
-  [ important (color (hex "000"))
-  , important (backgroundColor (hex "DBB004"))
-  ]
 
 
 {-| Decodes two fields into a tuple.
 - https://stackoverflow.com/a/53017452
 -}
-decodeAsTuple2 : String -> Json.Decode.Decoder a -> String -> Json.Decode.Decoder b -> Json.Decode.Decoder (a, b)
+decodeAsTuple2 : String -> Decoder a -> String -> Decoder b -> Decoder (a, b)
 decodeAsTuple2 fieldA decoderA fieldB decoderB =
     let
         result : a -> b -> (a, b)
         result valueA valueB =
             (valueA, valueB)
     in
-        Json.Decode.succeed result
-            |> Json.Decode.Extra.andMap (Json.Decode.field fieldA decoderA)
-            |> Json.Decode.Extra.andMap (Json.Decode.field fieldB decoderB)
+        succeed result
+            |> andMap (field fieldA decoderA)
+            |> andMap (field fieldB decoderB)
+
+
+-- HTTP
+
+
+checkForUpdate : Cmd Msg
+checkForUpdate =
+  Http.get
+    { url = "https://tichu.netlify.com/version.json"
+    , expect = Http.expectJson CheckedVersion versionDecoder
+    }
+
