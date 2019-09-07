@@ -6,7 +6,8 @@ import Css exposing (..)
 import Css.Transitions exposing (transition, easeInOut)
 import Dict exposing (Dict)
 import HtmlHelper exposing (hr, range)
-import Html.Styled exposing (Html, a, div, text, button, input, label, li, span, toUnstyled)
+import Html.Styled exposing
+  (Html, a, div, text, button, input, label, li, span, toUnstyled, fromUnstyled)
 import Html.Styled.Attributes exposing
   ( id, type_, css, for, value, checked, href, target, title)
 import Html.Styled.Events exposing (onInput, onClick, onCheck)
@@ -14,6 +15,7 @@ import Http
 import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
+import LineChart
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
 import Time exposing (Posix, every)
@@ -326,6 +328,7 @@ view model =
         ]
         [ settingsGear model
         , viewScorer model
+        , viewHistoryChart model
         , if model.showSettings then
             shield (ToggleSettings False) False
           else
@@ -1028,6 +1031,53 @@ viewActions model =
       "Undo"
       Undo
     ]
+
+
+viewHistoryChart : Model -> Html Msg
+viewHistoryChart model =
+  let
+    (t1History, t2History) = List.unzip (historyToChartableHistory model.scorer.history)
+  in
+    fromUnstyled
+      (LineChart.view2 .round .score t1History t2History
+      )
+
+
+type alias History =
+  { round: Float
+  , score: Float
+  }
+
+
+historyToChartableHistory : List (Int, Int) -> List (History, History)
+historyToChartableHistory history =
+  List.indexedMap
+    (\i (t1, t2) ->
+      ( { round = toFloat (i + 1), score = toFloat t1 }
+      , { round = toFloat (i + 1), score = toFloat t2 }
+      )
+    )
+    (mapAccumulate (List.reverse history))
+
+
+mapAccumulate : List (Int, Int) -> List (Int, Int)
+mapAccumulate list =
+  ( List.indexedMap
+    ( \i h ->
+      foldHistory (List.take (i + 1) list)
+    )
+    list
+  )
+
+
+foldHistory : List (Int, Int) -> (Int, Int)
+foldHistory list =
+  List.foldl foldHistoryFun (0, 0) list
+
+
+foldHistoryFun : (Int, Int) -> (Int, Int) -> (Int, Int)
+foldHistoryFun (t1, t2) =
+  \(a1, a2) -> (a1 + t1, a2 + t2)
 
 
 viewSettings : Model -> Html Msg
