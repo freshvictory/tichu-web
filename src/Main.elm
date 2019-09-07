@@ -15,6 +15,15 @@ import Http
 import Json.Decode exposing
   (Decoder, Value, decodeValue, succeed, map6, field, string, int, list)
 import Json.Decode.Extra exposing (andMap)
+import LineChart exposing (Config, viewCustom, line)
+import LineChart.Axis as Axis
+import LineChart.Colors as Colors
+import LineChart.Dots as Dots
+import LineChart.Junk as Junk
+import LineChart.Legends as Legends
+import LineChart.Area as Area
+import LineChart.Events as Events
+import LineChart.Line as Line
 import LineChart
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
@@ -1039,7 +1048,12 @@ viewHistoryChart model =
     (t1History, t2History) = List.unzip (historyToChartableHistory model.scorer.history)
   in
     fromUnstyled
-      (LineChart.view2 .round .score t1History t2History
+      (LineChart.view
+        .round
+        .score
+        [ line Colors.gold Dots.triangle model.vertName t1History
+        , line Colors.red Dots.square model.horzName t2History
+        ]
       )
 
 
