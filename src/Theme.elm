@@ -3,6 +3,7 @@ module Theme exposing
   , light
   , dark
   , strawberry
+  , mint
   )
 
 import Css exposing (Color, hex)
@@ -69,5 +70,21 @@ strawberry =
     , cta = hex "d53032"
     , ctaText = hex "FFF"
     , pop = hex "9cbe45"
+    }
+  }
+
+
+mint : ThemeSettings
+mint =
+  { id = "mint"
+  , name = "Mint"
+  , colors =
+    { border = hex "734941"
+    , background = hex "deffe1"
+    , menuBackground = hex "8febbc"
+    , text = hex "734941"
+    , cta = hex "734941"
+    , ctaText = hex "bffec6"
+    , pop = hex "734941"
     }
   }

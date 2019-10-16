@@ -17,7 +17,7 @@ import Json.Decode.Extra exposing (andMap)
 import Scorer exposing (..)
 import Svgs exposing (consecutiveVictorySvg, undoSvg, xSvg, gearSvg, trashSvg)
 import Time exposing (Posix, every)
-import Theme exposing (ThemeSettings, light, dark, strawberry)
+import Theme exposing (ThemeSettings, light, dark, strawberry, mint)
 import Version exposing (Version, versionDecoder, compareVersion)
 
 
@@ -27,7 +27,7 @@ main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
-    , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
+    , view = \model -> { title = "Tichu Beta", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
     , subscriptions = subscriptions
     }
@@ -89,7 +89,7 @@ defaultModel theme vertName horzName =
   , themes = themes
   , showSettings = False
   , checkingForUpdate = False
-  , currentVersion = { version = "1.0.1" }
+  , currentVersion = { version = "1.2.0" }
   , foundVersion = { version = "0.0.0" }
   , updateAvailable = False
   , crashed = False
@@ -99,7 +99,7 @@ defaultModel theme vertName horzName =
 
 
 themes : Dict String ThemeSettings
-themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, strawberry, light ])
+themes = Dict.fromList (List.map (\t -> (t.id, t)) [ dark, strawberry, light, mint ])
 
 
 modelFromState : State -> Model
@@ -1038,7 +1038,7 @@ viewSettings model =
       , borderRadius (px 20)
       , padding (px 10)
       , backgroundColor model.theme.colors.menuBackground
-      , width (if model.showAbout then px 300 else px 150)
+      , width (if model.showAbout then px 300 else px 175)
       , transition [ (Css.Transitions.width3 100 0 easeInOut) ]
       , textAlign left
       , marginBottom (px 10)
@@ -1391,7 +1391,7 @@ decodeAsTuple2 fieldA decoderA fieldB decoderB =
 checkForUpdate : Cmd Msg
 checkForUpdate =
   Http.get
-    { url = "https://tichu.netlify.com/version.json"
+    { url = "https://beta--tichu.netlify.com/version.json"
     , expect = Http.expectJson CheckedVersion versionDecoder
     }
 
