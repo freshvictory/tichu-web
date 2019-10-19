@@ -27,7 +27,7 @@ main : Program Json.Decode.Value Model Msg
 main =
   Browser.document
     { init = init
-    , view = \model -> { title = "Tichu Beta", body = [ model |> view |> toUnstyled ] }
+    , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
     , update = updateWithStorage
     , subscriptions = subscriptions
     }
@@ -89,7 +89,7 @@ defaultModel theme vertName horzName =
   , themes = themes
   , showSettings = False
   , checkingForUpdate = False
-  , currentVersion = { version = "1.2.0" }
+  , currentVersion = { version = "1.2.1" }
   , foundVersion = { version = "0.0.0" }
   , updateAvailable = False
   , crashed = False
