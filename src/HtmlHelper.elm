@@ -48,8 +48,8 @@ range : RangeConfig msg -> RangeStyles -> Html msg
 range config styles =
     input
         [ type_ "range"
-        , min (String.fromInt config.min)
-        , max (String.fromInt config.max)
+        , Html.Styled.Attributes.min (String.fromInt config.min)
+        , Html.Styled.Attributes.max (String.fromInt config.max)
         , step (String.fromInt config.step)
         , value (String.fromInt config.value)
         , onInput config.onInput

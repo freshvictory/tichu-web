@@ -151,9 +151,9 @@ decodeState =
         (field "lighting" string)
         (field "vertName" string)
         (field "horzName" string)
-        (field "vertScore" int)
-        (field "horzScore" int)
-        (field "history" (list (decodeAsTuple2 "0" int "1" int)))
+        (field "vertScore" Json.Decode.int)
+        (field "horzScore" Json.Decode.int)
+        (field "history" (list (decodeAsTuple2 "0" Json.Decode.int "1" Json.Decode.int)))
 
 
 getState : Model -> State
@@ -747,7 +747,7 @@ viewBet model ( player, bet ) showClose =
             [ input
                 [ type_ "checkbox"
                 , id ("success" ++ "-" ++ playerId)
-                , checked successful
+                , Html.Styled.Attributes.checked successful
                 , onCheck (ChangeFirstOut player)
                 , css
                     [ display none
@@ -903,7 +903,7 @@ viewConsecutiveVictoryButton model elemid team ischecked =
         [ input
             [ type_ "checkbox"
             , id elemid
-            , checked ischecked
+            , Html.Styled.Attributes.checked ischecked
             , onCheck (ConsecutiveVictory team)
             , css
                 [ display none
@@ -1334,7 +1334,7 @@ viewAbout model =
             , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
             , a
                 [ href "https://github.com/freshvictory/tichu-web/issues/new"
-                , target "_blank"
+                , Html.Styled.Attributes.target "_blank"
                 , title "hep"
                 , css
                     [ color inherit
@@ -1386,7 +1386,7 @@ settingsGear model =
         [ input
             [ type_ "checkbox"
             , id "settings-toggle"
-            , checked model.showSettings
+            , Html.Styled.Attributes.checked model.showSettings
             , onCheck ToggleSettings
             , css
                 [ display none
