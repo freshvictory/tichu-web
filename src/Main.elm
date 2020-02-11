@@ -363,8 +363,8 @@ view model =
                 , property "-moz-user-select" "none"
                 , property "-webkit-user-select" "none"
                 , property "-ms-user-select" "none"
-                , backgroundColor model.theme.colors.background
-                , color model.theme.colors.text
+                , backgroundColor (hex model.theme.colors.background)
+                , color (hex model.theme.colors.text)
                 , fontFamilies
                     [ "-apple-system"
                     , "BlinkMacSystemFont"
@@ -466,7 +466,7 @@ viewTeam : Model -> Team -> String -> Int -> Html Msg
 viewTeam model team name score =
     div
         [ css
-            [ border3 (px 3) solid model.theme.colors.border
+            [ border3 (px 3) solid (hex model.theme.colors.border)
             , borderRadius (px 10)
             , marginTop (px 20)
             , width (px 90)
@@ -477,7 +477,7 @@ viewTeam model team name score =
                 [ padding2 (px 5) (px 5)
                 , borderTopRightRadius (px 7)
                 , borderTopLeftRadius (px 7)
-                , backgroundColor model.theme.colors.menuBackground
+                , backgroundColor (hex model.theme.colors.menuBackground)
                 ]
             ]
             [ input
@@ -493,7 +493,7 @@ viewTeam model team name score =
                     , boxSizing borderBox
                     , focus [ outline none ]
                     , backgroundColor transparent
-                    , color model.theme.colors.text
+                    , color (hex model.theme.colors.text)
                     , textAlign center
                     ]
                 ]
@@ -535,14 +535,14 @@ viewBetChoice : Model -> Player -> Html Msg
 viewBetChoice model player =
     div
         [ css
-            [ border3 (px 2) solid model.theme.colors.border
+            [ border3 (px 2) solid (hex model.theme.colors.border)
             , borderRadius (px 20)
             , padding (px 10)
             , displayFlex
             , alignItems center
             , margin auto
             , boxSizing borderBox
-            , backgroundColor model.theme.colors.menuBackground
+            , backgroundColor (hex model.theme.colors.menuBackground)
             , position relative
             ]
         ]
@@ -550,16 +550,16 @@ viewBetChoice model player =
             [ onClick (ChangePlayerBet player Tichu True)
             , css
                 [ cursor pointer
-                , borderRight3 (px 2) solid model.theme.colors.border
+                , borderRight3 (px 2) solid (hex model.theme.colors.border)
                 , display inlineBlock
                 , marginRight (px 10)
                 , padding2 (px 5) (px 10)
-                , border3 (px 2) solid model.theme.colors.border
+                , border3 (px 2) solid (hex model.theme.colors.border)
                 , borderRadius (px 10)
                 , boxSizing borderBox
                 , textAlign center
                 , cursor pointer
-                , backgroundColor model.theme.colors.background
+                , backgroundColor (hex model.theme.colors.background)
                 ]
             ]
             [ text "Tichu" ]
@@ -568,12 +568,12 @@ viewBetChoice model player =
             , css
                 [ cursor pointer
                 , padding2 (px 5) (px 10)
-                , border3 (px 2) solid model.theme.colors.border
+                , border3 (px 2) solid (hex model.theme.colors.border)
                 , borderRadius (px 10)
                 , boxSizing borderBox
                 , textAlign center
                 , cursor pointer
-                , backgroundColor model.theme.colors.background
+                , backgroundColor (hex model.theme.colors.background)
                 ]
             ]
             [ text "Grand Tichu" ]
@@ -584,16 +584,16 @@ viewBets : Model -> ( Player, Bet ) -> ( Player, Bet ) -> Html Msg
 viewBets model ( player1, bet1 ) ( player2, bet2 ) =
     div
         [ css
-            [ border3 (px 2) solid model.theme.colors.border
-            , borderRadius (px 20)
+            [ borderRadius (em 1)
             , padding (px 10)
             , displayFlex
             , flexDirection column
             , alignItems center
             , boxSizing borderBox
-            , backgroundColor model.theme.colors.menuBackground
+            , backgroundColor (hex model.theme.colors.background)
             , maxHeight maxContent
             , position relative
+            , property "box-shadow" "5px 5px 15px #d9d9d9aa, -5px -5px 15px #ffffffaa"
             ]
         ]
         [ viewAddBet model ( player1, bet1 ) (bet2 == Zero)
@@ -618,17 +618,17 @@ viewAddBet model ( player, bet ) showClose =
             ]
         ]
         [ if bet == Zero then
-            div
+            button
                 [ css
                     [ padding2 (px 5) (px 10)
-                    , border3 (px 2) solid model.theme.colors.border
+                    -- , border3 (px 2) solid model.theme.colors.border
                     , borderRadius (px 10)
                     , width (px 86)
                     , boxSizing borderBox
                     , textAlign center
                     , cursor pointer
                     , fontStyle italic
-                    , backgroundColor model.theme.colors.background
+                    , backgroundColor (hex model.theme.colors.background)
                     ]
                 , onClick (ChangeSettingBet (Person player))
                 ]
@@ -644,13 +644,13 @@ viewAddBetMin model ( player, _ ) =
     div
         [ css
             [ position absolute
-            , backgroundColor model.theme.colors.menuBackground
+            , backgroundColor (hex model.theme.colors.menuBackground)
             , left (pct 50)
             , transform (translate2 (pct -50) (pct -50))
             , top (pct 100)
             , padding2 zero (px 10)
             , height (px 20)
-            , borderBottom3 (px 2) solid model.theme.colors.border
+            , borderBottom3 (px 2) solid (hex model.theme.colors.border)
             , borderBottomLeftRadius (px 10)
             , borderBottomRightRadius (px 10)
             , borderTop zero
@@ -701,7 +701,7 @@ viewBet model ( player, bet ) showClose =
                     hex "71be44"
 
                  else
-                    model.theme.colors.border
+                    (hex model.theme.colors.border)
                 )
             ]
         ]
@@ -711,8 +711,8 @@ viewBet model ( player, bet ) showClose =
                 , height (px 15)
                 , cursor pointer
                 , borderRadius (pct 100)
-                , backgroundColor model.theme.colors.menuBackground
-                , border3 (px 1) solid model.theme.colors.border
+                , backgroundColor (hex model.theme.colors.menuBackground)
+                , border3 (px 1) solid (hex model.theme.colors.border)
                 , boxSizing borderBox
                 , position absolute
                 , top (px -8)
@@ -759,7 +759,7 @@ viewBet model ( player, bet ) showClose =
                 , css
                     [ padding (px 5)
                     , cursor pointer
-                    , backgroundColor model.theme.colors.background
+                    , backgroundColor (hex model.theme.colors.background)
                     , borderTopLeftRadius (px 8)
                     , borderBottomLeftRadius (px 8)
                     , width (px 54)
@@ -859,8 +859,8 @@ viewTeamTurnScore model teamScore team =
                 [ height (px 25)
                 , width (px widthPx)
                 , padding2 zero (px 10)
-                , backgroundColor model.theme.colors.menuBackground
-                , border3 (px 3) solid model.theme.colors.border
+                , backgroundColor (hex model.theme.colors.menuBackground)
+                , border3 (px 3) solid (hex model.theme.colors.border)
                 , borderBottom zero
                 , boxSizing borderBox
                 , borderRadius zero
@@ -913,14 +913,14 @@ viewConsecutiveVictoryButton model elemid team ischecked =
         , label
             [ for elemid
             , css
-                [ border3 (px 3) solid model.theme.colors.border
+                [ border3 (px 3) solid (hex model.theme.colors.border)
                 , width (px 50)
                 , height (px 50)
                 , display inlineFlex
                 , alignItems center
                 , boxSizing borderBox
                 , padding2 zero (px 7)
-                , backgroundColor model.theme.colors.border
+                , backgroundColor (hex model.theme.colors.border)
                 , cursor pointer
                 , batch
                     (if ischecked then
@@ -952,8 +952,8 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                             ]
                 , if ischecked then
                     batch
-                        [ backgroundColor model.theme.colors.cta
-                        , borderColor model.theme.colors.cta
+                        [ backgroundColor (hex model.theme.colors.cta)
+                        , borderColor (hex model.theme.colors.cta)
                         ]
 
                   else
@@ -1076,8 +1076,8 @@ viewConsecutiveVictoryOverlay model team active =
             , height (pct 100)
             , overflow hidden
             , lineHeight (px 50)
-            , backgroundColor model.theme.colors.cta
-            , color model.theme.colors.ctaText
+            , backgroundColor (hex model.theme.colors.cta)
+            , color (hex model.theme.colors.ctaText)
             , cursor pointer
             , pointerEvents auto
             , opposite zero
@@ -1119,15 +1119,15 @@ viewSlider model =
         }
         { height = 50
         , padding = 5
-        , background = model.theme.colors.background
+        , background = (hex model.theme.colors.background)
         , trackBorderRadius = 0
         , thumbHeight = 30
         , thumbWidth = 40
-        , thumbColor = model.theme.colors.pop
+        , thumbColor = (hex model.theme.colors.pop)
         , thumbBorderRadius = 20
         , additional =
-            [ borderTop3 (px 3) solid model.theme.colors.border
-            , borderBottom3 (px 3) solid model.theme.colors.border
+            [ borderTop3 (px 3) solid (hex model.theme.colors.border)
+            , borderBottom3 (px 3) solid (hex model.theme.colors.border)
             ]
         }
 
@@ -1150,8 +1150,8 @@ viewActions model =
             [ css
                 [ width (px 150)
                 , padding2 (px 10) zero
-                , backgroundColor model.theme.colors.cta
-                , color model.theme.colors.ctaText
+                , backgroundColor (hex model.theme.colors.cta)
+                , color (hex model.theme.colors.ctaText)
                 , borderRadius (px 10)
                 , marginLeft auto
                 ]
@@ -1173,10 +1173,10 @@ viewSettings : Model -> Html Msg
 viewSettings model =
     div
         [ css
-            [ border3 (px 3) solid model.theme.colors.border
+            [ border3 (px 3) solid (hex model.theme.colors.border)
             , borderRadius (px 20)
             , padding (px 10)
-            , backgroundColor model.theme.colors.menuBackground
+            , backgroundColor (hex model.theme.colors.menuBackground)
             , width
                 (if model.showAbout then
                     px 300
@@ -1204,8 +1204,8 @@ defaultSettings model =
             [ cursor pointer
             , width (pct 100)
             , padding2 (px 6) zero
-            , backgroundColor model.theme.colors.background
-            , border3 (px 2) solid model.theme.colors.border
+            , backgroundColor (hex model.theme.colors.background)
+            , border3 (px 2) solid (hex model.theme.colors.border)
             , boxSizing borderBox
             , color inherit
             , borderRadius (px 10)
@@ -1219,7 +1219,7 @@ defaultSettings model =
             ]
         ]
         (themeSettings model)
-    , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
+    , hr 2 (hex model.theme.colors.border) [ margin2 (px 10) zero ]
     , div
         [ css
             [ displayFlex
@@ -1229,32 +1229,32 @@ defaultSettings model =
         [ iconButton
             model
             trashSvg
-            [ backgroundColor model.theme.colors.background ]
+            [ backgroundColor (hex model.theme.colors.background) ]
             "Reset"
             (ShowConfirmation "Are you sure you want to reset?" Clear)
         , iconButton
             model
             (div [ css [ textAlign center, fontSize (px 18), fontWeight bold ] ] [ text "i" ])
-            [ backgroundColor model.theme.colors.background ]
+            [ backgroundColor (hex model.theme.colors.background) ]
             "About"
             (ShowAbout True)
         , iconButton
             model
             undoSvg
-            [ backgroundColor
+            [ backgroundColor (hex
                 (if model.updateAvailable then
                     model.theme.colors.cta
 
                  else
                     model.theme.colors.background
-                )
-            , color
+                ))
+            , color (hex
                 (if model.updateAvailable then
                     model.theme.colors.ctaText
 
                  else
                     model.theme.colors.text
-                )
+                ))
             , transform (scale2 -1 1)
             ]
             "Reload"
@@ -1271,7 +1271,7 @@ themeSettings model =
             , marginBottom (px 5)
             , textAlign center
             , fontWeight bold
-            , borderBottom3 (px 2) solid model.theme.colors.border
+            , borderBottom3 (px 2) solid (hex model.theme.colors.border)
             ]
         ]
         [ text "Theme" ]
@@ -1323,7 +1323,7 @@ viewAbout model =
                 , marginBottom (px 5)
                 , textAlign center
                 , fontWeight bold
-                , borderBottom3 (px 2) solid model.theme.colors.border
+                , borderBottom3 (px 2) solid (hex model.theme.colors.border)
                 ]
             ]
             [ text "About" ]
@@ -1331,7 +1331,7 @@ viewAbout model =
             []
             [ aboutEntry "Version" model.currentVersion.version
             , aboutEntry "Developed by" "Justin Renjilian"
-            , hr 2 model.theme.colors.border [ margin2 (px 10) zero ]
+            , hr 2 (hex model.theme.colors.border) [ margin2 (px 10) zero ]
             , a
                 [ href "https://github.com/freshvictory/tichu-web/issues/new"
                 , Html.Styled.Attributes.target "_blank"
@@ -1400,7 +1400,7 @@ settingsGear model =
                 , right zero
                 , width (px 30)
                 , height (px 30)
-                , color model.theme.colors.border
+                , color (hex model.theme.colors.border)
                 , cursor pointer
                 , batch
                     (if model.updateAvailable then
@@ -1409,7 +1409,7 @@ settingsGear model =
                             , width (px 8)
                             , height (px 8)
                             , borderRadius (px 8)
-                            , backgroundColor model.theme.colors.pop
+                            , backgroundColor (hex model.theme.colors.pop)
                             , position absolute
                             , top (px -4)
                             , right (px -4)
@@ -1434,9 +1434,9 @@ iconButton model icon styles t onclick =
             , display inlineBlock
             , cursor pointer
             , padding (px 3)
-            , border3 (px 2) solid model.theme.colors.border
+            , border3 (px 2) solid (hex model.theme.colors.border)
             , borderRadius (px 10)
-            , backgroundColor model.theme.colors.menuBackground
+            , backgroundColor (hex model.theme.colors.menuBackground)
             , batch styles
             ]
         , title t
@@ -1473,9 +1473,9 @@ confirm model =
                     ]
                     [ div
                         [ css
-                            [ backgroundColor model.theme.colors.background
+                            [ backgroundColor (hex model.theme.colors.background)
                             , borderRadius (px 30)
-                            , border3 (px 3) solid model.theme.colors.border
+                            , border3 (px 3) solid (hex model.theme.colors.border)
                             , padding (px 20)
                             ]
                         ]
@@ -1496,8 +1496,8 @@ confirm model =
                                 [ onClick CloseConfirmation
                                 , css
                                     [ confirmButtonStyle
-                                    , backgroundColor model.theme.colors.menuBackground
-                                    , color model.theme.colors.text
+                                    , backgroundColor (hex model.theme.colors.menuBackground)
+                                    , color (hex model.theme.colors.text)
                                     ]
                                 ]
                                 [ text "No" ]
@@ -1505,8 +1505,8 @@ confirm model =
                                 [ onClick msg
                                 , css
                                     [ confirmButtonStyle
-                                    , backgroundColor model.theme.colors.cta
-                                    , color model.theme.colors.ctaText
+                                    , backgroundColor (hex model.theme.colors.cta)
+                                    , color (hex model.theme.colors.ctaText)
                                     , marginLeft auto
                                     ]
                                 ]

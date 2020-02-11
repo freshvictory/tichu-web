@@ -25,3 +25,7 @@ button {
   border: none;
 }
 
+button:active {
+  color: inherit;
+}
+

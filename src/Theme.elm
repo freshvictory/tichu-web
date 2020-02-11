@@ -6,8 +6,6 @@ module Theme exposing
     , strawberry
     )
 
-import Css exposing (Color, hex)
-
 
 type alias ThemeSettings =
     { id : String
@@ -17,13 +15,13 @@ type alias ThemeSettings =
 
 
 type alias Colors =
-    { border : Color
-    , background : Color
-    , menuBackground : Color
-    , cta : Color
-    , ctaText : Color
-    , text : Color
-    , pop : Color
+    { border : String
+    , background : String
+    , menuBackground : String
+    , cta : String
+    , ctaText : String
+    , text : String
+    , pop : String
     }
 
 
@@ -32,13 +30,13 @@ light =
     { id = "light"
     , name = "Light"
     , colors =
-        { border = hex "BBB"
-        , background = hex "FFF"
-        , menuBackground = hex "EEE"
-        , cta = hex "DBB004"
-        , ctaText = hex "000"
-        , text = hex "000"
-        , pop = hex "B84444"
+        { border = "BBB"
+        , background = "FFF"
+        , menuBackground = "EEE"
+        , cta = "DBB004"
+        , ctaText = "000"
+        , text = "000"
+        , pop = "B84444"
         }
     }
 
@@ -48,13 +46,13 @@ dark =
     { id = "dark"
     , name = "Dark"
     , colors =
-        { border = hex "444"
-        , background = hex "000"
-        , menuBackground = hex "323232"
-        , text = hex "CCC"
-        , cta = hex "DBB004"
-        , ctaText = hex "000"
-        , pop = hex "B84444"
+        { border = "444"
+        , background = "000"
+        , menuBackground = "323232"
+        , text = "CCC"
+        , cta = "DBB004"
+        , ctaText = "000"
+        , pop = "B84444"
         }
     }
 
@@ -64,13 +62,13 @@ strawberry =
     { id = "strawberry"
     , name = "Strawberry"
     , colors =
-        { border = hex "ef5b95"
-        , background = hex "f7a3cc"
-        , menuBackground = hex "f67fb6"
-        , text = hex "FFF"
-        , cta = hex "d53032"
-        , ctaText = hex "FFF"
-        , pop = hex "9cbe45"
+        { border = "ef5b95"
+        , background = "f7a3cc"
+        , menuBackground = "f67fb6"
+        , text = "FFF"
+        , cta = "d53032"
+        , ctaText = "FFF"
+        , pop = "9cbe45"
         }
     }
 
@@ -80,12 +78,12 @@ mint =
     { id = "mint"
     , name = "Mint"
     , colors =
-        { border = hex "734941"
-        , background = hex "deffe1"
-        , menuBackground = hex "8febbc"
-        , text = hex "734941"
-        , cta = hex "734941"
-        , ctaText = hex "bffec6"
-        , pop = hex "734941"
+        { border = "734941"
+        , background = "deffe1"
+        , menuBackground = "8febbc"
+        , text = "734941"
+        , cta = "734941"
+        , ctaText = "bffec6"
+        , pop = "734941"
         }
     }
