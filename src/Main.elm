@@ -93,7 +93,7 @@ defaultModel theme vertName horzName =
     , themes = themes
     , showSettings = False
     , checkingForUpdate = False
-    , currentVersion = { version = "1.2.1" }
+    , currentVersion = { version = "1.2.3" }
     , foundVersion = { version = "0.0.0" }
     , updateAvailable = False
     , crashed = False
@@ -1096,7 +1096,7 @@ viewTeamTurnScoreSlider model =
         [ div
             [ css
                 [ overflow hidden
-                , width (px 300)
+                , width (px 240)
                 , position relative
                 ]
             ]
@@ -1106,26 +1106,6 @@ viewTeamTurnScoreSlider model =
                     Team _ -> True
                     _ -> False
                 )
-            ]
-        ]
-
-
-viewConsecutiveVictoryOverlays : Model -> Html Msg
-viewConsecutiveVictoryOverlays model =
-    div
-        [ css
-            [ position absolute
-            , width (px (50 + 240 + 50))
-            , height (px 50)
-            , pointerEvents none
-            ]
-        ]
-        [ div
-            [ css
-                [ 
-                ]
-            ]
-            [
             ]
         ]
 
@@ -1145,7 +1125,7 @@ viewConsecutiveVictoryOverlay model active =
             -- , width (px 240)
             , overflow hidden
             -- , lineHeight (px 30)
-            , width (px 290)
+            , width (px 230)
             , height (px 30)
             , backgroundColor (hex model.theme.colors.cta)
             , color (hex model.theme.colors.ctaText)
