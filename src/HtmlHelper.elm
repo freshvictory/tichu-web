@@ -1,9 +1,24 @@
-module HtmlHelper exposing (hr, range)
+module HtmlHelper exposing (hr, range, neumorphicShadow)
 
 import Css exposing (..)
 import Html.Styled exposing (Html, input)
 import Html.Styled.Attributes exposing (css, max, min, step, type_, value)
 import Html.Styled.Events exposing (onInput)
+
+
+neumorphicShadow : Float -> Float -> String -> String -> Bool -> Style
+neumorphicShadow offset blur light dark inset =
+    let
+        offsetPx = String.fromFloat offset ++ "px "
+        blurPx = String.fromFloat blur ++ "px "
+        insetModifier = if inset then "inset " else ""
+    in
+    
+    property
+        "box-shadow"
+        ( insetModifier ++ offsetPx ++ offsetPx ++ blurPx ++ "#" ++ dark ++ ", "
+        ++ insetModifier ++ "-" ++ offsetPx ++ "-" ++ offsetPx ++ blurPx ++ "#" ++ light
+        )
 
 
 hr : Float -> Color -> List Style -> Html msg

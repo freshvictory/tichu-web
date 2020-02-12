@@ -17,6 +17,8 @@ type alias ThemeSettings =
 type alias Colors =
     { border : String
     , background : String
+    , lightShadow : String
+    , darkShadow : String
     , menuBackground : String
     , cta : String
     , ctaText : String
@@ -31,11 +33,13 @@ light =
     , name = "Light"
     , colors =
         { border = "BBB"
-        , background = "FFF"
-        , menuBackground = "EEE"
+        , background = "EFEFEF"
+        , lightShadow ="FFFFFFAA"
+        , darkShadow = "60606026"
+        , menuBackground = "DDD"
         , cta = "DBB004"
         , ctaText = "000"
-        , text = "000"
+        , text = "4d4d4d"
         , pop = "B84444"
         }
     }
@@ -48,6 +52,8 @@ dark =
     , colors =
         { border = "444"
         , background = "000"
+        , lightShadow ="494949"
+        , darkShadow = "60606026"
         , menuBackground = "323232"
         , text = "CCC"
         , cta = "DBB004"
@@ -64,6 +70,8 @@ strawberry =
     , colors =
         { border = "ef5b95"
         , background = "f7a3cc"
+        , lightShadow ="f8add2"
+        , darkShadow = "60606033"
         , menuBackground = "f67fb6"
         , text = "FFF"
         , cta = "d53032"
@@ -80,6 +88,8 @@ mint =
     , colors =
         { border = "734941"
         , background = "deffe1"
+        , lightShadow ="deffe1"
+        , darkShadow = "7f7f7f26"
         , menuBackground = "8febbc"
         , text = "734941"
         , cta = "734941"

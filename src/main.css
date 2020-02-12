@@ -23,6 +23,8 @@ button {
   -webkit-appearance: none;
   -moz-appearance: none;
   border: none;
+  margin: 0;
+  color: inherit;
 }
 
 button:active {
