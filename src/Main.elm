@@ -427,8 +427,7 @@ viewScorer model =
             ]
         ]
         [ viewTeams model
-        , viewTurnScores model
-        , viewBetRow model
+        , viewTurnScoreAndBets model
         , viewActions model
         , if abs (model.scorer.vertScore - model.scorer.horzScore) > 400 then
             button
@@ -471,7 +470,7 @@ viewTeam model team name score =
             , marginTop (px 20)
             , width (px 90)
             , overflow hidden
-            , neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow False
+            , neumorphicShadow 5 10 model.theme.colors.lightShadow False
             ]
         ]
         [ div
@@ -510,12 +509,36 @@ viewTeam model team name score =
         ]
 
 
+viewTurnScoreAndBets : Model -> Html Msg
+viewTurnScoreAndBets model =
+    div
+        [ css
+            [ borderRadius (px 25)
+            , maxWidth maxContent
+            , margin auto
+            , overflow hidden
+            , padding (px 20)
+            , property "display" "grid"
+            , property "grid-template-rows" "[cv] max-content [slider] max-content [bets] max-content"
+            , property "grid-template-columns" "max-content max-content max-content"
+            -- , property "row-gap" " 30px"
+            , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+            ]
+        ]
+        [ viewConsecutiveVictories model
+        , viewTurnScores model
+        , viewBetRow model
+        ]
+
+
 viewBetRow : Model -> Html Msg
 viewBetRow model =
     div
         [ css
             [ displayFlex
             , property "justify-content" "space-evenly"
+            , property "grid-row" "bets"
+            , property "grid-column" "1 / end"
             ]
         ]
         (case model.settingBet of
@@ -610,6 +633,11 @@ viewBets model ( player1, bet1 ) ( player2, bet2 ) =
 
 viewAddBet : Model -> ( Player, Bet ) -> Bool -> Html Msg
 viewAddBet model ( player, bet ) showClose =
+    let
+        shadow = case model.scorer.firstOut of
+                Team _ -> model.theme.colors.darkShadow
+                _ -> model.theme.colors.lightShadow
+    in
     div
         [ css
             [ position relative
@@ -621,7 +649,7 @@ viewAddBet model ( player, bet ) showClose =
                 [ css
                     [ padding2 (px 15) (px 20)
                     -- , border3 (px 2) solid model.theme.colors.border
-                    , neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow False
+                    , neumorphicShadow 5 10 shadow False
                     , borderRadius (px 10)
                     -- , width (px 86)
                     , boxSizing borderBox
@@ -630,7 +658,7 @@ viewAddBet model ( player, bet ) showClose =
                     , fontStyle italic
                     , backgroundColor (hex model.theme.colors.background)
                     , active
-                        [ neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow True
+                        [ neumorphicShadow 5 10 shadow True
                         ]
                     ]
                 , onClick (ChangeSettingBet (Person player))
@@ -815,11 +843,10 @@ viewTurnScores model =
         [ css
             [ displayFlex
             , flexDirection column
-            , maxWidth maxContent
-            , margin auto
-            , padding (px 20)
-            , borderRadius (px 25)
-            , neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow False
+            , property "grid-row-start" "cv"
+            , property "grid-row-end" "slider"
+            , property "grid-column" "2"
+            , padding2 (px 30) zero
             ]
         ]
         [ viewTeamTurnScores model
@@ -867,7 +894,7 @@ viewTeamTurnScore model teamScore team =
                 [ height (px 25)
                 , width (px widthPx)
                 , padding2 zero (px 10)
-                , backgroundColor (hex model.theme.colors.menuBackground)
+                --, backgroundColor (hex model.theme.colors.menuBackground)
                 , border3 (px 1) solid (hex model.theme.colors.border)
                 , borderBottom zero
                 , boxSizing borderBox
@@ -903,10 +930,53 @@ viewTeamTurnScore model teamScore team =
         ]
 
 
+viewConsecutiveVictories : Model -> Html Msg
+viewConsecutiveVictories model =
+    div
+        [ css
+            [ displayFlex
+            , justifyContent spaceBetween
+            , property "grid-row" "cv"
+            , property "grid-column" "1 / end"
+            ]
+        ]
+        [ viewConsecutiveVictoryButton
+            model
+            "vert-cv"
+            Vertical
+            (case model.scorer.firstOut of
+                Team ( Vertical, _ ) ->
+                    True
+
+                _ ->
+                    False
+            )
+        , viewConsecutiveVictoryButton
+            model
+            "horz-cv"
+            Horizontal
+            (case model.scorer.firstOut of
+                Team ( Horizontal, _ ) ->
+                    True
+
+                _ ->
+                    False
+            )
+        ]
+
+
 viewConsecutiveVictoryButton : Model -> String -> Team -> Bool -> Html Msg
 viewConsecutiveVictoryButton model elemid team ischecked =
     div
-        [ css []
+        [ css
+            [ width (px 45)
+            , height (px 45)
+            , batch
+                ( case model.scorer.firstOut of
+                    Team _ -> if ischecked then [ position relative ] else []
+                    _ -> [ position relative ]
+                )
+            ]
         ]
         [ input
             [ type_ "checkbox"
@@ -918,28 +988,67 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                 ]
             ]
             []
+        , div
+            [ css
+                [ borderRadius (pct 50)
+                , position absolute
+                , top zero
+                , backgroundColor (hex model.theme.colors.cta)
+                , left (pct 50)
+                , top (pct 50)
+                , transform (translate2 (pct -50) (pct -50))
+                , width zero
+                , height zero
+                , batch
+                    ( if ischecked then
+                        [ width (vw 200)
+                        , height (vw 200)
+                        , transition
+                            [ Css.Transitions.width3 300 0 (Css.Transitions.cubicBezier 1.0 0.05 0.6 1)
+                            , Css.Transitions.height3 300 0 (Css.Transitions.cubicBezier 1.0 0.05 0.6 1)
+                            ]
+                        ]
+                        else
+                        [ transition
+                            [ Css.Transitions.width3 300 0 Css.Transitions.easeOut
+                            , Css.Transitions.height3 300 0 Css.Transitions.easeOut
+                            ]
+                        ]
+                    )
+                ]
+            ]
+            [
+            ]
         , label
             [ for elemid
             , css
                 [ border3 (px 0) solid (hex model.theme.colors.border)
-                -- , width (px 40)
-                , height (px 40)
                 , display inlineFlex
                 , alignItems center
                 , boxSizing borderBox
-                , padding2 zero (px 7)
+                , batch
+                    ( case model.scorer.firstOut of
+                        Team _ -> if ischecked then [ position relative ] else []
+                        _ -> [ position relative ]
+                    )
                 --, backgroundColor (hex model.theme.colors.border)
                 , cursor pointer
+                , padding (px 10)
+                , borderRadius (pct 50)
+                , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+                , transition
+                    [ Css.Transitions.backgroundColor2 200 0
+                    , Css.Transitions.borderColor2 200 0
+                    ]
                 , batch
                     (if ischecked then
-                        [ transition
-                            [ Css.Transitions.backgroundColor2 200 0
-                            , Css.Transitions.borderColor2 200 0
-                            ]
+                        [ backgroundColor (hex model.theme.colors.cta)
+                        , borderColor (hex model.theme.colors.cta)
+                        , neumorphicShadow 5 10 model.theme.colors.darkShadow True
                         ]
-
                      else
-                        []
+                        [ 
+                        ]
                     )
                 , case team of
                     -- Left
@@ -964,16 +1073,6 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                 [ css
                     [ width (px 25)
                     , height (px 25)
-                    , padding (px 7)
-                    , borderRadius (pct 50)
-                    , neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow False
-                    , if ischecked then
-                        batch
-                            [ backgroundColor (hex model.theme.colors.cta)
-                            , borderColor (hex model.theme.colors.cta)
-                            ]
-                    else
-                        batch []
                     ]
                 ]
                 [ consecutiveVictorySvg ]
@@ -991,39 +1090,23 @@ viewTeamTurnScoreSlider model =
             , alignItems center
             , position relative
             , margin auto
-            , width (px (50 + 50 + 240))
+            , padding2 zero (px 20)
             ]
         ]
-        [ viewConsecutiveVictoryButton
-            model
-            "vert-cv"
-            Vertical
-            (case model.scorer.firstOut of
-                Team ( Vertical, _ ) ->
-                    True
-
-                _ ->
-                    False
-            )
-        , viewConsecutiveVictoryOverlays model
-        , div
+        [ div
             [ css
                 [ overflow hidden
-                , width (px 240)
+                , width (px 300)
+                , position relative
                 ]
             ]
-            [ viewSlider model ]
-        , viewConsecutiveVictoryButton
-            model
-            "horz-cv"
-            Horizontal
-            (case model.scorer.firstOut of
-                Team ( Horizontal, _ ) ->
-                    True
-
-                _ ->
-                    False
-            )
+            [ viewSlider model
+            , viewConsecutiveVictoryOverlay model
+                ( case model.scorer.firstOut of
+                    Team _ -> True
+                    _ -> False
+                )
+            ]
         ]
 
 
@@ -1039,79 +1122,51 @@ viewConsecutiveVictoryOverlays model =
         ]
         [ div
             [ css
-                [ position absolute
-                , left (px 50)
-                , right (px 50)
-                , width (px 240)
-                , height (pct 100)
+                [ 
                 ]
             ]
-            [ viewConsecutiveVictoryOverlay
-                model
-                Vertical
-                (case model.scorer.firstOut of
-                    Team ( Vertical, _ ) ->
-                        True
-
-                    _ ->
-                        False
-                )
-            , viewConsecutiveVictoryOverlay
-                model
-                Horizontal
-                (case model.scorer.firstOut of
-                    Team ( Horizontal, _ ) ->
-                        True
-
-                    _ ->
-                        False
-                )
+            [
             ]
         ]
 
 
-viewConsecutiveVictoryOverlay : Model -> Team -> Bool -> Html Msg
-viewConsecutiveVictoryOverlay model team active =
-    let
-        ( direction, opposite, transitionDirection ) =
-            case team of
-                Vertical ->
-                    ( right, left, Css.Transitions.right3 )
-
-                Horizontal ->
-                    ( left, right, Css.Transitions.left3 )
-    in
-    div
+viewConsecutiveVictoryOverlay : Model -> Bool -> Html Msg
+viewConsecutiveVictoryOverlay model active =
+    button
         [ css
             [ position absolute
-            , height (pct 100)
+            , left (pct 50)
+            , top (px 20)
+            , property "transform-origin" "center"
+            , transforms
+                [ translate2 (pct -50) (pct -50)
+                , scale 0
+                ]
+            -- , width (px 240)
             , overflow hidden
-            , lineHeight (px 50)
+            -- , lineHeight (px 30)
+            , width (px 290)
+            , height (px 30)
             , backgroundColor (hex model.theme.colors.cta)
             , color (hex model.theme.colors.ctaText)
-            , cursor pointer
-            , pointerEvents auto
-            , opposite zero
-            , direction (pct 100)
-            , transition [ transitionDirection 200 0 easeInOut ]
-            , whiteSpace noWrap
+            , borderRadius (px 20)
+            , textAlign center
             , batch
                 (if active then
-                    [ direction zero
-                    , padding2 zero (px 10)
+                    [ transforms
+                        [ translate2 (pct -50) (pct -50)
+                        , scale 1
+                        ]
+                    , transition
+                        [ Css.Transitions.transform3 200 0 (Css.Transitions.cubicBezier 0.61 0.59 0.49 1.15)
+                        ]
                     ]
 
                  else
-                    []
-                )
-            , batch
-                (case team of
-                    Horizontal ->
-                        [ textAlign right
+                    [ transition
+                        [ Css.Transitions.transform3 200 0 (Css.Transitions.cubicBezier 0.46 -0.2 0.73 0.77)
                         ]
-
-                    Vertical ->
-                        []
+                    ]
                 )
             ]
         , onClick (ConsecutiveVictory Vertical False)
@@ -1139,7 +1194,12 @@ viewSlider model =
         , additional =
             [ border3 (px 1) solid (hex model.theme.colors.border)
             --, borderBottom3 (px 0) solid (hex model.theme.colors.border)
-            , neumorphicShadow 5 10 model.theme.colors.lightShadow model.theme.colors.darkShadow True
+            , neumorphicShadow 5 10 model.theme.colors.lightShadow True
+            , batch
+                ( case model.scorer.firstOut of
+                    Team _ -> [ pointerEvents none ]
+                    _ -> []
+                )
             ]
         }
 
@@ -1166,7 +1226,7 @@ viewActions model =
                 , color (hex model.theme.colors.ctaText)
                 , borderRadius (px 10)
                 , marginLeft auto
-                , neumorphicShadow 5 15 "ffffae" "bbaa66" False
+                -- , neumorphicShadow 5 15 "ffffae" "bbaa66" False
                 , active
                     [ boxShadow none
                     ]

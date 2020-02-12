@@ -4,10 +4,11 @@ import Css exposing (..)
 import Html.Styled exposing (Html, input)
 import Html.Styled.Attributes exposing (css, max, min, step, type_, value)
 import Html.Styled.Events exposing (onInput)
+import Theme exposing (NeumorphicShadow)
 
 
-neumorphicShadow : Float -> Float -> String -> String -> Bool -> Style
-neumorphicShadow offset blur light dark inset =
+neumorphicShadow : Float -> Float -> NeumorphicShadow -> Bool -> Style
+neumorphicShadow offset blur shadow inset =
     let
         offsetPx = String.fromFloat offset ++ "px "
         blurPx = String.fromFloat blur ++ "px "
@@ -16,8 +17,8 @@ neumorphicShadow offset blur light dark inset =
     
     property
         "box-shadow"
-        ( insetModifier ++ offsetPx ++ offsetPx ++ blurPx ++ "#" ++ dark ++ ", "
-        ++ insetModifier ++ "-" ++ offsetPx ++ "-" ++ offsetPx ++ blurPx ++ "#" ++ light
+        ( insetModifier ++ offsetPx ++ offsetPx ++ blurPx ++ "#" ++ shadow.dark ++ ", "
+        ++ insetModifier ++ "-" ++ offsetPx ++ "-" ++ offsetPx ++ blurPx ++ "#" ++ shadow.light
         )
 
 
