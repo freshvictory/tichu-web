@@ -27,7 +27,7 @@ main : Program Json.Decode.Value Model Msg
 main =
     Browser.document
         { init = init
-        , view = \model -> { title = "Tichu", body = [ model |> view |> toUnstyled ] }
+        , view = \model -> { title = "Tichu Beta", body = [ model |> view |> toUnstyled ] }
         , update = updateWithStorage
         , subscriptions = subscriptions
         }
