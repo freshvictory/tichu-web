@@ -20,6 +20,7 @@ type alias Colors =
     , background : String
     , lightShadow : NeumorphicShadow
     , darkShadow : NeumorphicShadow
+    , ctaShadow : NeumorphicShadow
     , menuBackground : String
     , cta : String
     , ctaText : String
@@ -43,6 +44,7 @@ light =
         , background = "EFEFEF"
         , lightShadow = { light = "ffffff4a", dark = "60606026" }
         , darkShadow = { light = "ffffff4a", dark = "60606026" }
+        , ctaShadow = { light = "fde78d", dark = "DBB004" }
         , menuBackground = "DDD"
         , cta = "DBB004"
         , ctaText = "4d4d4d"
@@ -58,9 +60,10 @@ dark =
     , name = "Dark"
     , colors =
         { border = "444"
-        , background = "000"
-        , lightShadow ={ light = "494949", dark = "60606026" }
-        , darkShadow = { light = "494949", dark = "60606026" }
+        , background = "111111"
+        , lightShadow = { light = "161616", dark = "050505" }
+        , darkShadow = { light = "ffffff4a", dark = "60606026" }
+        , ctaShadow = { light = "fde78d59", dark = "DBB00459" }
         , menuBackground = "323232"
         , text = "CCC"
         , cta = "DBB004"
@@ -79,6 +82,7 @@ strawberry =
         , background = "f7a3cc"
         , lightShadow = { light = "f8add2", dark = "60606033" }
         , darkShadow = { light = "f8add25e", dark = "60606033" }
+        , ctaShadow = { light = "e57f80", dark = "a82224aa" }
         , menuBackground = "f67fb6"
         , text = "FFF"
         , cta = "d53032"
@@ -97,6 +101,7 @@ mint =
         , background = "deffe1"
         , lightShadow = { light = "ffffff7d", dark = "9797977a" }
         , darkShadow = { light = "a3a3a36e", dark = "4242426e" }
+        , ctaShadow = { light = "bc908899", dark = "5f3c368f" }
         , menuBackground = "8febbc"
         , text = "734941"
         , cta = "734941"

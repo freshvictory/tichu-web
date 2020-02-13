@@ -523,6 +523,16 @@ viewTurnScoreAndBets model =
             , property "grid-template-columns" "max-content max-content max-content"
             -- , property "row-gap" " 30px"
             , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+            , transition
+                [ Css.Transitions.boxShadow3 (if model.showSettings then 0 else 150) 0 (Css.Transitions.cubicBezier 1.0 0.0 1 0.0)
+                ]
+            , batch
+                ( case model.scorer.firstOut of
+                    Team _ ->
+                        [neumorphicShadow 5 15 model.theme.colors.ctaShadow False]
+                    _ ->
+                        []
+                )
             ]
         ]
         [ viewConsecutiveVictories model
@@ -1206,9 +1216,10 @@ viewActions model =
                 , color (hex model.theme.colors.ctaText)
                 , borderRadius (px 10)
                 , marginLeft auto
-                -- , neumorphicShadow 5 15 "ffffae" "bbaa66" False
+                , neumorphicShadow 5 15 model.theme.colors.ctaShadow False
                 , active
-                    [ boxShadow none
+                    [ neumorphicShadow 5 15 model.theme.colors.ctaShadow True
+                    , color (hex model.theme.colors.ctaText)
                     ]
                 ]
             , onClick Score
