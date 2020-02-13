@@ -519,7 +519,7 @@ viewTurnScoreAndBets model =
             , overflow hidden
             , padding (px 20)
             , property "display" "grid"
-            , property "grid-template-rows" "[cv] max-content [slider] max-content [bets] max-content"
+            , property "grid-template-rows" "[cv] max-content [slider] max-content [bets] 50px"
             , property "grid-template-columns" "max-content max-content max-content"
             -- , property "row-gap" " 30px"
             , neumorphicShadow 5 10 model.theme.colors.lightShadow False
@@ -1138,13 +1138,13 @@ viewConsecutiveVictoryOverlay model active =
                         , scale 1
                         ]
                     , transition
-                        [ Css.Transitions.transform3 200 0 (Css.Transitions.cubicBezier 0.61 0.59 0.49 1.15)
+                        [ Css.Transitions.transform3 250 0 (Css.Transitions.cubicBezier 0.61 0.59 0.49 1.15)
                         ]
                     ]
 
                  else
                     [ transition
-                        [ Css.Transitions.transform3 200 0 (Css.Transitions.cubicBezier 0.46 -0.2 0.73 0.77)
+                        [ Css.Transitions.transform3 250 0 (Css.Transitions.cubicBezier 0.46 -0.2 0.73 0.77)
                         ]
                     ]
                 )
@@ -1229,10 +1229,10 @@ viewSettings : Model -> Html Msg
 viewSettings model =
     div
         [ css
-            [ border3 (px 3) solid (hex model.theme.colors.border)
-            , borderRadius (px 20)
+            [ borderRadius (px 20)
             , padding (px 10)
             , backgroundColor (hex model.theme.colors.menuBackground)
+            , boxShadow4 (px 10) (px 10) (px 10) (hex model.theme.colors.lightShadow.dark)
             , width
                 (if model.showAbout then
                     px 300
@@ -1261,7 +1261,7 @@ defaultSettings model =
             , width (pct 100)
             , padding2 (px 6) zero
             , backgroundColor (hex model.theme.colors.background)
-            , border3 (px 2) solid (hex model.theme.colors.border)
+            , neumorphicShadow 5 10 model.theme.colors.darkShadow False
             , boxSizing borderBox
             , color inherit
             , borderRadius (px 10)
@@ -1271,7 +1271,7 @@ defaultSettings model =
         [ css
             [ batch buttonStyles
             , textAlign left
-            , padding (px 10)
+            , padding (px 12)
             ]
         ]
         (themeSettings model)
@@ -1456,8 +1456,11 @@ settingsGear model =
                 , right zero
                 , width (px 30)
                 , height (px 30)
+                , padding (px 5)
+                , borderRadius (pct 50)
                 , color (hex model.theme.colors.border)
                 , cursor pointer
+                , neumorphicShadow 5 10 model.theme.colors.lightShadow False
                 , batch
                     (if model.updateAvailable then
                         [ after
@@ -1475,6 +1478,11 @@ settingsGear model =
                      else
                         []
                     )
+                , batch
+                    (if model.showSettings then
+                        [ neumorphicShadow 5 10 model.theme.colors.lightShadow True ]
+                    else []
+                    )
                 ]
             ]
             [ gearSvg ]
@@ -1483,16 +1491,20 @@ settingsGear model =
 
 iconButton : Model -> Html Msg -> List Style -> String -> Msg -> Html Msg
 iconButton model icon styles t onclick =
-    div
+    button
         [ css
-            [ width (px 20)
-            , height (px 20)
+            [ width (px 34)
+            , height (px 34)
             , display inlineBlock
             , cursor pointer
-            , padding (px 3)
-            , border3 (px 2) solid (hex model.theme.colors.border)
-            , borderRadius (px 10)
+            , padding (px 7)
+            --, border3 (px 2) solid (hex model.theme.colors.border)
+            , borderRadius (pct 50)
             , backgroundColor (hex model.theme.colors.menuBackground)
+            , neumorphicShadow 2 10 model.theme.colors.lightShadow False
+            , active
+                [ neumorphicShadow 2 10 model.theme.colors.lightShadow True
+                ]
             , batch styles
             ]
         , title t
