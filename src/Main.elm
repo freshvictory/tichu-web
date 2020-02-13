@@ -1554,7 +1554,7 @@ confirm model =
                         [ css
                             [ backgroundColor (hex model.theme.colors.background)
                             , borderRadius (px 30)
-                            , border3 (px 3) solid (hex model.theme.colors.border)
+                            -- , border3 (px 3) solid (hex model.theme.colors.border)
                             , padding (px 20)
                             ]
                         ]
@@ -1575,8 +1575,12 @@ confirm model =
                                 [ onClick CloseConfirmation
                                 , css
                                     [ confirmButtonStyle
-                                    , backgroundColor (hex model.theme.colors.menuBackground)
+                                    , backgroundColor (hex model.theme.colors.background)
                                     , color (hex model.theme.colors.text)
+                                    , neumorphicShadow 5 15 model.theme.colors.lightShadow False
+                                    , active
+                                        [ neumorphicShadow 5 15 model.theme.colors.lightShadow True
+                                        ]
                                     ]
                                 ]
                                 [ text "No" ]
@@ -1586,7 +1590,11 @@ confirm model =
                                     [ confirmButtonStyle
                                     , backgroundColor (hex model.theme.colors.cta)
                                     , color (hex model.theme.colors.ctaText)
+                                    , neumorphicShadow 5 15 model.theme.colors.ctaShadow False
                                     , marginLeft auto
+                                    , active
+                                        [ neumorphicShadow 5 15 model.theme.colors.ctaShadow True
+                                        ]
                                     ]
                                 ]
                                 [ text "Yes" ]
