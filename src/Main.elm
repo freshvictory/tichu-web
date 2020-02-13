@@ -617,7 +617,7 @@ viewBets : Model -> ( Player, Bet ) -> ( Player, Bet ) -> Html Msg
 viewBets model ( player1, bet1 ) ( player2, bet2 ) =
     div
         [ css
-            [ borderRadius (em 10)
+            [ borderRadius (px 10)
             -- , padding (px 10)
             , displayFlex
             , flexDirection column
@@ -629,15 +629,15 @@ viewBets model ( player1, bet1 ) ( player2, bet2 ) =
             ]
         ]
         [ viewAddBet model ( player1, bet1 ) (bet2 == Zero)
-        , if bet1 /= Zero then
-            if bet2 == Zero then
-                viewAddBetMin model ( player2, bet2 )
+        -- , if bet1 /= Zero then
+        --     if bet2 == Zero then
+        --         viewAddBetMin model ( player2, bet2 )
 
-            else
-                viewAddBet model ( player2, bet2 ) True
+        --     else
+        --         viewAddBet model ( player2, bet2 ) True
 
-          else
-            text ""
+        --   else
+        --     text ""
         ]
 
 
@@ -734,30 +734,35 @@ viewBet model ( player, bet ) showClose =
     in
     div
         [ css
-            [ border3 (px 2) solid transparent
-            , position relative
+            [ position relative
             , borderRadius (px 10)
-            , backgroundColor
-                (if successful then
-                    hex "71be44"
-
+            , padding (px 10)
+            , batch
+                ( if successful then
+                    [ backgroundColor (hex "71be44")
+                    , neumorphicShadow 3 10 { light = "4f862e5c", dark = "71be4457"} False
+                    ]
                  else
-                    (hex model.theme.colors.border)
+                    [ backgroundColor (hex model.theme.colors.background)
+                    , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+                    ]
                 )
             ]
         ]
         [ div
             [ css
-                [ width (px 15)
+                [ width (px 17)
                 , height (px 15)
                 , cursor pointer
-                , borderRadius (pct 100)
+                , borderTopLeftRadius (px 10)
+                , borderBottomRightRadius (px 5)
+                -- , neumorphicShadow 5 10 model.theme.colors.lightShadow False
                 , backgroundColor (hex model.theme.colors.menuBackground)
-                , border3 (px 1) solid (hex model.theme.colors.border)
+                -- , border3 (px 1) solid (hex model.theme.colors.border)
                 , boxSizing borderBox
                 , position absolute
-                , top (px -8)
-                , left (px -8)
+                , top zero
+                , left zero
                 , batch
                     (if showClose then
                         []
@@ -800,9 +805,9 @@ viewBet model ( player, bet ) showClose =
                 , css
                     [ padding (px 5)
                     , cursor pointer
-                    , backgroundColor (hex model.theme.colors.background)
-                    , borderTopLeftRadius (px 8)
-                    , borderBottomLeftRadius (px 8)
+                    -- , backgroundColor (hex model.theme.colors.background)
+                    -- , borderTopLeftRadius (px 8)
+                    -- , borderBottomLeftRadius (px 8)
                     , width (px 54)
                     , boxSizing borderBox
                     , textAlign center
@@ -832,6 +837,15 @@ viewBet model ( player, bet ) showClose =
                         , backgroundColor (hex "FFF")
                         , color (hex "111")
                         , fontWeight bold
+                        , neumorphicShadow
+                            5
+                            10
+                            ( if successful then
+                                model.theme.colors.darkShadow
+                              else
+                                model.theme.colors.lightShadow
+                            )
+                            False
                         ]
                     ]
                     [ text
@@ -1216,9 +1230,9 @@ viewActions model =
                 , color (hex model.theme.colors.ctaText)
                 , borderRadius (px 10)
                 , marginLeft auto
-                , neumorphicShadow 5 15 model.theme.colors.ctaShadow False
+                , neumorphicShadow 3 15 model.theme.colors.ctaShadow False
                 , active
-                    [ neumorphicShadow 5 15 model.theme.colors.ctaShadow True
+                    [ neumorphicShadow 3 15 model.theme.colors.ctaShadow True
                     , color (hex model.theme.colors.ctaText)
                     ]
                 ]
@@ -1590,10 +1604,10 @@ confirm model =
                                     [ confirmButtonStyle
                                     , backgroundColor (hex model.theme.colors.cta)
                                     , color (hex model.theme.colors.ctaText)
-                                    , neumorphicShadow 5 15 model.theme.colors.ctaShadow False
+                                    , neumorphicShadow 3 15 model.theme.colors.ctaShadow False
                                     , marginLeft auto
                                     , active
-                                        [ neumorphicShadow 5 15 model.theme.colors.ctaShadow True
+                                        [ neumorphicShadow 3 15 model.theme.colors.ctaShadow True
                                         ]
                                     ]
                                 ]
