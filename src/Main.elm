@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Html.Styled exposing (Html, a, button, div, input, label, li, span, text, toUnstyled)
 import Html.Styled.Attributes exposing (checked, css, for, href, id, target, title, type_, value)
 import Html.Styled.Events exposing (onCheck, onClick, onInput)
-import HtmlHelper exposing (hr, range, neumorphicShadow)
+import HtmlHelper exposing (hr, neumorphicShadow, range)
 import Http
 import Json.Decode exposing (Decoder, Value, decodeValue, field, int, list, map6, string, succeed)
 import Json.Decode.Extra exposing (andMap)
@@ -521,15 +521,25 @@ viewTurnScoreAndBets model =
             , property "display" "grid"
             , property "grid-template-rows" "[cv] max-content [slider] max-content [bets] 50px"
             , property "grid-template-columns" "max-content max-content max-content"
+
             -- , property "row-gap" " 30px"
             , neumorphicShadow 5 10 model.theme.colors.lightShadow False
             , transition
-                [ Css.Transitions.boxShadow3 (if model.showSettings then 0 else 150) 0 (Css.Transitions.cubicBezier 1.0 0.0 1 0.0)
+                [ Css.Transitions.boxShadow3
+                    (if model.showSettings then
+                        0
+
+                     else
+                        150
+                    )
+                    0
+                    (Css.Transitions.cubicBezier 1.0 0.0 1 0.0)
                 ]
             , batch
-                ( case model.scorer.firstOut of
+                (case model.scorer.firstOut of
                     Team _ ->
-                        [neumorphicShadow 5 15 model.theme.colors.ctaShadow False]
+                        [ neumorphicShadow 5 15 model.theme.colors.ctaShadow False ]
+
                     _ ->
                         []
                 )
@@ -618,6 +628,7 @@ viewBets model ( player1, bet1 ) ( player2, bet2 ) =
     div
         [ css
             [ borderRadius (px 10)
+
             -- , padding (px 10)
             , displayFlex
             , flexDirection column
@@ -629,13 +640,12 @@ viewBets model ( player1, bet1 ) ( player2, bet2 ) =
             ]
         ]
         [ viewAddBet model ( player1, bet1 ) (bet2 == Zero)
+
         -- , if bet1 /= Zero then
         --     if bet2 == Zero then
         --         viewAddBetMin model ( player2, bet2 )
-
         --     else
         --         viewAddBet model ( player2, bet2 ) True
-
         --   else
         --     text ""
         ]
@@ -644,9 +654,13 @@ viewBets model ( player1, bet1 ) ( player2, bet2 ) =
 viewAddBet : Model -> ( Player, Bet ) -> Bool -> Html Msg
 viewAddBet model ( player, bet ) showClose =
     let
-        shadow = case model.scorer.firstOut of
-                Team _ -> model.theme.colors.darkShadow
-                _ -> model.theme.colors.lightShadow
+        shadow =
+            case model.scorer.firstOut of
+                Team _ ->
+                    model.theme.colors.darkShadow
+
+                _ ->
+                    model.theme.colors.lightShadow
     in
     div
         [ css
@@ -658,9 +672,11 @@ viewAddBet model ( player, bet ) showClose =
             button
                 [ css
                     [ padding2 (px 15) (px 20)
+
                     -- , border3 (px 2) solid model.theme.colors.border
                     , neumorphicShadow 5 10 shadow False
                     , borderRadius (px 10)
+
                     -- , width (px 86)
                     , boxSizing borderBox
                     , textAlign center
@@ -738,10 +754,11 @@ viewBet model ( player, bet ) showClose =
             , borderRadius (px 10)
             , padding (px 10)
             , batch
-                ( if successful then
+                (if successful then
                     [ backgroundColor (hex "71be44")
-                    , neumorphicShadow 3 10 { light = "4f862e5c", dark = "71be4457"} False
+                    , neumorphicShadow 3 10 { light = "4f862e5c", dark = "71be4457" } False
                     ]
+
                  else
                     [ backgroundColor (hex model.theme.colors.background)
                     , neumorphicShadow 5 10 model.theme.colors.lightShadow False
@@ -756,8 +773,10 @@ viewBet model ( player, bet ) showClose =
                 , cursor pointer
                 , borderTopLeftRadius (px 10)
                 , borderBottomRightRadius (px 5)
+
                 -- , neumorphicShadow 5 10 model.theme.colors.lightShadow False
                 , backgroundColor (hex model.theme.colors.menuBackground)
+
                 -- , border3 (px 1) solid (hex model.theme.colors.border)
                 , boxSizing borderBox
                 , position absolute
@@ -805,6 +824,7 @@ viewBet model ( player, bet ) showClose =
                 , css
                     [ padding (px 5)
                     , cursor pointer
+
                     -- , backgroundColor (hex model.theme.colors.background)
                     -- , borderTopLeftRadius (px 8)
                     -- , borderBottomLeftRadius (px 8)
@@ -840,9 +860,10 @@ viewBet model ( player, bet ) showClose =
                         , neumorphicShadow
                             5
                             10
-                            ( if successful then
+                            (if successful then
                                 model.theme.colors.darkShadow
-                              else
+
+                             else
                                 model.theme.colors.lightShadow
                             )
                             False
@@ -918,6 +939,7 @@ viewTeamTurnScore model teamScore team =
                 [ height (px 25)
                 , width (px widthPx)
                 , padding2 zero (px 10)
+
                 --, backgroundColor (hex model.theme.colors.menuBackground)
                 , border3 (px 1) solid (hex model.theme.colors.border)
                 , borderBottom zero
@@ -996,9 +1018,16 @@ viewConsecutiveVictoryButton model elemid team ischecked =
             [ width (px 45)
             , height (px 45)
             , batch
-                ( case model.scorer.firstOut of
-                    Team _ -> if ischecked then [ position relative ] else []
-                    _ -> [ position relative ]
+                (case model.scorer.firstOut of
+                    Team _ ->
+                        if ischecked then
+                            [ position relative ]
+
+                        else
+                            []
+
+                    _ ->
+                        [ position relative ]
                 )
             ]
         ]
@@ -1024,7 +1053,7 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                 , width zero
                 , height zero
                 , batch
-                    ( if ischecked then
+                    (if ischecked then
                         [ width (vw 200)
                         , height (vw 200)
                         , transition
@@ -1032,7 +1061,8 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                             , Css.Transitions.height3 300 0 (Css.Transitions.cubicBezier 1.0 0.05 0.6 1)
                             ]
                         ]
-                        else
+
+                     else
                         [ transition
                             [ Css.Transitions.width3 300 0 Css.Transitions.easeOut
                             , Css.Transitions.height3 300 0 Css.Transitions.easeOut
@@ -1041,8 +1071,7 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                     )
                 ]
             ]
-            [
-            ]
+            []
         , label
             [ for elemid
             , css
@@ -1051,10 +1080,18 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                 , alignItems center
                 , boxSizing borderBox
                 , batch
-                    ( case model.scorer.firstOut of
-                        Team _ -> if ischecked then [ position relative ] else []
-                        _ -> [ position relative ]
+                    (case model.scorer.firstOut of
+                        Team _ ->
+                            if ischecked then
+                                [ position relative ]
+
+                            else
+                                []
+
+                        _ ->
+                            [ position relative ]
                     )
+
                 --, backgroundColor (hex model.theme.colors.border)
                 , cursor pointer
                 , padding (px 10)
@@ -1070,26 +1107,26 @@ viewConsecutiveVictoryButton model elemid team ischecked =
                         , borderColor (hex model.theme.colors.cta)
                         , neumorphicShadow 5 10 model.theme.colors.darkShadow True
                         ]
+
                      else
-                        [ 
-                        ]
+                        []
                     )
                 , case team of
                     -- Left
                     Vertical ->
                         batch
                             [-- borderTopLeftRadius (px 25)
-                            --, borderBottomLeftRadius (px 25)
-                            -- , paddingLeft (px 16)
-                            -- , textAlign right
+                             --, borderBottomLeftRadius (px 25)
+                             -- , paddingLeft (px 16)
+                             -- , textAlign right
                             ]
 
                     -- Right
                     Horizontal ->
                         batch
-                            [ --borderTopRightRadius (px 25)
-                            --, borderBottomRightRadius (px 25)
-                            --, textAlign left
+                            [--borderTopRightRadius (px 25)
+                             --, borderBottomRightRadius (px 25)
+                             --, textAlign left
                             ]
                 ]
             ]
@@ -1126,9 +1163,12 @@ viewTeamTurnScoreSlider model =
             ]
             [ viewSlider model
             , viewConsecutiveVictoryOverlay model
-                ( case model.scorer.firstOut of
-                    Team _ -> True
-                    _ -> False
+                (case model.scorer.firstOut of
+                    Team _ ->
+                        True
+
+                    _ ->
+                        False
                 )
             ]
         ]
@@ -1146,8 +1186,10 @@ viewConsecutiveVictoryOverlay model active =
                 [ translate2 (pct -50) (pct -50)
                 , scale 0
                 ]
+
             -- , width (px 240)
             , overflow hidden
+
             -- , lineHeight (px 30)
             , width (px 230)
             , height (px 30)
@@ -1197,12 +1239,16 @@ viewSlider model =
         , thumbBorderRadius = 20
         , additional =
             [ border3 (px 1) solid (hex model.theme.colors.border)
+
             --, borderBottom3 (px 0) solid (hex model.theme.colors.border)
             , neumorphicShadow 5 10 model.theme.colors.lightShadow True
             , batch
-                ( case model.scorer.firstOut of
-                    Team _ -> [ pointerEvents none ]
-                    _ -> []
+                (case model.scorer.firstOut of
+                    Team _ ->
+                        [ pointerEvents none ]
+
+                    _ ->
+                        []
                 )
             ]
         }
@@ -1322,20 +1368,24 @@ defaultSettings model =
         , iconButton
             model
             undoSvg
-            [ backgroundColor (hex
-                (if model.updateAvailable then
-                    model.theme.colors.cta
+            [ backgroundColor
+                (hex
+                    (if model.updateAvailable then
+                        model.theme.colors.cta
 
-                 else
-                    model.theme.colors.background
-                ))
-            , color (hex
-                (if model.updateAvailable then
-                    model.theme.colors.ctaText
+                     else
+                        model.theme.colors.background
+                    )
+                )
+            , color
+                (hex
+                    (if model.updateAvailable then
+                        model.theme.colors.ctaText
 
-                 else
-                    model.theme.colors.text
-                ))
+                     else
+                        model.theme.colors.text
+                    )
+                )
             , transform (scale2 -1 1)
             ]
             "Reload"
@@ -1506,7 +1556,9 @@ settingsGear model =
                 , batch
                     (if model.showSettings then
                         [ neumorphicShadow 5 10 model.theme.colors.lightShadow True ]
-                    else []
+
+                     else
+                        []
                     )
                 ]
             ]
@@ -1523,6 +1575,7 @@ iconButton model icon styles t onclick =
             , display inlineBlock
             , cursor pointer
             , padding (px 7)
+
             --, border3 (px 2) solid (hex model.theme.colors.border)
             , borderRadius (pct 50)
             , backgroundColor (hex model.theme.colors.menuBackground)
@@ -1568,6 +1621,7 @@ confirm model =
                         [ css
                             [ backgroundColor (hex model.theme.colors.background)
                             , borderRadius (px 30)
+
                             -- , border3 (px 3) solid (hex model.theme.colors.border)
                             , padding (px 20)
                             ]

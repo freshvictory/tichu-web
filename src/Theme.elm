@@ -1,6 +1,6 @@
 module Theme exposing
-    ( ThemeSettings
-    , NeumorphicShadow
+    ( NeumorphicShadow
+    , ThemeSettings
     , dark
     , light
     , mint

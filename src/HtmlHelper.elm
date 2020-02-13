@@ -1,4 +1,4 @@
-module HtmlHelper exposing (hr, range, neumorphicShadow)
+module HtmlHelper exposing (hr, neumorphicShadow, range)
 
 import Css exposing (..)
 import Html.Styled exposing (Html, input)
@@ -10,15 +10,36 @@ import Theme exposing (NeumorphicShadow)
 neumorphicShadow : Float -> Float -> NeumorphicShadow -> Bool -> Style
 neumorphicShadow offset blur shadow inset =
     let
-        offsetPx = String.fromFloat offset ++ "px "
-        blurPx = String.fromFloat blur ++ "px "
-        insetModifier = if inset then "inset " else ""
+        offsetPx =
+            String.fromFloat offset ++ "px "
+
+        blurPx =
+            String.fromFloat blur ++ "px "
+
+        insetModifier =
+            if inset then
+                "inset "
+
+            else
+                ""
     in
-    
     property
         "box-shadow"
-        ( insetModifier ++ offsetPx ++ offsetPx ++ blurPx ++ "#" ++ shadow.dark ++ ", "
-        ++ insetModifier ++ "-" ++ offsetPx ++ "-" ++ offsetPx ++ blurPx ++ "#" ++ shadow.light
+        (insetModifier
+            ++ offsetPx
+            ++ offsetPx
+            ++ blurPx
+            ++ "#"
+            ++ shadow.dark
+            ++ ", "
+            ++ insetModifier
+            ++ "-"
+            ++ offsetPx
+            ++ "-"
+            ++ offsetPx
+            ++ blurPx
+            ++ "#"
+            ++ shadow.light
         )
 
 
