@@ -44,7 +44,7 @@ light =
         , background = "EFEFEF"
         , lightShadow = { light = "ffffff4a", dark = "60606026" }
         , darkShadow = { light = "ffffff4a", dark = "60606026" }
-        , ctaShadow = { light = "fde78d", dark = "DBB004" }
+        , ctaShadow = { light = "feedaa", dark = "dbb004a8" }
         , menuBackground = "DDD"
         , cta = "DBB004"
         , ctaText = "4d4d4d"
