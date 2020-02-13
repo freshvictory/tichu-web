@@ -93,7 +93,7 @@ defaultModel theme vertName horzName =
     , themes = themes
     , showSettings = False
     , checkingForUpdate = False
-    , currentVersion = { version = "1.2.5" }
+    , currentVersion = { version = "1.2.6" }
     , foundVersion = { version = "0.0.0" }
     , updateAvailable = False
     , crashed = False
@@ -578,8 +578,7 @@ viewBetChoice : Model -> Player -> Html Msg
 viewBetChoice model player =
     div
         [ css
-            [ border3 (px 2) solid (hex model.theme.colors.border)
-            , borderRadius (px 20)
+            [ borderRadius (px 20)
             , padding (px 10)
             , displayFlex
             , alignItems center
@@ -589,34 +588,39 @@ viewBetChoice model player =
             , position relative
             ]
         ]
-        [ div
+        [ button
             [ onClick (ChangePlayerBet player Tichu True)
             , css
                 [ cursor pointer
-                , borderRight3 (px 2) solid (hex model.theme.colors.border)
                 , display inlineBlock
                 , marginRight (px 10)
                 , padding2 (px 5) (px 10)
-                , border3 (px 2) solid (hex model.theme.colors.border)
                 , borderRadius (px 10)
                 , boxSizing borderBox
                 , textAlign center
                 , cursor pointer
                 , backgroundColor (hex model.theme.colors.background)
+                , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+                , active
+                    [ neumorphicShadow 5 10 model.theme.colors.lightShadow True
+                    ]
                 ]
             ]
             [ text "Tichu" ]
-        , div
+        , button
             [ onClick (ChangePlayerBet player GrandTichu True)
             , css
                 [ cursor pointer
                 , padding2 (px 5) (px 10)
-                , border3 (px 2) solid (hex model.theme.colors.border)
                 , borderRadius (px 10)
                 , boxSizing borderBox
                 , textAlign center
                 , cursor pointer
                 , backgroundColor (hex model.theme.colors.background)
+                , neumorphicShadow 5 10 model.theme.colors.lightShadow False
+                , active
+                    [ neumorphicShadow 5 10 model.theme.colors.lightShadow True
+                    ]
                 ]
             ]
             [ text "Grand Tichu" ]
