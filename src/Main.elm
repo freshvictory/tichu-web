@@ -93,7 +93,7 @@ defaultModel theme vertName horzName =
     , themes = themes
     , showSettings = False
     , checkingForUpdate = False
-    , currentVersion = { version = "1.2.3" }
+    , currentVersion = { version = "1.2.4" }
     , foundVersion = { version = "0.0.0" }
     , updateAvailable = False
     , crashed = False
