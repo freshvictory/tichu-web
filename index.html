@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tichu Scorer</title>
+
+    <style>
+      html {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol";
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body,
+      button,
+      h1,
+      fieldset,
+      input {
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        appearance: none;
+        cursor: pointer;
+      }
+
+      input[type="range"] {
+        appearance: none;
+      }
+    </style>
+
+    <style>
+      :root {
+        --font-heading: 1.5rem;
+        --border-radius: 8px;
+        --spacing-small: 8px;
+        --spacing-medium: 16px;
+        --spacing-large: 24px;
+      }
+
+      :root {
+        --c-black: #000;
+        --c-light-black: #222;
+        --c-gray: #777;
+        --c-lightest-gray: #ddd;
+        --c-off-white: #efefef;
+        --c-white: #fff;
+
+        --theme-accent: #d56268;
+        --theme-text: var(--c-light-black);
+        --theme-text-light: var(--c-light-black);
+        --theme-text-lightest: var(--c-gray);
+        --theme-background: var(--c-white);
+        --theme-background-off: var(--c-off-white);
+        --theme-background-light: var(--c-lightest-gray);
+      }
+    </style>
+
+    <style>
+      .visually-hidden {
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        height: 1px;
+        width: 1px;
+        overflow: hidden;
+        white-space: nowrap;
+        position: absolute;
+      }
+
+      html {
+        accent-color: var(--theme-accent);
+      }
+
+      html,
+      body,
+      main {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      html,
+      body {
+        color: var(--theme-text);
+        background-color: var(--theme-background);
+      }
+
+      output {
+        font-variant-numeric: tabular-nums;
+      }
+
+      main {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: var(--spacing-medium);
+        padding: var(--spacing-medium);
+      }
+
+      form {
+        --slider-inline: 75;
+        --slider-block: 372; /* Nice if multiple of 31 */
+        --slider-unit: 1px;
+        --slider-inline-size: calc(var(--slider-inline) * var(--slider-unit));
+        --slider-block-size: calc(var(--slider-block) * var(--slider-unit));
+      }
+
+      form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto 1fr;
+        gap: var(--spacing-medium);
+      }
+
+      form > .points {
+        grid-column: 2;
+      }
+
+      form > .actions {
+        grid-column: span 2;
+      }
+
+      .range-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+
+        box-sizing: content-box;
+        inline-size: var(--slider-inline-size);
+        block-size: var(--slider-block-size);
+
+        border: 3px solid var(--theme-text);
+        border-radius: 4px;
+
+        background-color: var(--theme-background);
+
+        --thumb-color: var(--theme-accent);
+        --thumb-line-size: 3px;
+        --thumb-background: linear-gradient(
+          to left,
+          transparent,
+          transparent calc(50% - var(--thumb-line-size) / 2),
+          var(--thumb-color) calc(50% - var(--thumb-line-size) / 2),
+          var(--thumb-color) calc(50% + var(--thumb-line-size) / 2),
+          #77777744,
+          transparent 90%
+        );
+        --thumb-inline-size: 100%;
+        --thumb-block-size: var(--tick-block-size);
+
+        --tick-color: var(--theme-background-light);
+        --tick-thickness: 3px;
+        --tick-inline-size: 12px;
+        --tick-block-size: calc(var(--slider-block-size) / 31);
+
+        background: linear-gradient(
+            to bottom,
+            var(--tick-color) var(--tick-thickness),
+            transparent 1px
+          )
+          repeat-y;
+        background-size: var(--tick-inline-size) var(--tick-block-size);
+        background-position: 0
+          calc(var(--tick-block-size) / 2 - var(--tick-thickness) / 2);
+      }
+
+      .range-container > input[type="range"] {
+        flex-shrink: 0;
+      }
+
+      input[type="range"] {
+        inline-size: var(--slider-block-size);
+        block-size: var(--slider-inline-size);
+        transform: rotate(270deg);
+        transform-origin: center;
+
+        background-color: transparent;
+      }
+
+      input[type="range"]::-webkit-slider-runnable-track {
+        inline-size: 100%;
+        block-size: 100%;
+      }
+
+      input[type="range"]::-moz-range-track {
+        inline-size: 100%;
+        block-size: 100%;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        block-size: var(--thumb-inline-size);
+        inline-size: var(--thumb-block-size);
+        background: var(--thumb-background);
+        appearance: none;
+        box-shadow: none;
+        border: 0;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        block-size: var(--thumb-inline-size);
+        inline-size: var(--thumb-block-size);
+        background: var(--thumb-background);
+        appearance: none;
+        box-shadow: none;
+        border-radius: 0;
+        border: 0;
+      }
+
+      .points {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: var(--spacing-small);
+      }
+
+      .points > output {
+        transform: translateY(calc(var(--offset) * 12px));
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 class="heading">Tichu Scorer</h1>
+
+      <form id="score-form">
+        <div>
+          <output
+            name="verticalScore"
+            class="score"
+            for="taken-points
+            vertical-bet
+            horizontal-bet
+            consecutive-none
+            consecutive-vertical
+            consecutive-horizontal
+          "
+            form="score-form"
+          >
+            0
+          </output>
+
+          <output
+            name="horizontalScore"
+            class="score"
+            for="taken-points
+            vertical-bet
+            horizontal-bet
+            consecutive-none
+            consecutive-vertical
+            consecutive-horizontal
+          "
+            form="score-form"
+          >
+            0
+          </output>
+        </div>
+
+        <fieldset class="points">
+          <legend class="visually-hidden">Points</legend>
+
+          <output id="taken-output" for="taken-points" style="--offset: 15"
+            >50</output
+          >
+
+          <label for="taken-points" class="visually-hidden">Taken points</label>
+          <div class="range-container">
+            <input
+              id="taken-points"
+              name="takenPoints"
+              type="range"
+              min="-25"
+              max="125"
+              step="5"
+              value="50"
+            />
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="submit">Score</button>
+        </div>
+      </form>
+    </main>
+
+    <script>
+      /*
+       * Taken points slider
+       */
+      const slider = document.getElementById("taken-points");
+      const sliderOutput = document.getElementById("taken-output");
+      slider.addEventListener("input", function (event) {
+        sliderOutput.textContent = event.target.value;
+        sliderOutput.style.setProperty("--offset", 25 - event.target.value / 5);
+      });
+    </script>
+  </body>
+</html>
