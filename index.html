@@ -73,6 +73,11 @@
         --theme-background: var(--c-white);
         --theme-background-off: var(--c-off-white);
         --theme-background-light: var(--c-lightest-gray);
+
+        --team-us-color: #6494ed;
+        --team-us-text: #366fd9;
+        --team-them-color: #ed7864;
+        --team-them-text: #d94e36;
       }
     </style>
 
@@ -112,12 +117,19 @@
       header {
         text-align: center;
         font-variant-caps: small-caps;
-        background-color: var(--theme-background-off);
         padding: var(--spacing-small);
       }
 
       h1 {
         font-size: var(--font-heading);
+        display: inline-block;
+        background: linear-gradient(
+          to top right,
+          var(--team-us-text),
+          var(--team-them-text)
+        );
+        background-clip: text;
+        color: transparent;
       }
 
       main {
@@ -128,7 +140,7 @@
       }
 
       form {
-        --slider-inline-size: 100px;
+        --slider-inline-size: 70px;
         --slider-entries: 31;
         --slider-size-multiple: 12px;
         --slider-block-size: calc(
@@ -153,6 +165,9 @@
       }
 
       .range-container {
+        grid-row: 1;
+        grid-column: 1;
+
         display: flex;
         align-items: center;
         justify-content: space-around;
@@ -162,25 +177,17 @@
         block-size: var(--slider-block-size);
 
         border: var(--border);
-        border-color: var(--theme-background);
+        border-color: transparent;
 
-        --thumb-color: var(--theme-accent);
-        --thumb-line-size: 3px;
-        --thumb-background: linear-gradient(
-          to left,
-          transparent,
-          transparent calc(50% - var(--thumb-line-size) / 2),
-          var(--thumb-color) calc(50% - var(--thumb-line-size) / 2),
-          var(--thumb-color) calc(50% + var(--thumb-line-size) / 2),
-          #77777744,
-          transparent 90%
-        );
-        --thumb-inline-size: 100%;
+        --thumb-color: #2222;
+        --thumb-inline-size: calc(1.2 * var(--slider-inline-size));
         --thumb-block-size: var(--tick-block-size);
+        --thumb-border: 3px solid var(--theme-background);
+        --thumb-border-radius: var(--thumb-block-size);
+        --thumb-inline-offset: calc(-0.1 * var(--slider-inline-size));
 
         --tick-color: var(--theme-background-light);
         --tick-thickness: 3px;
-        --tick-inline-size: 15%;
         --tick-block-size: calc(
           var(--slider-block-size) / var(--slider-entries)
         );
@@ -223,37 +230,61 @@
       input[type="range"]::-webkit-slider-thumb {
         block-size: var(--thumb-inline-size);
         inline-size: var(--thumb-block-size);
-        background: var(--thumb-background);
+        background-color: var(--thumb-color);
         appearance: none;
         box-shadow: none;
-        border: 0;
+        transform: translateY(var(--thumb-inline-offset));
+        border: var(--thumb-border);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        border-radius: var(--thumb-border-radius);
       }
 
       input[type="range"]::-moz-range-thumb {
         block-size: var(--thumb-inline-size);
         inline-size: var(--thumb-block-size);
-        background: var(--thumb-background);
+        background-color: var(--thumb-color);
         appearance: none;
         box-shadow: none;
-        border-radius: 0;
-        border: 0;
+        transform: translateY(var(--thumb-inline-offset));
+        border: var(--thumb-border);
+        backdrop-filter: blur(20px);
+        border-radius: var(--thumb-border-radius);
+        box-sizing: border-box;
       }
 
       .points {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         gap: var(--spacing-small);
+
+        --tick-inline-size: calc(0.15 * var(--slider-inline-size));
       }
 
       .points > output {
-        --offset: calc(25 - var(--value, 50) / 5);
-        transform: translateY(
-          calc(var(--offset) * var(--slider-size-multiple))
-        );
+        grid-column: 1;
+        grid-row: 1;
+
         font-weight: bold;
         inline-size: 3ch;
+        box-sizing: content-box;
         text-align: right;
-        block-size: fit-content;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(
+          to bottom,
+          var(--team-us-color),
+          var(--team-them-color)
+        );
+        border-radius: var(--border-radius);
+        padding: var(--spacing-small);
+        color: var(--theme-background);
+
+        transform: translateX(
+          calc(var(--tick-inline-size) + var(--spacing-small))
+        );
       }
 
       .teams {
@@ -270,17 +301,23 @@
         padding-inline: var(--spacing-large);
         padding-block: var(--spacing-medium);
         text-align: center;
-
-        background-color: var(--team-color);
-        border-radius: var(--border-radius);
+        font-weight: bold;
+        background-color: var(--theme-background-off);
+        --border-radius: 8px;
       }
 
       .score#top-score {
-        --team-color: #6495ed;
+        --team-color: var(--team-us-color);
+        border-block-end: 4px solid var(--team-color);
+        border-start-start-radius: var(--border-radius);
+        border-start-end-radius: var(--border-radius);
       }
 
       .score#bottom-score {
-        --team-color: #ed7864;
+        --team-color: var(--team-them-color);
+        border-block-start: 4px solid var(--team-color);
+        border-end-start-radius: var(--border-radius);
+        border-end-end-radius: var(--border-radius);
       }
 
       .actions {
@@ -350,7 +387,10 @@
         <fieldset class="points">
           <legend class="visually-hidden">Points</legend>
 
-          <output id="taken-output" for="taken-points">50</output>
+          <output id="taken-output" for="taken-points">
+            <span id="taken-us">50</span>
+            <span id="taken-them">50</span></output
+          >
 
           <label for="taken-points" class="visually-hidden">Taken points</label>
           <div class="range-container">
@@ -370,6 +410,7 @@
           <button
             type="submit"
             data-theme="secondary"
+            name="_action"
             value="undo"
             class="submit"
           >
@@ -382,7 +423,7 @@
       </form>
     </main>
 
-    <script>
+    <script type="text/javascript">
       // @ts-check
 
       /*
@@ -392,8 +433,11 @@
         document.getElementById("taken-points")
       );
       const sliderOutput = document.getElementById("taken-output");
+      const sliderOutputUs = document.getElementById("taken-us");
+      const sliderOutputThem = document.getElementById("taken-them");
       slider.addEventListener("input", function () {
-        sliderOutput.textContent = this.value;
+        sliderOutputUs.textContent = this.value;
+        sliderOutputThem.textContent = 100 - this.value;
         const offset = 25 - parseInt(this.value, 10) / 5;
         sliderOutput.style.setProperty("--value", this.value);
       });
@@ -413,22 +457,120 @@
       form.addEventListener("submit", function (event) {
         event.preventDefault();
         const data = new FormData(form);
-        const takenPoints = data.get("takenPoints");
-
         if (
-          typeof takenPoints !== "string" ||
-          isNaN(parseInt(takenPoints, 10))
+          event.submitter instanceof HTMLButtonElement &&
+          event.submitter.value === "undo"
         ) {
-          console.error(
-            "[FORM] Unexpected value for `takenPoints`",
-            takenPoints
-          );
+          undo();
           return;
         }
 
-        topTeamOutput.value = takenPoints;
-        bottomTeamOutput.value = (100 - parseInt(takenPoints, 10)).toString();
+        const formPoints = data.get("takenPoints");
+        const takenPoints =
+          typeof formPoints === "string" && !isNaN(parseInt(formPoints, 10))
+            ? parseInt(formPoints, 10)
+            : 50;
+
+        const points = calculatePoints({ takenPoints });
+        updateScore(points);
+        updateHistory(points);
       });
+
+      function init() {
+        try {
+          const score = getStoredScore();
+          turnHistory = getStoredHistory();
+
+          renderScore(score);
+        } catch (e) {
+          console.error("Error reading from local storage", e);
+        }
+      }
+
+      function getStoredScore() {
+        const score = localStorage.getItem("score");
+
+        return JSON.parse(score) || { us: 0, them: 0 };
+      }
+
+      /**
+       * Take the current turn's point result and update
+       * the team scores and local storage.
+       *
+       * @param points {{us: number, them: number}}
+       */
+      function updateScore(points) {
+        const currentScore = getCurrentScore();
+
+        const score = {
+          us: currentScore.us + points.us,
+          them: currentScore.them + points.them,
+        };
+
+        try {
+          localStorage.setItem("score", JSON.stringify(score));
+        } catch (e) {
+          console.error("Error writing to local storage", e);
+        }
+
+        renderScore(score);
+      }
+
+      function getStoredHistory() {
+        const history = localStorage.getItem("turnHistory");
+
+        return JSON.parse(history) || [];
+      }
+
+      function updateHistory(turnScore) {
+        turnHistory.push([turnScore.us, turnScore.them]);
+      }
+
+      function saveHistory() {
+        try {
+          localStorage.setItem("turnHistory", JSON.stringify(turnHistory));
+        } catch (e) {
+          console.error("Error writing to local storage", e);
+        }
+      }
+
+      function getCurrentScore() {
+        return {
+          us: parseInt(topTeamOutput.value, 10) || 0,
+          them: parseInt(bottomTeamOutput.value, 10) || 0,
+        };
+      }
+
+      function calculatePoints({ takenPoints }) {
+        return {
+          us: takenPoints,
+          them: 100 - takenPoints,
+        };
+      }
+
+      function undo() {
+        const lastScore = turnHistory.pop();
+
+        if (!lastScore) {
+          return;
+        }
+
+        const [us, them] = lastScore;
+
+        updateScore({
+          us: -us,
+          them: -them,
+        });
+      }
+
+      function renderScore(score) {
+        topTeamOutput.value = score.us;
+        bottomTeamOutput.value = score.them;
+      }
+
+      /** @type {[number, number][]} */
+      let turnHistory = [];
+      init();
     </script>
   </body>
 </html>
