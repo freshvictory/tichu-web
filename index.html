@@ -435,10 +435,12 @@
       const sliderOutput = document.getElementById("taken-output");
       const sliderOutputUs = document.getElementById("taken-us");
       const sliderOutputThem = document.getElementById("taken-them");
+
       slider.addEventListener("input", function () {
+        const parsed = parseInt(this.value, 10);
         sliderOutputUs.textContent = this.value;
-        sliderOutputThem.textContent = 100 - this.value;
-        const offset = 25 - parseInt(this.value, 10) / 5;
+        sliderOutputThem.textContent = (100 - parsed).toString();
+        const offset = 25 - parsed / 5;
         sliderOutput.style.setProperty("--value", this.value);
       });
 
@@ -454,123 +456,144 @@
       const form = /** @type {HTMLFormElement} */ (
         document.getElementById("score-form")
       );
+
       form.addEventListener("submit", function (event) {
         event.preventDefault();
+
         const data = new FormData(form);
-        if (
-          event.submitter instanceof HTMLButtonElement &&
-          event.submitter.value === "undo"
-        ) {
-          undo();
-          return;
-        }
-
-        const formPoints = data.get("takenPoints");
+        const takenPointsInput = data.get("takenPoints");
         const takenPoints =
-          typeof formPoints === "string" && !isNaN(parseInt(formPoints, 10))
-            ? parseInt(formPoints, 10)
-            : 50;
+          typeof takenPointsInput === "string" &&
+          parseInt(takenPointsInput, 10);
 
-        const points = calculatePoints({ takenPoints });
-        updateScore(points);
-        updateHistory(points);
+        const game = newGame();
+        const next = score(
+          {
+            consecutive: "none",
+            ourBets: ["none", "none"],
+            theirBets: ["none", "none"],
+            ourTakenPoints: takenPoints,
+          },
+          game
+        );
+
+        renderGame(next);
       });
 
-      function init() {
-        try {
-          const score = getStoredScore();
-          turnHistory = getStoredHistory();
-
-          renderScore(score);
-        } catch (e) {
-          console.error("Error reading from local storage", e);
-        }
-      }
-
-      function getStoredScore() {
-        const score = localStorage.getItem("score");
-
-        return JSON.parse(score) || { us: 0, them: 0 };
+      /**
+       * @param game {Game}
+       */
+      function renderGame(game) {
+        topTeamOutput.value = game.ourScore.toString();
+        bottomTeamOutput.value = game.theirScore.toString();
       }
 
       /**
-       * Take the current turn's point result and update
-       * the team scores and local storage.
+       * @typedef {'tichu'|'grand'} BetLevel
        *
-       * @param points {{us: number, them: number}}
+       * @typedef {'none' | {
+       *   level: BetLevel;
+       *   successful: boolean;
+       * }}
+       * Bet
+       *
+       * @typedef {{
+       *    ourTakenPoints: number;
+       *    consecutive: 'none' | 'us' | 'them';
+       *    ourBets: [Bet, Bet];
+       *    theirBets: [Bet, Bet];
+       * }}
+       * Turn
+       *
+       * @typedef {{
+       *    ourScore: number;
+       *    theirScore: number;
+       *    history: Turn[];
+       * }}
+       * Game
        */
-      function updateScore(points) {
-        const currentScore = getCurrentScore();
 
-        const score = {
-          us: currentScore.us + points.us,
-          them: currentScore.them + points.them,
-        };
-
-        try {
-          localStorage.setItem("score", JSON.stringify(score));
-        } catch (e) {
-          console.error("Error writing to local storage", e);
-        }
-
-        renderScore(score);
-      }
-
-      function getStoredHistory() {
-        const history = localStorage.getItem("turnHistory");
-
-        return JSON.parse(history) || [];
-      }
-
-      function updateHistory(turnScore) {
-        turnHistory.push([turnScore.us, turnScore.them]);
-      }
-
-      function saveHistory() {
-        try {
-          localStorage.setItem("turnHistory", JSON.stringify(turnHistory));
-        } catch (e) {
-          console.error("Error writing to local storage", e);
-        }
-      }
-
-      function getCurrentScore() {
+      /**
+       * @returns {Game}
+       */
+      function newGame() {
         return {
-          us: parseInt(topTeamOutput.value, 10) || 0,
-          them: parseInt(bottomTeamOutput.value, 10) || 0,
+          ourScore: 0,
+          theirScore: 0,
+          history: [],
         };
       }
 
-      function calculatePoints({ takenPoints }) {
+      /**
+       * @param turn {Turn}
+       * @param game {Game}
+       * @returns {Game}
+       */
+      function score(turn, game) {
+        const { us: ourTakenPoints, them: theirTakenPoints } =
+          takenPoints(turn);
+
+        const { us: ourBetPoints, them: theirBetPoints } = turnBetPoints(turn);
+
         return {
-          us: takenPoints,
-          them: 100 - takenPoints,
+          ourScore: game.ourScore + ourTakenPoints + ourBetPoints,
+          theirScore: game.theirScore + theirTakenPoints + theirBetPoints,
+          history: [...game.history, turn],
         };
       }
 
-      function undo() {
-        const lastScore = turnHistory.pop();
-
-        if (!lastScore) {
-          return;
+      /**
+       * @param turn {Turn}
+       * @returns {{us: number, them: number}}
+       */
+      function takenPoints(turn) {
+        switch (turn.consecutive) {
+          case "none":
+            return {
+              us: turn.ourTakenPoints,
+              them: 100 - turn.ourTakenPoints,
+            };
+          case "us":
+            return {
+              us: 200,
+              them: 0,
+            };
+          case "them":
+            return {
+              us: 0,
+              them: 200,
+            };
         }
-
-        const [us, them] = lastScore;
-
-        updateScore({
-          us: -us,
-          them: -them,
-        });
       }
 
-      function renderScore(score) {
-        topTeamOutput.value = score.us;
-        bottomTeamOutput.value = score.them;
+      /**
+       * @param turn {Turn}
+       * @returns {{us: number, them: number}}
+       */
+      function turnBetPoints(turn) {
+        return {
+          us: pointsForBets(turn.ourBets),
+          them: pointsForBets(turn.theirBets),
+        };
       }
 
-      /** @type {[number, number][]} */
-      let turnHistory = [];
-      init();
+      /**
+       * @param bets {Bet[]}
+       * @returns {number}
+       */
+      function pointsForBets(bets) {
+        return bets.reduce(function (sum, bet) {
+          if (bet === "none") {
+            return sum;
+          }
+
+          const sign = bet.successful ? 1 : -1;
+          const value =
+            bet.level === "grand" ? 200 : bet.level === "tichu" ? 100 : 0;
+
+          return sum + sign * value;
+        }, 0);
+      }
     </script>
   </body>
 </html>
