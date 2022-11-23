@@ -44,7 +44,7 @@
     <style>
       :root {
         --font-large: 1.25rem;
-        --font-heading: 1.5rem;
+        --font-heading: 1.25rem;
         --spacing-small: 8px;
         --spacing-medium: 16px;
         --spacing-large: 24px;
@@ -55,6 +55,7 @@
         --border: 3px solid var(--theme-text);
         --edge: 1px solid var(--theme-background-light);
         --border-radius: 8px;
+        --border-radius-small: 2px;
       }
 
       :root {
@@ -66,7 +67,7 @@
         --c-white: #fff;
 
         --theme-accent: hsl(39, 79%, 66%);
-        --theme-accent-shadow: hsl(39, 90%, 31%);
+        --theme-accent-shadow: hsl(39, 90%, 35%);
         --theme-text: var(--c-light-black);
         --theme-text-light: var(--c-light-black);
         --theme-text-lightest: var(--c-gray);
@@ -142,18 +143,18 @@
       form {
         --slider-inline-size: 70px;
         --slider-entries: 31;
-        --slider-size-multiple: 12px;
+        --slider-size-multiple: 11px;
         --slider-block-size: calc(
           var(--slider-entries) * var(--slider-size-multiple)
-        ); /* Nice if multiple of 31 */
+        );
         block-size: 100%;
       }
 
       form {
         display: grid;
         grid-template-columns: 1fr auto;
-        grid-template-rows: auto 1fr;
-        row-gap: var(--spacing-medium);
+        grid-template-rows: 1fr auto;
+        gap: var(--spacing-large);
       }
 
       form > .points {
@@ -255,13 +256,86 @@
 
       .points {
         display: grid;
+        align-items: center;
+        grid-template-rows: auto 1fr auto;
+        gap: var(--spacing-small);
+      }
+
+      .points > * {
+        grid-column: 1;
+      }
+
+      .points > input[name="consecutive"] {
+        display: none;
+      }
+
+      input[name="consecutive"][value="us"] + .consecutive {
+        --team-color: var(--team-us-color);
+        --team-color-text: var(--team-us-text);
+        border-end-start-radius: var(--border-radius-small);
+        border-end-end-radius: var(--border-radius-small);
+      }
+      input[name="consecutive"][value="them"] + .consecutive {
+        --team-color: var(--team-them-color);
+        --team-color-text: var(--team-them-text);
+        border-start-start-radius: var(--border-radius-small);
+        border-start-end-radius: var(--border-radius-small);
+      }
+
+      input[name="consecutive"]:checked + .consecutive {
+        background-color: var(--team-color-text);
+        color: var(--theme-background);
+        box-shadow: 0 0 4px -1px var(--team-color);
+      }
+
+      .consecutive {
+        padding-block: var(--spacing-small);
+        padding-inline: var(--spacing-medium);
+        border: 2px solid transparent;
+        border-radius: var(--border-radius);
+        border-image: 2px outset var(--team-color);
+        text-align: center;
+        color: var(--team-color-text);
+        font-weight: bold;
+        background-color: var(--theme-background-off);
+        box-shadow: 1px 1px 4px -1px var(--theme-background-light);
+      }
+
+      input[name="consecutive"]:checked + .consecutive-none {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .consecutive-none {
+        block-size: calc(var(--slider-block-size) + 2 * var(--spacing-small));
+        inline-size: 110%;
+        background-color: #fff9;
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+        opacity: 1;
+
+        transition: opacity 150ms;
+      }
+
+      .points > .consecutive-none {
+        z-index: 1;
+      }
+
+      .points > .taken,
+      .points > .consecutive-none {
+        grid-row: 2;
+        justify-self: center;
+      }
+
+      .taken {
+        display: grid;
         grid-template-columns: 1fr;
         gap: var(--spacing-small);
 
         --tick-inline-size: calc(0.15 * var(--slider-inline-size));
       }
 
-      .points > output {
+      .taken > #taken-output {
         grid-column: 1;
         grid-row: 1;
 
@@ -321,35 +395,41 @@
       }
 
       .actions {
-        display: grid;
-        grid-template-columns: 1fr 2fr;
+        display: flex;
         gap: var(--spacing-medium);
-        align-items: flex-end;
+        justify-content: space-around;
       }
 
-      button[type="submit"] {
-        background-color: var(--theme-background-light);
-        box-shadow: 0 2px var(--theme-text-lightest);
-        font-size: var(--font-large);
-        padding-block: var(--spacing-medium);
-        padding-inline: var(--spacing-large);
+      .actions > .submit {
+        grid-column: 1 / -1;
+      }
+
+      button {
+        padding-block: var(--spacing-small);
+        padding-inline: var(--spacing-medium);
         border-radius: var(--border-radius);
-      }
-
-      button[data-theme="primary"] {
-        background-color: var(--theme-accent);
-        box-shadow: 0 2px var(--theme-accent-shadow);
-        font-weight: bold;
+        background-color: var(--color);
+        box-shadow: 1px 1px 3px -1px var(--shadow);
       }
 
       button:active {
-        box-shadow: none;
-        transform: translateY(2px);
+        box-shadow: 0 0 3px -2px var(--shadow);
+      }
+
+      .submit {
+        --color: var(--theme-accent);
+        --shadow: var(--theme-accent-shadow);
+        font-weight: bold;
+      }
+
+      .secondary {
+        --color: var(--theme-background-light);
+        --shadow: var(--theme-text-lightest);
       }
     </style>
   </head>
   <body>
-    <header><h1 class="heading">Tichu</h1></header>
+    <header class="visually-hidden"><h1 class="heading">Tichu</h1></header>
     <main>
       <form id="score-form">
         <div class="teams">
@@ -361,8 +441,8 @@
               top-bet
               bottom-bet
               consecutive-none
-              consecutive-top
-              consecutive-bottom
+              consecutive-us
+              consecutive-them
             "
             form="score-form"
             >0</output
@@ -387,23 +467,54 @@
         <fieldset class="points">
           <legend class="visually-hidden">Points</legend>
 
-          <output id="taken-output" for="taken-points">
-            <span id="taken-us">50</span>
-            <span id="taken-them">50</span></output
+          <input
+            id="consecutive-us"
+            type="radio"
+            name="consecutive"
+            value="us"
+          />
+          <label for="consecutive-us" class="consecutive">1st & 2nd</label>
+
+          <div class="taken">
+            <div id="taken-output" for="taken-points">
+              <output id="taken-us">50</output>
+              <output id="taken-them">50</output>
+            </div>
+
+            <label for="taken-points" class="visually-hidden"
+              >Taken points</label
+            >
+            <div class="range-container">
+              <input
+                id="taken-points"
+                name="takenPoints"
+                type="range"
+                min="-25"
+                max="125"
+                step="5"
+                value="50"
+              />
+            </div>
+          </div>
+
+          <input
+            id="consecutive-none"
+            type="radio"
+            name="consecutive"
+            value="none"
+            checked
+          />
+          <label for="consecutive-none" class="consecutive-none"
+            ><span class="visually-hidden">No consecutive victory</span></label
           >
 
-          <label for="taken-points" class="visually-hidden">Taken points</label>
-          <div class="range-container">
-            <input
-              id="taken-points"
-              name="takenPoints"
-              type="range"
-              min="-25"
-              max="125"
-              step="5"
-              value="50"
-            />
-          </div>
+          <input
+            id="consecutive-them"
+            type="radio"
+            name="consecutive"
+            value="them"
+          />
+          <label for="consecutive-them" class="consecutive">1st & 2nd</label>
         </fieldset>
 
         <div class="actions">
@@ -412,12 +523,22 @@
             data-theme="secondary"
             name="_action"
             value="undo"
-            class="submit"
+            class="secondary"
           >
             Undo
           </button>
+
           <button type="submit" data-theme="primary" class="submit">
             Score
+          </button>
+          <button
+            type="submit"
+            data-theme="secondary"
+            name="_action"
+            value="new"
+            class="secondary"
+          >
+            New
           </button>
         </div>
       </form>
@@ -438,8 +559,8 @@
 
       slider.addEventListener("input", function () {
         const parsed = parseInt(this.value, 10);
-        sliderOutputUs.textContent = this.value;
-        sliderOutputThem.textContent = (100 - parsed).toString();
+        sliderOutputUs.value = this.value;
+        sliderOutputThem.value = (100 - parsed).toString();
         const offset = 25 - parsed / 5;
         sliderOutput.style.setProperty("--value", this.value);
       });
@@ -466,16 +587,20 @@
           typeof takenPointsInput === "string" &&
           parseInt(takenPointsInput, 10);
 
+        const consecutive = data.get("consecutive");
+
         const game = newGame();
         const next = score(
           {
-            consecutive: "none",
+            consecutive,
             ourBets: ["none", "none"],
             theirBets: ["none", "none"],
             ourTakenPoints: takenPoints,
           },
           game
         );
+
+        form.reset();
 
         renderGame(next);
       });
