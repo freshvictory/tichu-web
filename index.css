@@ -1,0 +1,436 @@
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body,
+button,
+h1,
+fieldset,
+input {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  appearance: none;
+}
+
+:root {
+  --font-large: 1.25rem;
+  --font-heading: 1.25rem;
+  --spacing-small: 8px;
+  --spacing-medium: 16px;
+  --spacing-large: 24px;
+  --spacing-xlarge: 32px;
+}
+
+:root {
+  --border: 3px solid var(--theme-text);
+  --edge: 1px solid var(--theme-background-light);
+  --border-radius: 8px;
+  --border-radius-small: 2px;
+}
+
+:root {
+  --c-black: #000;
+  --c-light-black: #222;
+  --c-gray: #777;
+  --c-lightest-gray: #ddd;
+  --c-off-white: #efefef;
+  --c-white: #fff;
+
+  --theme-accent: hsl(39, 79%, 66%);
+  --theme-accent-shadow: hsl(39, 90%, 35%);
+  --theme-text: var(--c-light-black);
+  --theme-text-light: var(--c-gray);
+  --theme-background: var(--c-white);
+  --theme-background-off: var(--c-off-white);
+  --theme-background-light: var(--c-lightest-gray);
+
+  --team-us-color: #6494ed;
+  --team-us-text: #366fd9;
+  --team-them-color: #ed7864;
+  --team-them-text: #d94e36;
+}
+
+:root {
+  --transition-duration: 200ms;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  position: absolute;
+}
+
+html {
+  accent-color: var(--theme-accent);
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+
+  color: var(--theme-text);
+  background-color: var(--theme-background);
+}
+
+output {
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+header {
+  text-align: center;
+  font-variant-caps: small-caps;
+  padding: var(--spacing-small);
+}
+
+h1 {
+  font-size: var(--font-heading);
+  display: inline-block;
+  background: linear-gradient(
+    to top right,
+    var(--team-us-text),
+    var(--team-them-text)
+  );
+  background-clip: text;
+  color: transparent;
+}
+
+main {
+  padding-block: var(--spacing-large);
+  padding-inline: var(--spacing-large);
+  min-inline-size: min(100vw, 400px);
+  margin-inline: auto;
+}
+
+form {
+  --slider-inline-size: 70px;
+  --slider-entries: 31;
+  --slider-size-multiple: 11px;
+  --slider-block-size: calc(
+    var(--slider-entries) * var(--slider-size-multiple)
+  );
+  block-size: 100%;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr auto;
+  gap: var(--spacing-large);
+}
+
+form > .points {
+  grid-column: 2;
+}
+
+form > .actions {
+  grid-column: span 2;
+}
+
+.range-container {
+  grid-row: 1;
+  grid-column: 1;
+
+  opacity: 1;
+  transition: opacity var(--transition-duration);
+
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  box-sizing: content-box;
+  inline-size: var(--slider-inline-size);
+  block-size: var(--slider-block-size);
+
+  border: var(--border);
+  border-color: transparent;
+
+  --thumb-color: #2222;
+  --thumb-inline-size: calc(1.2 * var(--slider-inline-size));
+  --thumb-block-size: var(--tick-block-size);
+  --thumb-border: 3px solid var(--theme-background);
+  --thumb-border-radius: var(--thumb-block-size);
+  --thumb-inline-offset: calc(-0.1 * var(--slider-inline-size));
+  --thumb-scale: 1;
+
+  --tick-color: var(--theme-background-light);
+  --tick-thickness: 3px;
+  --tick-block-size: calc(var(--slider-block-size) / var(--slider-entries));
+
+  background: linear-gradient(
+      to bottom,
+      var(--tick-color) var(--tick-thickness),
+      transparent 1px
+    )
+    repeat-y;
+  background-size: var(--tick-inline-size) var(--tick-block-size);
+  background-position: 0
+    calc(var(--tick-block-size) / 2 - var(--tick-thickness) / 2);
+}
+
+.range-container > input[type="range"] {
+  flex-shrink: 0;
+}
+
+input[type="range"] {
+  inline-size: var(--slider-block-size);
+  block-size: var(--slider-inline-size);
+  transform: rotate(270deg);
+  transform-origin: center;
+  border-radius: var(--border-radius);
+
+  background-color: transparent;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+input[type="range"]::-moz-range-track {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  block-size: var(--thumb-inline-size);
+  inline-size: var(--thumb-block-size);
+  background-color: var(--thumb-color);
+  appearance: none;
+  box-shadow: none;
+  transform: translateY(var(--thumb-inline-offset)) scale(var(--thumb-scale));
+  transform-origin: center bottom;
+  border: var(--thumb-border);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-radius: var(--thumb-border-radius);
+  transition: transform var(--transition-duration);
+}
+
+input[type="range"]::-moz-range-thumb {
+  block-size: var(--thumb-inline-size);
+  inline-size: var(--thumb-block-size);
+  background-color: var(--thumb-color);
+  appearance: none;
+  box-shadow: none;
+  transform: translateY(var(--thumb-inline-offset)) scale(var(--thumb-scale));
+  transform-origin: center bottom;
+  border: var(--thumb-border);
+  backdrop-filter: blur(20px);
+  border-radius: var(--thumb-border-radius);
+  box-sizing: border-box;
+  transition: transform var(--transition-duration);
+}
+
+.points {
+  display: grid;
+  align-items: center;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--spacing-small);
+
+  --tick-inline-size: calc(0.15 * var(--slider-inline-size));
+}
+
+.points > * {
+  grid-column: 1;
+}
+
+.points > input[name="consecutive"] {
+  display: none;
+}
+
+input[name="consecutive"][value="us"] + .consecutive {
+  --team-color: var(--team-us-color);
+  --team-color-text: var(--team-us-text);
+  border-end-start-radius: var(--border-radius-small);
+  border-end-end-radius: var(--border-radius-small);
+}
+input[name="consecutive"][value="them"] + .consecutive {
+  --team-color: var(--team-them-color);
+  --team-color-text: var(--team-them-text);
+  border-start-start-radius: var(--border-radius-small);
+  border-start-end-radius: var(--border-radius-small);
+}
+
+input[name="consecutive"]:checked + .consecutive {
+  background-color: var(--team-color-text);
+  color: var(--theme-background);
+  border-color: var(--team-color-text);
+}
+
+.consecutive {
+  padding-block: var(--spacing-small);
+  padding-inline: var(--spacing-medium);
+  border-radius: var(--border-radius);
+  border-image: 2px outset var(--team-color);
+  text-align: center;
+  color: var(--team-color-text);
+  font-weight: bold;
+  /* background-color: var(--theme-background-off); */
+  /* border: 2px dashed var(--theme-background-light); */
+}
+
+input[name="consecutive"]:checked + .consecutive-none {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.consecutive-none {
+  block-size: calc(var(--slider-block-size) + 2 * var(--spacing-small));
+  inline-size: 110%;
+}
+
+.points > .consecutive-none {
+  z-index: 2;
+}
+
+.points > .range-container,
+.points > .consecutive-none,
+#taken-output {
+  grid-row: 2;
+  justify-self: center;
+}
+
+input[name="consecutive"][value="none"]:not(:checked) ~ .range-container {
+  opacity: 0;
+  --thumb-inline-offset: calc(0.1 * var(--slider-inline-size));
+  --thumb-scale: 0.1;
+}
+
+#taken-output {
+  block-size: var(--slider-block-size);
+
+  font-weight: bold;
+  inline-size: 3ch;
+  box-sizing: content-box;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-image: linear-gradient(
+    to bottom,
+    var(--team-us-color),
+    var(--team-us-color),
+    var(--team-them-color),
+    var(--team-them-color)
+  );
+  border-radius: var(--border-radius);
+  padding: var(--spacing-small);
+  color: var(--theme-background);
+
+  transform: translateX(calc(0.75 * var(--tick-inline-size)));
+
+  transition: background-position var(--transition-duration),
+    transform var(--transition-duration);
+  background-position: 0 50%;
+  background-size: 100% 300%;
+
+  box-shadow: inset 1px 1px 5px -2px var(--theme-text);
+}
+
+input[name="consecutive"][value="us"]:checked ~ #taken-output {
+  background-position: 0 0;
+  transform: translateX(0);
+}
+
+input[name="consecutive"][value="them"]:checked ~ #taken-output {
+  background-position: 0 100%;
+  transform: translateX(0);
+}
+
+.teams {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.score {
+  display: block;
+  inline-size: 4ch;
+  box-sizing: content-box;
+  font-size: var(--font-heading);
+  padding-inline: var(--spacing-large);
+  padding-block: var(--spacing-medium);
+  text-align: center;
+  font-weight: bold;
+  background-color: var(--theme-background-off);
+  --border-radius: 8px;
+}
+
+.score#top-score {
+  --team-color: var(--team-us-color);
+  border-block-end: 4px solid var(--team-color);
+  border-start-start-radius: var(--border-radius);
+  border-start-end-radius: var(--border-radius);
+}
+
+.score#bottom-score {
+  --team-color: var(--team-them-color);
+  border-block-start: 4px solid var(--team-color);
+  border-end-start-radius: var(--border-radius);
+  border-end-end-radius: var(--border-radius);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-medium);
+  justify-content: space-around;
+}
+
+.actions > .submit {
+  grid-column: 1 / -1;
+}
+
+button {
+  padding-block: var(--spacing-small);
+  padding-inline: var(--spacing-medium);
+  border-radius: var(--border-radius);
+  background-color: var(--color);
+  box-shadow: 1px 1px 3px -1px var(--shadow);
+}
+
+button:active {
+  box-shadow: 0 0 3px -2px var(--shadow);
+}
+
+.submit {
+  --color: var(--theme-accent);
+  --shadow: var(--theme-accent-shadow);
+  font-weight: bold;
+}
+
+.secondary {
+  --color: var(--theme-background-light);
+  --shadow: var(--theme-text-light);
+}
