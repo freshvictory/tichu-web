@@ -4,7 +4,9 @@
 const slider = /** @type {HTMLInputElement} */ (
   document.getElementById("taken-points")
 );
-const sliderOutput = document.getElementById("taken-output");
+const sliderOutput = /** @type {HTMLOutputElement} */ (
+  document.getElementById("taken-output")
+);
 const sliderOutputUs = /** @type {HTMLOutputElement} */ (
   document.getElementById("taken-us")
 );
@@ -59,9 +61,8 @@ const bottomTeamOutput = /** @type {HTMLOutputElement} */ (
  * @returns {FormState}
  */
 function formState(data) {
-  const takenPointsInput = data.get("takenPoints");
-  const takenPoints =
-    typeof takenPointsInput === "string" && parseInt(takenPointsInput, 10);
+  const takenPointsInput = /** @type {string} */ (data.get("takenPoints"));
+  const takenPoints = parseInt(takenPointsInput, 10);
 
   const consecutive = /** @type {Consecutive} */ (data.get("consecutive"));
 
