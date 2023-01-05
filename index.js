@@ -28,13 +28,9 @@ function onFormInput(elements) {
  * @param {Pick<Elements, keyof Elements & `slider${string}`>} elements
  * @param {{ us: number, them: number }} _
  */
-function renderTakenPoints(
-  { sliderOutputUs, sliderOutputThem, sliderOutputContainer },
-  { us, them }
-) {
+function renderTakenPoints({ sliderOutputUs, sliderOutputThem }, { us, them }) {
   sliderOutputUs.value = numberToString(us);
   sliderOutputThem.value = numberToString(them);
-  sliderOutputContainer.style.setProperty("--value", us.toString());
 }
 
 /*
