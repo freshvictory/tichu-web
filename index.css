@@ -45,6 +45,7 @@ input[type="range"] {
   --edge: 1px solid var(--theme-background-light);
   --border-radius: 8px;
   --border-radius-small: 2px;
+  --shadow: 1px 1px 5px -2px var(--theme-text);
 }
 
 :root {
@@ -160,7 +161,8 @@ form > .actions {
   grid-column: 1;
 
   opacity: 1;
-  transition: opacity var(--transition-duration);
+  transition: opacity, background-position;
+  transition-duration: var(--transition-duration);
 
   z-index: 1;
 
@@ -198,6 +200,11 @@ form > .actions {
     calc(var(--tick-block-size) / 2 - var(--tick-thickness) / 2);
 }
 
+input[name="consecutive"][value="none"]:not(:checked) ~ .range-container {
+  background-position-x: calc(-1 * var(--tick-inline-size) + 1px);
+  --thumb-inline-size: 20px;
+}
+
 .range-container > input[type="range"] {
   flex-shrink: 0;
 }
@@ -228,13 +235,13 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: var(--thumb-color);
   appearance: none;
   box-shadow: none;
-  transform: translateY(var(--thumb-inline-offset)) scale(var(--thumb-scale));
-  transform-origin: center bottom;
+  transform: translateY(var(--thumb-inline-offset));
+  transform-origin: center top;
   border: var(--thumb-border);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-radius: var(--thumb-border-radius);
-  transition: transform var(--transition-duration);
+  transition: block-size var(--transition-duration);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -243,20 +250,19 @@ input[type="range"]::-moz-range-thumb {
   background-color: var(--thumb-color);
   appearance: none;
   box-shadow: none;
-  transform: translateY(var(--thumb-inline-offset)) scale(var(--thumb-scale));
-  transform-origin: center bottom;
+  transform: translateY(var(--thumb-inline-offset));
+  transform-origin: center top;
   border: var(--thumb-border);
   backdrop-filter: blur(20px);
   border-radius: var(--thumb-border-radius);
   box-sizing: border-box;
-  transition: transform var(--transition-duration);
+  transition: block-size var(--transition-duration);
 }
 
 .points {
   display: grid;
   align-items: center;
   grid-template-rows: auto 1fr auto;
-  gap: var(--spacing-small);
 
   --tick-inline-size: calc(0.15 * var(--slider-inline-size));
 }
@@ -321,18 +327,12 @@ input[name="consecutive"]:checked + .consecutive-none {
   justify-self: center;
 }
 
-input[name="consecutive"][value="none"]:not(:checked) ~ .range-container {
-  opacity: 0;
-  --thumb-inline-offset: calc(0.1 * var(--slider-inline-size));
-  --thumb-scale: 0.1;
-}
-
 #taken-output {
   block-size: var(--slider-block-size);
 
   font-weight: bold;
-  inline-size: 3ch;
-  box-sizing: content-box;
+  inline-size: calc(3ch + 2 * var(--spacing-small));
+  padding: var(--spacing-small);
   text-align: right;
   display: flex;
   flex-direction: column;
@@ -346,27 +346,24 @@ input[name="consecutive"][value="none"]:not(:checked) ~ .range-container {
     var(--team-them-color)
   );
   border-radius: var(--border-radius);
-  padding: var(--spacing-small);
   color: var(--theme-background);
 
   transform: translateX(calc(0.75 * var(--tick-inline-size)));
 
-  transition: background-position var(--transition-duration),
-    transform var(--transition-duration);
+  transition: background-position;
+  transition-duration: var(--transition-duration);
   background-position: 0 50%;
   background-size: 100% 300%;
 
-  box-shadow: inset 1px 1px 5px -2px var(--theme-text);
+  box-shadow: inset var(--shadow);
 }
 
 input[name="consecutive"][value="us"]:checked ~ #taken-output {
   background-position: 0 0;
-  transform: translateX(0);
 }
 
 input[name="consecutive"][value="them"]:checked ~ #taken-output {
   background-position: 0 100%;
-  transform: translateX(0);
 }
 
 .teams {
@@ -384,22 +381,20 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
   padding-block: var(--spacing-medium);
   text-align: center;
   font-weight: bold;
-  background-color: var(--theme-background-off);
-  --border-radius: 8px;
+  /* border: 3px solid var(--team-color); */
+  background-color: var(--team-color);
+  border-radius: var(--border-radius);
+  color: white;
+  box-shadow: inset var(--shadow);
+  text-shadow: 1px 1px 1px var(--theme-text);
 }
 
 .score#top-score {
   --team-color: var(--team-us-color);
-  border-block-end: 4px solid var(--team-color);
-  border-start-start-radius: var(--border-radius);
-  border-start-end-radius: var(--border-radius);
 }
 
 .score#bottom-score {
   --team-color: var(--team-them-color);
-  border-block-start: 4px solid var(--team-color);
-  border-end-start-radius: var(--border-radius);
-  border-end-end-radius: var(--border-radius);
 }
 
 .actions {
