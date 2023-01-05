@@ -32,8 +32,8 @@ function renderTakenPoints(
   { sliderOutputUs, sliderOutputThem, sliderOutputContainer },
   { us, them }
 ) {
-  sliderOutputUs.value = us.toString();
-  sliderOutputThem.value = them.toString();
+  sliderOutputUs.value = numberToString(us);
+  sliderOutputThem.value = numberToString(them);
   sliderOutputContainer.style.setProperty("--value", us.toString());
 }
 
@@ -100,6 +100,16 @@ function onFormSubmit(form, event) {
  * @param game {Game}
  */
 function renderGame(game) {
-  topTeamOutput.value = game.ourScore.toString();
-  bottomTeamOutput.value = game.theirScore.toString();
+  topTeamOutput.value = numberToString(game.ourScore);
+  bottomTeamOutput.value = numberToString(game.theirScore);
+}
+
+/**
+ * Converts a number to a string.
+ * Uses the minus '−' character (`U+2212`)
+ * instead of hyphen '-' for the minus sign.
+ * @param {number} number
+ */
+function numberToString(number) {
+  return number.toString().replace("-", "\u2212");
 }
