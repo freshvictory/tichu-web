@@ -63,7 +63,7 @@ input[type="range"] {
   --theme-background: var(--c-white);
   --theme-background-off: var(--c-off-white);
   --theme-background-light: var(--c-lightest-gray);
-  --shadow: 1px 1px 5px -2px var(--theme-text);
+  --shadow: 1px 1px 5px -2px var(--c-lightest-black);
   --text-shadow: 0 0 3px var(--c-lightest-black);
 
   --team-us-color: #6494ed;
@@ -403,34 +403,28 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
 }
 
 .actions {
-  display: flex;
-  gap: var(--spacing-medium);
-  justify-content: space-around;
-}
-
-.actions > .submit {
-  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: var(--spacing-small);
 }
 
 button {
   padding-block: var(--spacing-small);
-  padding-inline: var(--spacing-medium);
-  border-radius: var(--border-radius);
-  background-color: var(--color);
-  box-shadow: 1px 1px 3px -1px var(--shadow);
+  background-color: var(--theme-background-off);
+  border: 1px solid var(--theme-background-light);
+  border-radius: var(--border-radius-small);
 }
 
-button:active {
-  box-shadow: 0 0 3px -2px var(--shadow);
+.actions > button:first-child {
+  border-start-start-radius: var(--border-radius);
+  border-end-start-radius: var(--border-radius);
 }
 
-.submit {
-  --color: var(--theme-accent);
-  --shadow: var(--theme-accent-shadow);
+.actions > button:last-child {
+  border-start-end-radius: var(--border-radius);
+  border-end-end-radius: var(--border-radius);
+}
+
+button.submit {
   font-weight: bold;
-}
-
-.secondary {
-  --color: var(--theme-background-light);
-  --shadow: var(--theme-text-light);
 }
