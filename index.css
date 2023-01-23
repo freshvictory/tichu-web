@@ -553,8 +553,8 @@ input[type="radio"][value$="-true"]:checked
 
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1.25fr 1fr;
-  gap: var(--spacing-small);
+  grid-template-columns: 1fr 1.5fr 1fr;
+  align-items: center;
 }
 
 button {
@@ -575,8 +575,17 @@ button {
   border-end-end-radius: var(--border-radius);
 }
 
+.actions > button.submit {
+  z-index: 1;
+  margin-inline: calc(-1 * var(--spacing-small));
+}
+
 button.submit {
   font-weight: bold;
+  background-color: var(--theme-background);
+  box-shadow: var(--shadow);
+  padding-block: var(--spacing-medium);
+  border-radius: 2rem;
 }
 
 .history {
