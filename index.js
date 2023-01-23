@@ -209,5 +209,5 @@ function recordTurns(turns) {
  * @param {number} number
  */
 function numberToString(number) {
-  return number.toString().replace("-", "\u2212");
+  return new Intl.NumberFormat().format(number).replace("-", "\u2212");
 }
