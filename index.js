@@ -128,6 +128,10 @@ function onFormSubmit(form, event) {
   let next;
 
   switch (intent) {
+    case "new": {
+      next = newGame();
+      break;
+    }
     case "undo": {
       next = undoForm(game);
       break;
