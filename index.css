@@ -75,6 +75,17 @@ select {
   --team-us-text: #366fd9;
   --team-them-color: #ed7864;
   --team-them-text: #d94e36;
+  --team-text: var(--c-white);
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --theme-background: var(--c-black);
+    --theme-background-off: var(--c-light-black);
+    --theme-background-light: var(--c-lightest-black);
+    --theme-text: var(--c-white);
+    --theme-text-light: var(--c-off-white);
+  }
 }
 
 .ours {
@@ -387,7 +398,7 @@ input[name="consecutive"]:checked + .consecutive-none {
     var(--team-them-color)
   );
   border-radius: var(--border-radius);
-  color: var(--theme-background);
+  color: var(--team-text);
 
   transform: translateX(calc(0.75 * var(--tick-inline-size)));
 
@@ -463,7 +474,7 @@ input[type="radio"][value="none"]:checked ~ .bet {
 
 input[type="radio"]:checked + .bet {
   background-color: var(--team-color);
-  color: var(--theme-background);
+  color: var(--team-text);
 }
 
 .bet-results {
