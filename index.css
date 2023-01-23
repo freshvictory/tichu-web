@@ -168,6 +168,10 @@ form {
   grid-template-rows: 1fr auto;
   gap: var(--spacing-xlarge);
   justify-content: space-between;
+
+  max-inline-size: 400px;
+  max-block-size: 750px;
+  margin-inline: auto;
 }
 
 @media screen and (max-width: 320px) {
