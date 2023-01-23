@@ -70,8 +70,6 @@ function formStateToTurn(data) {
   );
   const betSuccess = /** @type {string} */ (data.get("firstBetSuccess"));
 
-  console.log({ ourBets, theirBets, betSuccess });
-
   return {
     takenPoints,
     consecutive,
@@ -163,7 +161,6 @@ function onFormSubmit(form, event) {
  */
 function scoreForm(game, data) {
   const turn = formStateToTurn(data);
-  console.log({ turn });
   return score(turn, game);
 }
 
