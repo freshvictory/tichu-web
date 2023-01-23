@@ -9,7 +9,7 @@
   </head>
   <body>
     <header class="visually-hidden"><h1 class="heading">Tichu</h1></header>
-    <main>
+    <main class="page">
       <form id="score-form">
         <div class="teams">
           <output
@@ -215,7 +215,7 @@
           <button
             type="submit"
             data-theme="secondary"
-            name="_action"
+            name="intent"
             value="undo"
             class="secondary"
           >
@@ -235,8 +235,16 @@
             New
           </button>
         </div>
+
+        <div id="turn-record"></div>
       </form>
     </main>
+
+    <!-- <div class="page">
+      <section class="history-container" aria-labelledby="history">
+        <h2 id="history">History</h2>
+      </section>
+    </div> -->
 
     <script type="module">
       import { attach } from "./index.js";

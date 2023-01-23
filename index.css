@@ -105,22 +105,33 @@ html {
   accent-color: var(--theme-accent);
 }
 
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-
+html {
+  overflow: auto;
+  height: 100svh;
   color: var(--theme-text);
   background-color: var(--theme-background);
+  overflow: auto;
+  scroll-snap-type: y mandatory;
 }
 
 output {
   font-variant-numeric: tabular-nums;
 }
 
-body {
-  display: grid;
-  grid-template-rows: auto 1fr;
+h1,
+h2 {
+  padding: 0;
+  margin: 0;
+}
+
+.page {
+  block-size: 100svh;
+  scroll-snap-align: start;
+
+  padding-block: var(--spacing-large);
+  padding-inline: var(--spacing-large);
+  min-inline-size: min(100vw, 400px);
+  margin-inline: auto;
 }
 
 header {
@@ -139,13 +150,6 @@ h1 {
   );
   background-clip: text;
   color: transparent;
-}
-
-main {
-  padding-block: var(--spacing-large);
-  padding-inline: var(--spacing-large);
-  min-inline-size: min(100vw, 400px);
-  margin-inline: auto;
 }
 
 form {
@@ -551,4 +555,18 @@ button {
 
 button.submit {
   font-weight: bold;
+}
+
+.history {
+  block-size: 5rem;
+  overflow: hidden;
+
+  background-color: var(--theme-background-off);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-medium);
+
+  list-style: inside decimal;
+}
+
+.history .turn {
 }

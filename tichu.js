@@ -10,6 +10,33 @@ export function newGame() {
 }
 
 /**
+ * Given a list of turns, return a `Game` with
+ * the current scores.
+ *
+ * @param {Turn[]} turns
+ * @returns {Game}
+ */
+export function gameFromTurns(turns) {
+  const { us, them } = turns.reduce(
+    function (scores, turn) {
+      const turnScore = scoreTurn(turn);
+
+      return {
+        us: scores.us + turnScore.us,
+        them: scores.them + turnScore.them,
+      };
+    },
+    { us: 0, them: 0 }
+  );
+
+  return {
+    ourScore: us,
+    theirScore: them,
+    history: turns,
+  };
+}
+
+/**
  * @param turn {Turn}
  * @param game {Game}
  * @returns {Game}
@@ -24,6 +51,48 @@ export function score(turn, game) {
     ourScore: game.ourScore + ourTakenPoints + ourBetPoints,
     theirScore: game.theirScore + theirTakenPoints + theirBetPoints,
     history: [...game.history, turn],
+  };
+}
+
+/**
+ * Calculate the points for each team given a `Turn`.
+ *
+ * @param {Turn} turn
+ * @returns {{ us: number, them: number }}
+ */
+function scoreTurn(turn) {
+  const { us: ourTakenPoints, them: theirTakenPoints } =
+    calculateTakenPoints(turn);
+
+  const { us: ourBetPoints, them: theirBetPoints } = turnBetPoints(turn);
+
+  return {
+    us: ourTakenPoints + ourBetPoints,
+    them: theirTakenPoints + theirBetPoints,
+  };
+}
+
+/**
+ * Undo a turn.
+ *
+ * @param {Game} game
+ *
+ * @returns {Game}
+ */
+export function undo(game) {
+  const lastTurn = game.history.at(-1);
+
+  if (!lastTurn) {
+    return game;
+  }
+
+  const { us, them } = scoreTurn(lastTurn);
+  console.log("Undoing", lastTurn, { us, them });
+
+  return {
+    ourScore: game.ourScore - us,
+    theirScore: game.theirScore - them,
+    history: game.history.slice(0, -1),
   };
 }
 
@@ -68,6 +137,10 @@ function turnBetPoints(turn) {
  */
 function pointsForBets(bets) {
   return bets.reduce(function (sum, bet) {
+    if (bet === "none") {
+      return 0;
+    }
+
     const sign = bet.successful ? 1 : -1;
     const value = bet.level === "grand" ? 200 : bet.level === "tichu" ? 100 : 0;
 

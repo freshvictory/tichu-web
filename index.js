@@ -1,4 +1,10 @@
-import { calculateTakenPoints, newGame, score } from "./tichu.js";
+import {
+  calculateTakenPoints,
+  gameFromTurns,
+  newGame,
+  score,
+  undo,
+} from "./tichu.js";
 
 /**
  * @param {Elements} elements
@@ -41,6 +47,9 @@ const topTeamOutput = /** @type {HTMLOutputElement} */ (
 );
 const bottomTeamOutput = /** @type {HTMLOutputElement} */ (
   document.getElementById("bottom-score")
+);
+const turnRecord = /** @type {HTMLElement} */ (
+  document.getElementById("turn-record")
 );
 
 /**
@@ -100,10 +109,34 @@ function onFormSubmit(form, event) {
   event.preventDefault();
 
   const data = new FormData(form);
-  const turn = formStateToTurn(data);
 
-  const game = newGame();
-  const next = score(turn, game);
+  const turns = /** @type {Turn[]} */ (
+    data.getAll("turns").map(function (turn) {
+      if (typeof turn !== "string") {
+        return;
+      }
+
+      return JSON.parse(turn);
+    })
+  );
+
+  const game = gameFromTurns(turns);
+
+  const intent = event.submitter?.getAttribute("value");
+
+  /** @type {Game} */
+  let next;
+
+  switch (intent) {
+    case "undo": {
+      next = undoForm(game);
+      break;
+    }
+    default: {
+      next = scoreForm(game, data);
+      break;
+    }
+  }
 
   form.reset();
 
@@ -111,11 +144,52 @@ function onFormSubmit(form, event) {
 }
 
 /**
- * @param game {Game}
+ * @param {Game} game
+ * @param {FormData} data
+ *
+ * @returns {Game}
+ */
+function scoreForm(game, data) {
+  const turn = formStateToTurn(data);
+  return score(turn, game);
+}
+
+/**
+ * @param {Game} game
+ *
+ * @returns {Game}
+ */
+function undoForm(game) {
+  return undo(game);
+}
+
+/**
+ * @param {Game} game
  */
 function renderGame(game) {
   topTeamOutput.value = numberToString(game.ourScore);
   bottomTeamOutput.value = numberToString(game.theirScore);
+
+  recordTurns(game.history);
+}
+
+/**
+ * @param {Turn[]} turns
+ */
+function recordTurns(turns) {
+  turnRecord.innerHTML = "";
+
+  const elements = turns.map(function (turn, index) {
+    const turnElement = document.createElement("input");
+    turnElement.id = `turn-${index + 1}`;
+    turnElement.type = "hidden";
+    turnElement.name = "turns";
+    turnElement.value = JSON.stringify(turn);
+
+    return turnElement;
+  });
+
+  turnRecord.append(...elements);
 }
 
 /**
