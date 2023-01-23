@@ -16,7 +16,7 @@ export function attach(elements) {
  */
 function onFormInput(elements) {
   const data = new FormData(elements.form);
-  const state = formState(data);
+  const state = formStateToTurn(data);
 
   const takenPoints = calculateTakenPoints(state);
 
@@ -44,29 +44,52 @@ const bottomTeamOutput = /** @type {HTMLOutputElement} */ (
 );
 
 /**
- * @typedef {{
- *  takenPoints: number;
- *  consecutive: Consecutive;
- * }} FormState
- */
-
-/**
+ * Parse a `FormData` object into a `Turn`.
+ *
  * @param {FormData} data
- * @returns {FormState}
+ * @returns {Turn}
  */
-function formState(data) {
+function formStateToTurn(data) {
   const takenPointsInput = /** @type {string} */ (data.get("takenPoints"));
   const takenPoints = parseInt(takenPointsInput, 10);
 
   const consecutive = /** @type {Consecutive} */ (data.get("consecutive"));
 
-  const ourBets = /** @type {string[]} */ (data.getAll("ourBets"));
-  const theirBets = /** @type {string[]} */ (data.getAll("ourBets"));
+  const ourBets = /** @type {BetLevel[]} */ (data.getAll("ourBets"));
+  const theirBets = /** @type {BetLevel[]} */ (data.getAll("theirBets"));
+  const betSuccess = /** @type {string} */ (data.get("firstBetSuccess"));
 
   return {
     takenPoints,
     consecutive,
+    ourBets: mapBetData("us", ourBets, [betSuccess]),
+    theirBets: mapBetData("them", theirBets, [betSuccess]),
   };
+}
+
+/**
+ * @param {"us" | "them"} team
+ * @param {BetLevel[]} levels
+ * @param {string[]} successes
+ *
+ * @returns {[Bet, Bet]}
+ */
+function mapBetData(team, levels, successes) {
+  return [
+    mapBet(team, levels[0], successes[0]),
+    mapBet(team, levels[1], successes[1]),
+  ];
+}
+
+/**
+ * @param {"us" | "them"} team
+ * @param {BetLevel} level
+ * @param {string} success
+ *
+ * @returns {Bet}
+ */
+function mapBet(team, level, success) {
+  return level ? { level, successful: success === `${team}-true` } : "none";
 }
 
 /**
@@ -77,18 +100,10 @@ function onFormSubmit(form, event) {
   event.preventDefault();
 
   const data = new FormData(form);
-  const { takenPoints, consecutive } = formState(data);
+  const turn = formStateToTurn(data);
 
   const game = newGame();
-  const next = score(
-    {
-      consecutive,
-      ourBets: ["none", "none"],
-      theirBets: ["none", "none"],
-      takenPoints,
-    },
-    game
-  );
+  const next = score(turn, game);
 
   form.reset();
 

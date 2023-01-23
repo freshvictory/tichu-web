@@ -494,9 +494,10 @@ input[type="radio"][value="none"]:checked ~ .bet-results {
   border-end-end-radius: var(--result-radius);
 }
 
-input[type="radio"][value="true"]:not(:checked)
+input[type="radio"][value$="-true"]:not(:checked)
   ~ .bet-result[data-result="failure"],
-input[type="radio"][value="true"]:checked ~ .bet-result[data-result="success"] {
+input[type="radio"][value$="-true"]:checked
+  ~ .bet-result[data-result="success"] {
   background-color: var(--color);
   color: white;
   font-weight: bold;
