@@ -551,6 +551,7 @@ button {
   background-color: var(--theme-background-off);
   border: 1px solid var(--theme-background-light);
   border-radius: var(--border-radius-small);
+  color: var(--theme-text);
 }
 
 .actions > button:first-child {
