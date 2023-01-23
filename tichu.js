@@ -87,7 +87,6 @@ export function undo(game) {
   }
 
   const { us, them } = scoreTurn(lastTurn);
-  console.log("Undoing", lastTurn, { us, them });
 
   return {
     ourScore: game.ourScore - us,
