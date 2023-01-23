@@ -162,6 +162,12 @@ form {
   block-size: 100%;
 }
 
+@media screen and (min-height: 700px) {
+  form {
+    --slider-size-multiple: 15px;
+  }
+}
+
 form {
   display: grid;
   grid-template-columns: 1fr 1fr;
