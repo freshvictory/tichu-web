@@ -64,9 +64,13 @@ function formStateToTurn(data) {
 
   const consecutive = /** @type {Consecutive} */ (data.get("consecutive"));
 
-  const ourBets = /** @type {BetLevel[]} */ (data.getAll("ourBets"));
-  const theirBets = /** @type {BetLevel[]} */ (data.getAll("theirBets"));
+  const ourBets = /** @type {(BetLevel | "none")[]} */ (data.getAll("ourBets"));
+  const theirBets = /** @type {(BetLevel | "none")[]} */ (
+    data.getAll("theirBets")
+  );
   const betSuccess = /** @type {string} */ (data.get("firstBetSuccess"));
+
+  console.log({ ourBets, theirBets, betSuccess });
 
   return {
     takenPoints,
@@ -78,7 +82,7 @@ function formStateToTurn(data) {
 
 /**
  * @param {"us" | "them"} team
- * @param {BetLevel[]} levels
+ * @param {(BetLevel | "none")[]} levels
  * @param {string[]} successes
  *
  * @returns {[Bet, Bet]}
@@ -92,12 +96,16 @@ function mapBetData(team, levels, successes) {
 
 /**
  * @param {"us" | "them"} team
- * @param {BetLevel} level
+ * @param {BetLevel | "none"} level
  * @param {string} success
  *
  * @returns {Bet}
  */
 function mapBet(team, level, success) {
+  if (!level || level === "none") {
+    return "none";
+  }
+
   return level ? { level, successful: success === `${team}-true` } : "none";
 }
 
@@ -155,6 +163,7 @@ function onFormSubmit(form, event) {
  */
 function scoreForm(game, data) {
   const turn = formStateToTurn(data);
+  console.log({ turn });
   return score(turn, game);
 }
 

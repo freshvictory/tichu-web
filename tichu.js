@@ -138,7 +138,7 @@ function turnBetPoints(turn) {
 function pointsForBets(bets) {
   return bets.reduce(function (sum, bet) {
     if (bet === "none") {
-      return 0;
+      return sum;
     }
 
     const sign = bet.successful ? 1 : -1;
