@@ -27,7 +27,8 @@ button {
   cursor: pointer;
 }
 
-input[type="range"] {
+input[type="range"],
+select {
   appearance: none;
 }
 
@@ -37,7 +38,7 @@ input[type="range"] {
   --spacing-small: 8px;
   --spacing-medium: 16px;
   --spacing-large: 24px;
-  --spacing-xlarge: 32px;
+  --spacing-xlarge: 48px;
 }
 
 :root {
@@ -49,12 +50,16 @@ input[type="range"] {
 
 :root {
   --c-black: #000;
-  --c-light-black: #222;
+  --c-light-black: hsla(0, 0%, 13%, 1);
   --c-lightest-black: #333;
   --c-gray: #777;
   --c-lightest-gray: #ddd;
   --c-off-white: #efefef;
   --c-white: #fff;
+  --c-shadow: hsla(0, 0%, 10%, 0.5);
+
+  --c-success: #71be44;
+  --c-failure: #f07171;
 
   --theme-accent: hsl(39, 79%, 66%);
   --theme-accent-shadow: hsl(39, 90%, 35%);
@@ -63,13 +68,23 @@ input[type="range"] {
   --theme-background: var(--c-white);
   --theme-background-off: var(--c-off-white);
   --theme-background-light: var(--c-lightest-gray);
-  --shadow: 1px 1px 5px -2px var(--c-lightest-black);
-  --text-shadow: 0 0 3px var(--c-lightest-black);
+  --shadow: 1px 1px 5px -2px var(--c-shadow);
+  --text-shadow: 0 0 3px var(--c-shadow);
 
   --team-us-color: #6494ed;
   --team-us-text: #366fd9;
   --team-them-color: #ed7864;
   --team-them-text: #d94e36;
+}
+
+.ours {
+  --team-color: var(--team-us-color);
+  --team-color-text: var(--team-us-text);
+}
+
+.theirs {
+  --team-color: var(--team-them-color);
+  --team-color-text: var(--team-them-text);
 }
 
 :root {
@@ -145,9 +160,16 @@ form {
 
 form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto;
-  gap: var(--spacing-large);
+  gap: var(--spacing-xlarge);
+  justify-content: space-between;
+}
+
+@media screen and (max-width: 320px) {
+  form {
+    gap: var(--spacing-large);
+  }
 }
 
 form > .points {
@@ -378,10 +400,111 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
   justify-content: space-between;
 }
 
+.teams > hr {
+  block-size: 2px;
+  border-radius: var(--border-radius-small);
+  inline-size: 100%;
+  background-color: var(--theme-background-light);
+  border: none;
+}
+
+.bets {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: var(--border-radius);
+}
+
+.bets:has(:focus-visible) {
+  outline: 5px auto Highlight;
+  outline: 5px auto -webkit-focus-ring-color;
+}
+
+.bet {
+  background-color: var(--theme-background-off);
+  z-index: 1;
+
+  padding-block: var(--spacing-small);
+  padding-inline: var(--spacing-medium);
+
+  transform: translateY(0);
+  white-space: nowrap;
+  transition: transform;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: ease-out;
+}
+
+.bet:first-of-type {
+  border-start-start-radius: var(--border-radius);
+  border-start-end-radius: var(--border-radius);
+}
+
+.bet:nth-of-type(3) {
+  border-end-start-radius: var(--border-radius);
+  border-end-end-radius: var(--border-radius);
+}
+
+input[type="radio"][value="none"]:checked ~ .bet {
+  transform: translateY(25%);
+}
+
+input[type="radio"]:checked + .bet {
+  background-color: var(--team-color);
+  color: var(--theme-background);
+}
+
+.bet-results {
+  border: 2px solid var(--theme-background-off);
+  border-radius: var(--border-radius);
+
+  --result-radius: calc(var(--border-radius) - 2px);
+
+  margin-block-start: var(--spacing-small);
+  transform: translateY(0);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  opacity: 1;
+
+  transition: transform, opacity;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: ease-out;
+}
+
+input[type="radio"][value="none"]:checked ~ .bet-results {
+  transform: translateY(-100%);
+  transition-timing-function: ease-in;
+  opacity: 0;
+}
+
+.bet-result {
+  padding: var(--spacing-small);
+  text-align: center;
+}
+
+.bet-result[data-result="failure"] {
+  --color: var(--c-failure);
+  border-start-start-radius: var(--result-radius);
+  border-end-start-radius: var(--result-radius);
+}
+
+.bet-result[data-result="success"] {
+  --color: var(--c-success);
+  border-start-end-radius: var(--result-radius);
+  border-end-end-radius: var(--result-radius);
+}
+
+input[type="radio"][value="true"]:not(:checked)
+  ~ .bet-result[data-result="failure"],
+input[type="radio"][value="true"]:checked ~ .bet-result[data-result="success"] {
+  background-color: var(--color);
+  color: white;
+  font-weight: bold;
+  pointer-events: none;
+}
+
 .score {
   display: block;
-  inline-size: 4ch;
-  box-sizing: content-box;
   font-size: var(--font-heading);
   padding-inline: var(--spacing-large);
   padding-block: var(--spacing-medium);

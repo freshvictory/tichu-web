@@ -60,6 +60,9 @@ function formState(data) {
 
   const consecutive = /** @type {Consecutive} */ (data.get("consecutive"));
 
+  const ourBets = /** @type {string[]} */ (data.getAll("ourBets"));
+  const theirBets = /** @type {string[]} */ (data.getAll("ourBets"));
+
   return {
     takenPoints,
     consecutive,

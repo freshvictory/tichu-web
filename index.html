@@ -27,6 +27,122 @@
             >0</output
           >
 
+          <fieldset class="bets ours">
+            <input
+              type="radio"
+              name="ourBets"
+              value="none"
+              checked
+              id="bets-us-none"
+              class="visually-hidden"
+            />
+            <label for="bets-us-none" class="bet">No bet</label>
+            <input
+              type="radio"
+              name="ourBets"
+              value="tichu"
+              id="bets-us-tichu"
+              class="visually-hidden"
+            />
+            <label for="bets-us-tichu" class="bet">Tichu</label>
+            <input
+              type="radio"
+              name="ourBets"
+              value="grand"
+              id="bets-us-grand"
+              class="visually-hidden"
+            />
+            <label for="bets-us-grand" class="bet">Grand Tichu</label>
+
+            <div class="bet-results">
+              <input
+                type="radio"
+                name="betSuccess"
+                value="false"
+                id="bet-failure-us"
+                class="visually-hidden"
+              />
+              <input
+                type="radio"
+                name="betSuccess"
+                value="true"
+                id="bet-success-us"
+                class="visually-hidden"
+              />
+              <label
+                for="bet-failure-us"
+                class="bet-result"
+                data-result="failure"
+                >✗</label
+              >
+              <label
+                for="bet-success-us"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
+          </fieldset>
+
+          <hr />
+
+          <fieldset class="bets theirs">
+            <input
+              type="radio"
+              name="theirBets"
+              value="none"
+              checked
+              id="bets-them-none"
+              class="visually-hidden"
+            />
+            <label for="bets-them-none" class="bet">No bet</label>
+            <input
+              type="radio"
+              name="theirBets"
+              value="tichu"
+              id="bets-them-tichu"
+              class="visually-hidden"
+            />
+            <label for="bets-them-tichu" class="bet">Tichu</label>
+            <input
+              type="radio"
+              name="theirBets"
+              value="grand"
+              id="bets-them-grand"
+              class="visually-hidden"
+            />
+            <label for="bets-them-grand" class="bet">Grand Tichu</label>
+
+            <div class="bet-results">
+              <input
+                type="radio"
+                name="betSuccess"
+                value="false"
+                id="bet-failure-them"
+                class="visually-hidden"
+              />
+              <input
+                type="radio"
+                name="betSuccess"
+                value="true"
+                id="bet-success-them"
+                class="visually-hidden"
+              />
+              <label
+                for="bet-failure-them"
+                class="bet-result"
+                data-result="failure"
+                >✗</label
+              >
+              <label
+                for="bet-success-them"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
+          </fieldset>
+
           <output
             id="bottom-score"
             name="bottomScore"
