@@ -135,7 +135,7 @@ function onFormSubmit(form, event) {
 
   switch (intent) {
     case "new": {
-      next = newGame();
+      next = startNewGame(game);
       break;
     }
     case "undo": {
@@ -151,6 +151,16 @@ function onFormSubmit(form, event) {
   form.reset();
 
   renderGame(next);
+}
+
+/**
+ * @param {Game} game
+ * @returns {Game}
+ */
+function startNewGame(game) {
+  return window.confirm("Are you sure you want to start a new game?")
+    ? newGame()
+    : game;
 }
 
 /**
