@@ -128,6 +128,12 @@ html {
   scroll-snap-type: y mandatory;
 }
 
+@media screen and (max-height: 666px) {
+  html {
+    scroll-snap-type: none;
+  }
+}
+
 output {
   font-variant-numeric: tabular-nums;
 }
@@ -187,7 +193,7 @@ form {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto;
   column-gap: var(--spacing-large);
-  row-gap: var(--spacing-large);
+  row-gap: var(--spacing-medium);
   justify-content: space-between;
 
   max-inline-size: 400px;
@@ -197,7 +203,7 @@ form {
 
 @media screen and (max-width: 320px) {
   form {
-    row-gap: var(--spacing-small);
+    gap: var(--spacing-small);
   }
 }
 
@@ -437,6 +443,7 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  row-gap: var(--spacing-small);
 }
 
 .teams > hr {
@@ -458,7 +465,7 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
   align-items: center;
 }
 
-.bets:has(:focus-visible) {
+.bets:has(input[type="radio"]:focus-visible) {
   outline: 5px auto Highlight;
   outline: 5px auto -webkit-focus-ring-color;
 }
@@ -493,6 +500,31 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
 
 .bet.grand {
   grid-area: grand;
+}
+
+input[type="radio"][value="none"]:not(:checked) ~ .bet.second {
+  transform: translateY(0%);
+}
+
+.bet.second {
+  transform: translateY(calc(-100% + var(--border-radius)));
+  transition: transform var(--transition-duration);
+
+  z-index: 0;
+
+  border-block-start: 2px solid var(--theme-background-light);
+}
+
+.second-bet {
+  background-color: var(--theme-background-light);
+  color: inherit;
+  font-size: inherit;
+  border: 0;
+  padding: var(--spacing-small);
+  border-radius: var(--border-radius);
+
+  display: block;
+  margin-block-start: var(--spacing-small);
 }
 
 input[type="radio"]:checked + .bet {
