@@ -12,19 +12,21 @@
     <main class="page">
       <form id="score-form">
         <div class="teams">
-          <output
-            id="top-score"
-            name="topScore"
-            class="score"
-            for="taken-points
+          <label for="top-score" class="score ours"
+            >Us
+            <output
+              id="top-score"
+              name="topScore"
+              for="taken-points
               top-bet
               bottom-bet
               consecutive-none
               consecutive-us
               consecutive-them
             "
-            form="score-form"
-            >0</output
+              form="score-form"
+              >0</output
+            ></label
           >
 
           <fieldset class="bets ours">
@@ -161,19 +163,21 @@
             >
           </fieldset>
 
-          <output
-            id="bottom-score"
-            name="bottomScore"
-            class="score"
-            for="taken-points
+          <label for="bottom-score" class="score theirs"
+            >Them
+            <output
+              id="bottom-score"
+              name="bottomScore"
+              for="taken-points
             top-bet
             bottom-bet
             consecutive-none
             consecutive-top
             consecutive-bottom
           "
-            form="score-form"
-            >0</output
+              form="score-form"
+              >0</output
+            ></label
           >
         </div>
 

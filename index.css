@@ -36,6 +36,7 @@ select {
 :root {
   --font-large: 1.25rem;
   --font-heading: 1.25rem;
+  --spacing-tiny: 4px;
   --spacing-small: 8px;
   --spacing-medium: 16px;
   --spacing-large: 24px;
@@ -594,25 +595,22 @@ input[type="radio"][value$="-true"]:checked
 }
 
 .score {
-  display: block;
-  font-size: var(--font-heading);
-  padding-inline: var(--spacing-large);
-  padding-block: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-tiny);
+  padding-inline: var(--spacing-medium);
+  padding-block: var(--spacing-small);
   text-align: center;
-  font-weight: bold;
   background-color: var(--team-color);
   border-radius: var(--border-radius);
   color: white;
   box-shadow: inset var(--shadow);
+}
+
+.score > output {
+  font-size: var(--font-heading);
+  font-weight: bold;
   text-shadow: var(--text-shadow);
-}
-
-.score#top-score {
-  --team-color: var(--team-us-color);
-}
-
-.score#bottom-score {
-  --team-color: var(--team-them-color);
 }
 
 .actions {
@@ -655,7 +653,7 @@ button.submit {
 #crash {
   display: none;
 
-  border-radius: 10px;
+  padding: 0;
   background-color: white;
   background-image: repeating-linear-gradient(
     45deg,
@@ -665,6 +663,10 @@ button.submit {
   color: white;
   font-weight: bold;
   text-shadow: 0 0 2px black, 0 0 2px black, 0 0 2px black;
+}
+
+#turn-record {
+  display: none;
 }
 
 .history {
