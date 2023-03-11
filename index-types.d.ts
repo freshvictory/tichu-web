@@ -7,4 +7,6 @@ type Elements = {
   turnRecord: HTMLElement;
   form: HTMLFormElement;
   history: HTMLElement;
+  topTeamOutput: HTMLOutputElement;
+  bottomTeamOutput: HTMLOutputElement;
 };

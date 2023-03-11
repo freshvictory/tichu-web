@@ -13,13 +13,14 @@ import {
 export function attach(elements, storage) {
   const game = storage ? load(storage) : null;
   if (game) {
-    renderGame(game);
+    renderGame(elements, game);
   }
 
   elements.form.addEventListener("input", onFormInput.bind(null, elements));
   elements.form.addEventListener("submit", function (event) {
     event.preventDefault();
     const next = onFormSubmit(event);
+    renderGame(elements, next);
     if (storage) {
       save(storage, next);
     }
@@ -64,19 +65,6 @@ function renderTakenPoints({ sliderOutputUs, sliderOutputThem }, { us, them }) {
   sliderOutputUs.value = numberToString(us);
   sliderOutputThem.value = numberToString(them);
 }
-
-/*
- * Form
- */
-const topTeamOutput = /** @type {HTMLOutputElement} */ (
-  document.getElementById("top-score")
-);
-const bottomTeamOutput = /** @type {HTMLOutputElement} */ (
-  document.getElementById("bottom-score")
-);
-const turnRecord = /** @type {HTMLElement} */ (
-  document.getElementById("turn-record")
-);
 
 /**
  * Parse a `FormData` object into a `Turn`.
@@ -175,8 +163,6 @@ function onFormSubmit(event) {
 
   form.reset();
 
-  renderGame(next);
-
   return next;
 }
 
@@ -211,19 +197,21 @@ function undoForm(game) {
 }
 
 /**
+ * @param {Elements} elements
  * @param {Game} game
  */
-function renderGame(game) {
-  topTeamOutput.value = numberToString(game.ourScore);
-  bottomTeamOutput.value = numberToString(game.theirScore);
+function renderGame(elements, game) {
+  elements.topTeamOutput.value = numberToString(game.ourScore);
+  elements.bottomTeamOutput.value = numberToString(game.theirScore);
 
-  recordTurns(game.history);
+  recordTurns(elements.turnRecord, game.history);
 }
 
 /**
+ * @param {HTMLElement} turnRecord
  * @param {Turn[]} turns
  */
-function recordTurns(turns) {
+function recordTurns(turnRecord, turns) {
   turnRecord.innerHTML = "";
 
   const elements = turns.map(function (turn, index) {
