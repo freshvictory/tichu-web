@@ -186,7 +186,7 @@ form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto;
-  column-gap: var(--spacing-xlarge);
+  column-gap: var(--spacing-large);
   row-gap: var(--spacing-large);
   justify-content: space-between;
 
@@ -197,7 +197,6 @@ form {
 
 @media screen and (max-width: 320px) {
   form {
-    column-gap: var(--spacing-large);
     row-gap: var(--spacing-small);
   }
 }
@@ -450,7 +449,10 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
 
 .bets {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-areas:
+    "none   none"
+    "tichu  grand"
+    "result result";
   border-radius: var(--border-radius);
 }
 
@@ -474,13 +476,35 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
 }
 
 .bet:first-of-type {
+  grid-area: none;
   border-start-start-radius: var(--border-radius);
   border-start-end-radius: var(--border-radius);
 }
 
-.bet:nth-of-type(3) {
+.bet:nth-of-type(2) {
   border-end-start-radius: var(--border-radius);
+}
+
+.bet:nth-of-type(3) {
   border-end-end-radius: var(--border-radius);
+}
+
+@media screen and (max-width: 320px) {
+  .bets {
+    grid-template-areas:
+      "none"
+      "tichu"
+      "grand"
+      "result";
+  }
+
+  .bet:nth-of-type(2) {
+    border-radius: 0;
+  }
+
+  .bet:nth-of-type(3) {
+    border-end-start-radius: var(--border-radius);
+  }
 }
 
 input[type="radio"][value="none"]:checked ~ .bet {
@@ -493,6 +517,8 @@ input[type="radio"]:checked + .bet {
 }
 
 .bet-results {
+  grid-area: result;
+
   border: 2px solid var(--theme-background-off);
   border-radius: var(--border-radius);
 
