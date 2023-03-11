@@ -8,13 +8,39 @@ import {
 
 /**
  * @param {Elements} elements
+ * @param {Storage | undefined} storage
  */
-export function attach(elements) {
+export function attach(elements, storage) {
+  const game = storage ? load(storage) : null;
+  if (game) {
+    renderGame(game);
+  }
+
   elements.form.addEventListener("input", onFormInput.bind(null, elements));
-  elements.form.addEventListener(
-    "submit",
-    onFormSubmit.bind(null, elements.form)
-  );
+  elements.form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const next = onFormSubmit(event);
+    if (storage) {
+      save(storage, next);
+    }
+  });
+}
+
+/**
+ * @param {Storage} storage
+ */
+function load(storage) {
+  const storedGame = storage.getItem("game");
+
+  return storedGame ? JSON.parse(storedGame) : null;
+}
+
+/**
+ * @param {Storage} storage
+ * @param {Game} game
+ */
+export function save(storage, game) {
+  storage.setItem("game", JSON.stringify(game));
 }
 
 /**
@@ -108,12 +134,11 @@ function mapBet(team, level, success) {
 }
 
 /**
- * @param {HTMLFormElement} form
  * @param {SubmitEvent} event
+ * @returns {Game}
  */
-function onFormSubmit(form, event) {
-  event.preventDefault();
-
+function onFormSubmit(event) {
+  const form = /** @type {HTMLFormElement} */ (event.target);
   const data = new FormData(form);
 
   const turns = /** @type {Turn[]} */ (
@@ -151,6 +176,8 @@ function onFormSubmit(form, event) {
   form.reset();
 
   renderGame(next);
+
+  return next;
 }
 
 /**
