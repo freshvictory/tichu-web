@@ -59,6 +59,8 @@ select {
   --c-white: #fff;
   --c-shadow: hsla(0, 0%, 10%, 0.5);
 
+  --theme-caution: yellow;
+
   --c-success: #71be44;
   --c-failure: #f07171;
 
@@ -184,7 +186,8 @@ form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto;
-  gap: var(--spacing-xlarge);
+  column-gap: var(--spacing-xlarge);
+  row-gap: var(--spacing-large);
   justify-content: space-between;
 
   max-inline-size: 400px;
@@ -194,7 +197,8 @@ form {
 
 @media screen and (max-width: 320px) {
   form {
-    gap: var(--spacing-large);
+    column-gap: var(--spacing-large);
+    row-gap: var(--spacing-small);
   }
 }
 
@@ -202,6 +206,7 @@ form > .points {
   grid-column: 2;
 }
 
+#crash,
 form > .actions {
   grid-column: span 2;
 }
@@ -596,6 +601,21 @@ button.submit {
   box-shadow: var(--shadow);
   padding-block: var(--spacing-medium);
   border-radius: 2rem;
+}
+
+#crash {
+  display: none;
+
+  border-radius: 10px;
+  background-color: white;
+  background-image: repeating-linear-gradient(
+    45deg,
+    black 0 10px,
+    var(--theme-caution) 10px 20px
+  );
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 2px black, 0 0 2px black, 0 0 2px black;
 }
 
 .history {

@@ -9,4 +9,5 @@ type Elements = {
   history: HTMLElement;
   topTeamOutput: HTMLOutputElement;
   bottomTeamOutput: HTMLOutputElement;
+  crash: HTMLButtonElement;
 };

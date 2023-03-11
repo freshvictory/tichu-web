@@ -211,6 +211,10 @@
           </div>
         </fieldset>
 
+        <button type="submit" id="crash" value="crash">
+          Things are not looking good
+        </button>
+
         <div class="actions">
           <button
             type="submit"
@@ -261,6 +265,8 @@
         bottomTeamOutput: document.getElementById("bottom-score"),
 
         turnRecord: document.getElementById("turn-record"),
+
+        crash: document.getElementById("crash"),
       };
 
       attach(elements, localStorage);

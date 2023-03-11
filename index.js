@@ -19,10 +19,15 @@ export function attach(elements, storage) {
   elements.form.addEventListener("input", onFormInput.bind(null, elements));
   elements.form.addEventListener("submit", function (event) {
     event.preventDefault();
-    const next = onFormSubmit(event);
-    renderGame(elements, next);
-    if (storage) {
-      save(storage, next);
+
+    try {
+      const next = onFormSubmit(event);
+      renderGame(elements, next);
+      if (storage) {
+        save(storage, next);
+      }
+    } catch (e) {
+      crash(e instanceof Error && e.message);
     }
   });
 }
@@ -42,6 +47,13 @@ function load(storage) {
  */
 export function save(storage, game) {
   storage.setItem("game", JSON.stringify(game));
+}
+
+/**
+ * @param {string | false} message
+ */
+function crash(message) {
+  document.body.innerHTML = message || "";
 }
 
 /**
@@ -155,6 +167,9 @@ function onFormSubmit(event) {
       next = undoForm(game);
       break;
     }
+    case "crash": {
+      throw new Error("The app crashed :(");
+    }
     default: {
       next = scoreForm(game, data);
       break;
@@ -203,6 +218,12 @@ function undoForm(game) {
 function renderGame(elements, game) {
   elements.topTeamOutput.value = numberToString(game.ourScore);
   elements.bottomTeamOutput.value = numberToString(game.theirScore);
+
+  if (Math.abs(game.theirScore - game.ourScore) > 400) {
+    elements.crash.style.display = "block";
+  } else {
+    elements.crash.style.display = "none";
+  }
 
   recordTurns(elements.turnRecord, game.history);
 }
