@@ -27,6 +27,9 @@ export function attach(elements, storage) {
         save(storage, next);
       }
     } catch (e) {
+      if (storage) {
+        save(storage, newGame());
+      }
       crash(e instanceof Error && e.message);
     }
   });
