@@ -391,7 +391,16 @@ input[name="consecutive"]:checked + .consecutive-none {
 
 .points > .consecutive-none {
   z-index: 2;
-  grid-row: 1 / span 3;
+  grid-row-start: 1;
+  grid-row-end: span 2;
+}
+
+.points > input[name="consecutive"][value="us"]:checked ~ .consecutive-none {
+  grid-row-start: 1;
+}
+
+.points > input[name="consecutive"][value="them"]:checked ~ .consecutive-none {
+  grid-row-start: 2;
 }
 
 .points > .range-container,
