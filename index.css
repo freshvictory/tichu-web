@@ -58,7 +58,7 @@ select {
   --c-lightest-gray: #ddd;
   --c-off-white: #efefef;
   --c-white: #fff;
-  --c-shadow: hsla(0, 0%, 10%, 0.5);
+  --c-shadow: 0deg 0% 63%;
 
   --theme-caution: yellow;
 
@@ -73,6 +73,9 @@ select {
   --theme-background-off: var(--c-off-white);
   --theme-background-light: var(--c-lightest-gray);
   --shadow: 1px 1px 5px -2px var(--c-shadow);
+  --shadow-medium: 0.3px 0.5px 0.7px hsl(var(--c-shadow) / 0.36),
+    0.8px 1.6px 2px -0.8px hsl(var(--c-shadow) / 0.36),
+    2.1px 4.1px 5.2px -1.7px hsl(var(--c-shadow) / 0.36);
   --text-shadow: 0 0 3px var(--c-shadow);
 
   --team-us-color: #6494ed;
@@ -89,6 +92,7 @@ select {
     --theme-background-light: var(--c-lightest-black);
     --theme-text: var(--c-white);
     --theme-text-light: var(--c-off-white);
+    --c-shadow: 0deg 0% 4%;
   }
 }
 
@@ -615,7 +619,7 @@ button {
 button.submit {
   font-weight: bold;
   background-color: var(--theme-background);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-medium);
   padding-block: var(--spacing-medium);
   border-radius: 2rem;
 }
