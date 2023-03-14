@@ -273,7 +273,8 @@ form > .actions {
     calc(var(--tick-block-size) / 2 - var(--tick-thickness) / 2);
 }
 
-input[name="consecutive"][value="none"]:not(:checked) ~ .range-container {
+.points:has(input[name="consecutive"][value="none"]:not(:checked))
+  .range-container {
   background-position-x: calc(-1 * var(--tick-inline-size) + 1px);
   --thumb-inline-size: 20px;
 }
