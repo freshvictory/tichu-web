@@ -30,137 +30,156 @@
           >
 
           <fieldset class="bets ours">
-            <input
-              type="radio"
-              name="ourBets"
-              value="none"
-              checked
-              id="bets-us-1-none"
-              class="visually-hidden"
-            />
-            <label for="bets-us-1-none" class="bet none">No bet</label>
-            <input
-              type="radio"
-              name="ourBets"
-              value="tichu"
-              id="bets-us-1-tichu"
-              class="visually-hidden"
-            />
-            <label for="bets-us-1-tichu" class="bet tichu">Tichu</label>
-            <input
-              type="radio"
-              name="ourBets"
-              value="grand"
-              id="bets-us-1-grand"
-              class="visually-hidden"
-            />
-            <label for="bets-us-1-grand" class="bet grand">Grand Tichu</label>
+            <legend class="visually-hidden">Our bets</legend>
 
-            <div class="bet-results">
+            <div class="bet-group">
               <input
                 type="radio"
-                name="firstBetSuccess"
-                value="us-false"
-                id="bet-failure-us"
+                name="betSuccess"
+                value="us-1-false"
+                id="our-bet-1-failure"
                 class="visually-hidden"
               />
               <input
                 type="radio"
-                name="firstBetSuccess"
-                value="us-true"
-                id="bet-success-us"
+                name="betSuccess"
+                value="us-1-true"
+                id="our-bet-1-success"
                 class="visually-hidden"
               />
               <label
-                for="bet-success-us"
-                class="bet-result"
-                data-result="success"
-                >✓</label
-              >
-              <label
-                for="bet-failure-us"
+                for="our-bet-1-failure"
                 class="bet-result"
                 data-result="failure"
                 >✗</label
               >
-            </div>
-
-            <label class="bet second">
-              Second
-              <select name="ourBets" class="second-bet">
+              <label for="our-bet-1" class="visually-hidden">First bet</label>
+              <select id="our-bet-1" name="ourBets" class="bet">
                 <option value="none">No bet</option>
                 <option value="tichu">Tichu</option>
                 <option value="grand">Grand tichu</option>
-              </select></label
-            >
+              </select>
+
+              <label
+                for="our-bet-1-success"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
+            <div class="bet-group">
+              <input
+                type="radio"
+                name="betSuccess"
+                value="us-2-false"
+                id="our-bet-2-failure"
+                class="visually-hidden"
+              />
+              <input
+                type="radio"
+                name="betSuccess"
+                value="us-2-true"
+                id="our-bet-2-success"
+                class="visually-hidden"
+              />
+              <label
+                for="our-bet-2-failure"
+                class="bet-result"
+                data-result="failure"
+                >✗</label
+              >
+              <label for="our-bet-2" class="visually-hidden">First bet</label>
+              <select id="our-bet-2" name="ourBets" class="bet">
+                <option value="none">No bet</option>
+                <option value="tichu">Tichu</option>
+                <option value="grand">Grand tichu</option>
+              </select>
+
+              <label
+                for="our-bet-2-success"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
           </fieldset>
 
           <hr />
 
           <fieldset class="bets theirs">
-            <input
-              type="radio"
-              name="theirBets"
-              value="none"
-              checked
-              id="bets-them-1-none"
-              class="visually-hidden"
-            />
-            <label for="bets-them-1-none" class="bet none">No bet</label>
-            <input
-              type="radio"
-              name="theirBets"
-              value="tichu"
-              id="bets-them-1-tichu"
-              class="visually-hidden"
-            />
-            <label for="bets-them-1-tichu" class="bet tichu">Tichu</label>
-            <input
-              type="radio"
-              name="theirBets"
-              value="grand"
-              id="bets-them-1-grand"
-              class="visually-hidden"
-            />
-            <label for="bets-them-1-grand" class="bet grand">Grand Tichu</label>
+            <legend class="visually-hidden">Their bets</legend>
 
-            <div class="bet-results">
+            <div class="bet-group">
               <input
                 type="radio"
-                name="firstBetSuccess"
-                value="them-false"
-                id="bet-failure-them"
+                name="betSuccess"
+                value="them-1-false"
+                id="their-bet-1-failure"
                 class="visually-hidden"
               />
               <input
                 type="radio"
-                name="firstBetSuccess"
-                value="them-true"
-                id="bet-success-them"
+                name="betSuccess"
+                value="them-1-true"
+                id="their-bet-1-success"
                 class="visually-hidden"
               />
               <label
-                for="bet-success-them"
-                class="bet-result"
-                data-result="success"
-                >✓</label
-              >
-              <label
-                for="bet-failure-them"
+                for="their-bet-1-failure"
                 class="bet-result"
                 data-result="failure"
                 >✗</label
               >
-            </div>
-
-            <label class="bet second">
-              Second
-              <select name="theirBets" class="second-bet">
+              <label for="their-bet-1" class="visually-hidden">First bet</label>
+              <select id="their-bet-1" name="theirBets" class="bet">
                 <option value="none">No bet</option>
                 <option value="tichu">Tichu</option>
                 <option value="grand">Grand tichu</option>
-              </select></label
-            >
+              </select>
+
+              <label
+                for="their-bet-1-success"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
+
+            <div class="bet-group">
+              <input
+                type="radio"
+                name="betSuccess"
+                value="them-2-false"
+                id="their-bet-2-failure"
+                class="visually-hidden"
+              />
+              <input
+                type="radio"
+                name="betSuccess"
+                value="them-2-true"
+                id="their-bet-2-success"
+                class="visually-hidden"
+              />
+              <label
+                for="their-bet-2-failure"
+                class="bet-result"
+                data-result="failure"
+                >✗</label
+              >
+              <label for="their-bet-1" class="visually-hidden">First bet</label>
+              <select id="their-bet-1" name="theirBets" class="bet">
+                <option value="none">No bet</option>
+                <option value="tichu">Tichu</option>
+                <option value="grand">Grand tichu</option>
+              </select>
+
+              <label
+                for="their-bet-2-success"
+                class="bet-result"
+                data-result="success"
+                >✓</label
+              >
+            </div>
           </fieldset>
 
           <label for="bottom-score" class="score theirs"

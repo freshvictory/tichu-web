@@ -97,13 +97,13 @@ function formStateToTurn(data) {
   const theirBets = /** @type {(BetLevel | "none")[]} */ (
     data.getAll("theirBets")
   );
-  const betSuccess = /** @type {string} */ (data.get("firstBetSuccess"));
+  const betSuccess = /** @type {string[]} */ (data.getAll("betSuccess"));
 
   return {
     takenPoints,
     consecutive,
-    ourBets: mapBetData("us", ourBets, [betSuccess]),
-    theirBets: mapBetData("them", theirBets, [betSuccess]),
+    ourBets: mapBetData("us", ourBets, betSuccess),
+    theirBets: mapBetData("them", theirBets, betSuccess),
   };
 }
 
@@ -116,8 +116,16 @@ function formStateToTurn(data) {
  */
 function mapBetData(team, levels, successes) {
   return [
-    mapBet(team, levels[0], successes[0]),
-    mapBet(team, levels[1], successes[1]),
+    mapBet(
+      team,
+      levels[0],
+      successes.find((s) => s.startsWith(`${team}-1`)) || "false"
+    ),
+    mapBet(
+      team,
+      levels[1],
+      successes.find((s) => s.startsWith(`${team}-2`)) || "false"
+    ),
   ];
 }
 
@@ -133,7 +141,7 @@ function mapBet(team, level, success) {
     return "none";
   }
 
-  return level ? { level, successful: success === `${team}-true` } : "none";
+  return level ? { level, successful: success.endsWith("true") } : "none";
 }
 
 /**
@@ -202,6 +210,7 @@ function startNewGame(game) {
  */
 function scoreForm(game, data) {
   const turn = formStateToTurn(data);
+  console.log(turn);
   return score(turn, game);
 }
 

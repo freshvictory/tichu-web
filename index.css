@@ -173,6 +173,17 @@ h1 {
   color: transparent;
 }
 
+select {
+  background-color: var(--theme-background-light);
+  color: inherit;
+  font-size: inherit;
+  border: 0;
+  padding-block: var(--spacing-small);
+  padding-inline: var(--spacing-medium);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--theme-background-light);
+}
+
 form {
   --slider-inline-size: 70px;
   --slider-entries: 31;
@@ -465,14 +476,10 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
 }
 
 .bets {
-  display: grid;
-  grid-template-areas:
-    "none  result"
-    "tichu result"
-    "grand result";
-  border-radius: var(--border-radius);
-
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  row-gap: var(--spacing-large);
 }
 
 .bets:has(input[type="radio"]:focus-visible) {
@@ -480,61 +487,22 @@ input[name="consecutive"][value="them"]:checked ~ #taken-output {
   outline: 5px auto -webkit-focus-ring-color;
 }
 
+.bet-group {
+  display: grid;
+  --result-inline-size: calc(2ex + 2 * var(--spacing-small));
+  grid-template-columns: var(--result-inline-size) 1fr var(--result-inline-size);
+  border-radius: var(--border-radius);
+  --result-radius: calc(var(--border-radius) - 1px);
+}
+
 .bet {
   background-color: var(--theme-background-off);
   z-index: 1;
 
-  padding-block: var(--spacing-small);
-  padding-inline: var(--spacing-medium);
+  padding: var(--spacing-small);
+  border-radius: 0;
 
   white-space: nowrap;
-}
-
-.bet:first-of-type {
-  border-start-start-radius: var(--border-radius);
-  border-start-end-radius: var(--border-radius);
-}
-
-.bet:last-of-type {
-  border-end-start-radius: var(--border-radius);
-  border-end-end-radius: var(--border-radius);
-}
-
-.bet.none {
-  grid-area: none;
-}
-
-.bet.tichu {
-  grid-area: tichu;
-}
-
-.bet.grand {
-  grid-area: grand;
-}
-
-input[type="radio"][value="none"]:not(:checked) ~ .bet.second {
-  transform: translateY(0%);
-}
-
-.bet.second {
-  transform: translateY(calc(-100% + var(--border-radius)));
-  transition: transform var(--transition-duration);
-
-  z-index: 0;
-
-  border-block-start: 2px solid var(--theme-background-light);
-}
-
-.second-bet {
-  background-color: var(--theme-background-light);
-  color: inherit;
-  font-size: inherit;
-  border: 0;
-  padding: var(--spacing-small);
-  border-radius: var(--border-radius);
-
-  display: block;
-  margin-block-start: var(--spacing-small);
 }
 
 input[type="radio"]:checked + .bet {
@@ -542,47 +510,39 @@ input[type="radio"]:checked + .bet {
   color: var(--team-text);
 }
 
-.bet-results {
-  grid-area: result;
-
-  border: 2px solid var(--theme-background-off);
-  border-radius: var(--border-radius);
-
-  --result-radius: calc(var(--border-radius) - 2px);
-
-  margin-inline-start: var(--spacing-small);
-
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-
-  opacity: 0;
-  transform: translateX(-100%);
-  transition: transform, opacity;
-  transition-duration: var(--transition-duration);
+.bet-group:has([value="none"]:not(:checked)) .bet-result {
+  transform: translateX(0);
 }
 
-input[type="radio"]:not([value="none"]):checked ~ .bet-results {
-  transform: translateX(0);
-  opacity: 1;
+.bet-group:has([value="none"]:checked) .bet {
+  border-radius: var(--border-radius);
 }
 
 .bet-result {
   display: flex;
   align-items: center;
   justify-content: center;
-  inline-size: 40px;
-  aspect-ratio: 1;
-  font-size: 25px;
+  inline-size: var(--result-inline-size);
+
+  border: 1px solid var(--theme-background-light);
+  transform: translateX(var(--transform));
+  transition: transform var(--transition-duration);
 }
 
 .bet-result:first-of-type {
   border-start-start-radius: var(--result-radius);
-  border-start-end-radius: var(--result-radius);
+  border-end-start-radius: var(--result-radius);
+  border-inline-end: 0;
+
+  --transform: 100%;
 }
 
 .bet-result:last-of-type {
-  border-end-start-radius: var(--result-radius);
+  border-start-end-radius: var(--result-radius);
   border-end-end-radius: var(--result-radius);
+  border-inline-start: 0;
+
+  --transform: -100%;
 }
 
 .bet-result[data-result="failure"] {
